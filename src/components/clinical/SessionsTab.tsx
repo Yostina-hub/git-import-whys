@@ -16,17 +16,29 @@ const SessionsTab = ({ patientId }: SessionsTabProps) => {
   }, [patientId]);
 
   const loadSessions = async () => {
+    console.log("Loading sessions for patient:", patientId);
+    
     let query = supabase
       .from("treatment_sessions")
-      .select("*, patients(first_name, last_name, mrn), profiles(first_name, last_name)")
+      .select(`
+        *,
+        patients(first_name, last_name, mrn),
+        clinician:profiles!treatment_sessions_clinician_id_fkey(first_name, last_name)
+      `)
       .order("performed_at", { ascending: false });
 
     if (patientId) {
       query = query.eq("patient_id", patientId);
     }
 
-    const { data } = await query;
-    if (data) setSessions(data);
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error("Error loading sessions:", error);
+    } else {
+      console.log("Loaded sessions:", data);
+      setSessions(data || []);
+    }
   };
 
   return (
@@ -53,7 +65,7 @@ const SessionsTab = ({ patientId }: SessionsTabProps) => {
                   {session.patients?.mrn} - {session.patients?.first_name} {session.patients?.last_name}
                 </TableCell>
                 <TableCell>
-                  {session.profiles?.first_name} {session.profiles?.last_name}
+                  {session.clinician?.first_name} {session.clinician?.last_name}
                 </TableCell>
                 <TableCell className="max-w-xs truncate">{session.procedure_notes || "-"}</TableCell>
                 <TableCell>
