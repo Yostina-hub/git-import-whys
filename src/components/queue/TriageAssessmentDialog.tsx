@@ -50,6 +50,15 @@ export function TriageAssessmentDialog({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Get the current ticket to preserve the token number
+      const { data: currentTicket, error: ticketFetchError } = await supabase
+        .from("tickets")
+        .select("token_number, priority")
+        .eq("id", ticketId)
+        .single();
+
+      if (ticketFetchError) throw ticketFetchError;
+
       // Create EMR note for triage assessment
       const { error: noteError } = await supabase.from("emr_notes").insert([{
         patient_id: patientId,
@@ -84,22 +93,15 @@ export function TriageAssessmentDialog({
       if (queueError) throw queueError;
       if (!doctorQueue) throw new Error("No active doctor queue found");
 
-      // Generate token for doctor queue
-      const { data: tokenData, error: tokenError } = await supabase.rpc("generate_ticket_token", {
-        queue_prefix: "Q"
-      });
-
-      if (tokenError) throw tokenError;
-
-      // Create new ticket in doctor queue
+      // Create new ticket in doctor queue with the SAME token number
       const { error: newTicketError } = await supabase
         .from("tickets")
         .insert({
           patient_id: patientId,
           queue_id: doctorQueue.id,
-          token_number: tokenData,
+          token_number: currentTicket.token_number,
           status: "waiting",
-          priority: "routine",
+          priority: currentTicket.priority,
           notes: `Transferred from triage. Chief complaint: ${chiefComplaint}`
         });
 
@@ -107,7 +109,7 @@ export function TriageAssessmentDialog({
 
       toast({
         title: "Triage complete",
-        description: `${patientName} has been transferred to doctor queue`,
+        description: `${patientName} transferred to doctor queue with token ${currentTicket.token_number}`,
       });
 
       setChiefComplaint("");
