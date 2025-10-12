@@ -12,6 +12,7 @@ import Billing from "./pages/Billing";
 import Reports from "./pages/Reports";
 import ClinicalRecords from "./pages/ClinicalRecords";
 import QueueManagement from "./pages/QueueManagement";
+import DoctorQueue from "./pages/DoctorQueue";
 import Orders from "./pages/Orders";
 import Communications from "./pages/Communications";
 import Admin from "./pages/Admin";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/reports" element={<Reports />} />
             <Route path="/clinical" element={<ClinicalRecords />} />
             <Route path="/queue" element={<QueueManagement />} />
+            <Route path="/doctor-queue" element={<DoctorQueue />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/communications" element={<Communications />} />
             <Route path="/services" element={<Services />} />
