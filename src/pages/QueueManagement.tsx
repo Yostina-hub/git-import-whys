@@ -16,6 +16,7 @@ import { QueueAnalytics } from "@/components/queue/QueueAnalytics";
 import { RoutingRules } from "@/components/queue/RoutingRules";
 import { TriageAssessmentDialog } from "@/components/queue/TriageAssessmentDialog";
 import { PostConsultationDialog } from "@/components/queue/PostConsultationDialog";
+import { PreviewPatientDialog } from "@/components/queue/PreviewPatientDialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
@@ -43,6 +44,8 @@ const QueueManagement = () => {
     patient_name: string;
     id: string;
   } | null>(null);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
+  const [previewTicket, setPreviewTicket] = useState<any | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -95,7 +98,11 @@ const QueueManagement = () => {
     console.log("Loading tickets for queue:", queueId);
     const { data, error } = await supabase
       .from("tickets")
-      .select("*, patients(first_name, last_name, mrn)")
+      .select(`
+        *, 
+        patients(first_name, last_name, mrn, date_of_birth, phone_mobile),
+        queues(name, queue_type)
+      `)
       .eq("queue_id", queueId)
       .in("status", ["waiting", "called"])
       .order("priority", { ascending: false })
@@ -391,7 +398,20 @@ const QueueManagement = () => {
                                         Assess
                                       </Button>
                                     )}
-                                    {ticket.status === "called" && (
+                                    {ticket.status === "called" && queue.queue_type === 'doctor' && (
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={() => {
+                                          setPreviewTicket(ticket);
+                                          setShowPreviewDialog(true);
+                                        }}
+                                      >
+                                        <Users className="h-4 w-4 mr-1" />
+                                        Preview
+                                      </Button>
+                                    )}
+                                    {ticket.status === "called" && queue.queue_type !== 'doctor' && (
                                       <Button size="sm" onClick={() => markServed(ticket.id)}>
                                         <CheckCircle className="h-4 w-4 mr-1" />
                                         Complete
@@ -449,6 +469,19 @@ const QueueManagement = () => {
               loadTickets(selectedQueue);
               loadQueueCounts();
             }
+          }}
+        />
+      )}
+
+      {/* Preview Dialog for Doctor Queue */}
+      {previewTicket && (
+        <PreviewPatientDialog
+          open={showPreviewDialog}
+          onOpenChange={setShowPreviewDialog}
+          ticket={previewTicket}
+          onComplete={() => {
+            markServed(previewTicket.id);
+            setShowPreviewDialog(false);
           }}
         />
       )}
