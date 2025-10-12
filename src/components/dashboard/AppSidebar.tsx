@@ -11,9 +11,9 @@ import {
   Shield,
   LayoutDashboard,
   Settings,
-  Pill,
-  AlertCircle,
   Activity,
+  Package,
+  ShoppingCart,
 } from "lucide-react";
 import {
   Sidebar,
@@ -50,6 +50,8 @@ const operationsNavItems = [
 ];
 
 const adminNavItems = [
+  { title: "Services", url: "/services", icon: ShoppingCart },
+  { title: "Packages", url: "/packages", icon: Package },
   { title: "Administration", url: "/admin", icon: Shield },
 ];
 
