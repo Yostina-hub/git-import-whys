@@ -1550,6 +1550,10 @@ export type Database = {
       }
     }
     Functions: {
+      assign_admin_role: {
+        Args: { user_email: string }
+        Returns: undefined
+      }
       generate_mrn: {
         Args: Record<PropertyKey, never>
         Returns: string
