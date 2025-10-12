@@ -338,7 +338,7 @@ const TriageQueue = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <span className={waitTime > 30 ? "text-destructive font-semibold" : ""}>
+                            <span className={waitTime > 15 ? "text-destructive font-semibold" : ""}>
                               {waitTime} min
                             </span>
                           </TableCell>
