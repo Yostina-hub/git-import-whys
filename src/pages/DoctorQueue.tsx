@@ -17,6 +17,7 @@ const DoctorQueue = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [tickets, setTickets] = useState<any[]>([]);
+  const [completedToday, setCompletedToday] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [showPatientDialog, setShowPatientDialog] = useState(false);
@@ -24,12 +25,14 @@ const DoctorQueue = () => {
   useEffect(() => {
     checkAuth();
     loadDoctorQueue();
+    loadCompletedToday();
   }, []);
 
   useEffect(() => {
     // Poll for updates every 10 seconds
     const interval = setInterval(() => {
       loadDoctorQueue();
+      loadCompletedToday();
     }, 10000);
     return () => clearInterval(interval);
   }, []);
@@ -81,6 +84,28 @@ const DoctorQueue = () => {
     } else {
       console.log("Loaded doctor queue tickets:", data);
       setTickets(data || []);
+    }
+  };
+
+  const loadCompletedToday = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const { data, error } = await supabase
+      .from("tickets")
+      .select("*, patients(id, first_name, last_name, mrn, date_of_birth)")
+      .eq("status", "served")
+      .eq("served_by", user.id)
+      .gte("served_at", today.toISOString())
+      .order("served_at", { ascending: false });
+
+    if (error) {
+      console.error("Error loading completed consultations:", error);
+    } else {
+      setCompletedToday(data || []);
     }
   };
 
@@ -145,6 +170,7 @@ const DoctorQueue = () => {
       });
       setShowPatientDialog(false);
       loadDoctorQueue();
+      loadCompletedToday();
     }
   };
 
@@ -187,99 +213,165 @@ const DoctorQueue = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                {tickets.filter(t => t.status === "waiting").length} waiting
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Stethoscope className="h-5 w-5 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                {tickets.filter(t => t.status === "called").length} in consultation
-              </span>
-            </div>
-          </div>
-          
-          <Button onClick={callNext} size="lg">
-            Call Next Patient
-          </Button>
-        </div>
+        <Tabs defaultValue="queue" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="queue">Current Queue</TabsTrigger>
+            <TabsTrigger value="completed">Today's Work ({completedToday.length})</TabsTrigger>
+          </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Patient Queue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Token</TableHead>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>MRN</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Wait Time</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tickets.map((ticket) => {
-                  const waitTime = getWaitTime(ticket.created_at);
-                  return (
-                    <TableRow key={ticket.id}>
-                      <TableCell className="font-bold">{ticket.token_number}</TableCell>
-                      <TableCell>
-                        {ticket.patients.first_name} {ticket.patients.last_name}
-                      </TableCell>
-                      <TableCell>{ticket.patients.mrn}</TableCell>
-                      <TableCell>
-                        <Badge className={getPriorityColor(ticket.priority)}>
-                          {ticket.priority.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{waitTime} min</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(ticket.status)}>
-                          {ticket.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
+          <TabsContent value="queue">
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {tickets.filter(t => t.status === "waiting").length} waiting
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Stethoscope className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {tickets.filter(t => t.status === "called").length} in consultation
+                  </span>
+                </div>
+              </div>
+              
+              <Button onClick={callNext} size="lg">
+                Call Next Patient
+              </Button>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Patient Queue</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Token</TableHead>
+                      <TableHead>Patient</TableHead>
+                      <TableHead>MRN</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Wait Time</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tickets.map((ticket) => {
+                      const waitTime = getWaitTime(ticket.created_at);
+                      return (
+                        <TableRow key={ticket.id}>
+                          <TableCell className="font-bold">{ticket.token_number}</TableCell>
+                          <TableCell>
+                            {ticket.patients.first_name} {ticket.patients.last_name}
+                          </TableCell>
+                          <TableCell>{ticket.patients.mrn}</TableCell>
+                          <TableCell>
+                            <Badge className={getPriorityColor(ticket.priority)}>
+                              {ticket.priority.toUpperCase()}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{waitTime} min</TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(ticket.status)}>
+                              {ticket.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => viewPatient(ticket)}
+                              >
+                                <FileText className="h-4 w-4 mr-1" />
+                                View
+                              </Button>
+                              {ticket.status === "called" && (
+                                <Button 
+                                  size="sm"
+                                  onClick={() => completeConsultation(ticket.id)}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Complete
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+
+                {tickets.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No patients in the doctor queue
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="completed">
+            <Card>
+              <CardHeader>
+                <CardTitle>Completed Consultations Today</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Time Completed</TableHead>
+                      <TableHead>Token</TableHead>
+                      <TableHead>Patient</TableHead>
+                      <TableHead>MRN</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {completedToday.map((ticket) => (
+                      <TableRow key={ticket.id}>
+                        <TableCell>
+                          {new Date(ticket.served_at).toLocaleTimeString()}
+                        </TableCell>
+                        <TableCell className="font-bold">{ticket.token_number}</TableCell>
+                        <TableCell>
+                          {ticket.patients.first_name} {ticket.patients.last_name}
+                        </TableCell>
+                        <TableCell>{ticket.patients.mrn}</TableCell>
+                        <TableCell>
+                          <Badge className={getPriorityColor(ticket.priority)}>
+                            {ticket.priority.toUpperCase()}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => viewPatient(ticket)}
+                            onClick={() => navigate(`/clinical?patient=${ticket.patients.id}`)}
                           >
                             <FileText className="h-4 w-4 mr-1" />
-                            View
+                            View Records
                           </Button>
-                          {ticket.status === "called" && (
-                            <Button 
-                              size="sm"
-                              onClick={() => completeConsultation(ticket.id)}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Complete
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
 
-            {tickets.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No patients in the doctor queue
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                {completedToday.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No consultations completed today yet
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Patient Details Dialog */}
