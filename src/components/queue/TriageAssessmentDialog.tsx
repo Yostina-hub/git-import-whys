@@ -61,7 +61,7 @@ export function TriageAssessmentDialog({
 
       if (noteError) throw noteError;
 
-      // Mark the ticket as served to complete triage
+      // Mark the current triage ticket as served
       const { error: ticketError } = await supabase
         .from("tickets")
         .update({ 
@@ -73,9 +73,41 @@ export function TriageAssessmentDialog({
 
       if (ticketError) throw ticketError;
 
+      // Find the doctor queue
+      const { data: doctorQueue, error: queueError } = await supabase
+        .from("queues")
+        .select("id")
+        .eq("queue_type", "doctor")
+        .eq("is_active", true)
+        .single();
+
+      if (queueError) throw queueError;
+      if (!doctorQueue) throw new Error("No active doctor queue found");
+
+      // Generate token for doctor queue
+      const { data: tokenData, error: tokenError } = await supabase.rpc("generate_ticket_token", {
+        queue_prefix: "Q"
+      });
+
+      if (tokenError) throw tokenError;
+
+      // Create new ticket in doctor queue
+      const { error: newTicketError } = await supabase
+        .from("tickets")
+        .insert({
+          patient_id: patientId,
+          queue_id: doctorQueue.id,
+          token_number: tokenData,
+          status: "waiting",
+          priority: "routine",
+          notes: `Transferred from triage. Chief complaint: ${chiefComplaint}`
+        });
+
+      if (newTicketError) throw newTicketError;
+
       toast({
-        title: "Triage assessment complete",
-        description: `${patientName} assessed and data saved to EMR. Patient removed from triage queue.`,
+        title: "Triage complete",
+        description: `${patientName} has been transferred to doctor queue`,
       });
 
       setChiefComplaint("");
