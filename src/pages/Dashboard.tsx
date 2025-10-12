@@ -2,10 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Users, Calendar, DollarSign, ClipboardList, LogOut, FileText, List, Stethoscope, Mail, Shield, UserCircle } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
+import { Users, Calendar, FileText, List, Stethoscope, Mail, DollarSign, ClipboardList } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/dashboard/AppSidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { StatsGrid } from "@/components/dashboard/StatsGrid";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -84,141 +87,157 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">SONIK EMR Dashboard</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">{user?.email}</span>
-            <Button variant="outline" size="sm" onClick={() => navigate("/profile")}>
-              <UserCircle className="h-4 w-4 mr-2" />
-              Profile
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </div>
+    <SidebarProvider defaultOpen>
+      <div className="flex min-h-screen w-full">
+        <AppSidebar isAdmin={isAdmin} />
+        
+        <div className="flex-1 flex flex-col">
+          <DashboardHeader
+            user={user}
+            onLogout={handleLogout}
+            onProfileClick={() => navigate("/profile")}
+          />
+
+          <main className="flex-1 p-6 space-y-6">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+              <p className="text-muted-foreground">
+                Welcome back! Here's what's happening today.
+              </p>
+            </div>
+
+            <StatsGrid stats={stats} />
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <Card
+                className="group hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-primary hover:border-l-primary/80"
+                onClick={() => navigate("/patients")}
+              >
+                <CardHeader className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Users className="h-10 w-10 text-primary group-hover:scale-110 transition-transform" />
+                    <span className="text-2xl font-bold text-muted-foreground">{stats.patients}</span>
+                  </div>
+                  <h3 className="font-semibold text-lg">Patient Management</h3>
+                  <CardDescription>
+                    Register, search, and manage patient records with comprehensive demographics
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+
+              <Card
+                className="group hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-blue-500 hover:border-l-blue-400"
+                onClick={() => navigate("/appointments")}
+              >
+                <CardHeader className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Calendar className="h-10 w-10 text-blue-500 group-hover:scale-110 transition-transform" />
+                    <span className="text-2xl font-bold text-muted-foreground">{stats.appointments}</span>
+                  </div>
+                  <h3 className="font-semibold text-lg">Appointments</h3>
+                  <CardDescription>
+                    Schedule, manage, and track patient appointments with real-time updates
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+
+              <Card
+                className="group hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-purple-500 hover:border-l-purple-400"
+                onClick={() => navigate("/clinical")}
+              >
+                <CardHeader className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <FileText className="h-10 w-10 text-purple-500 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Clinical Records</h3>
+                  <CardDescription>
+                    Manage assessments, treatment protocols, sessions, and EMR notes
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+
+              <Card
+                className="group hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-green-500 hover:border-l-green-400"
+                onClick={() => navigate("/billing")}
+              >
+                <CardHeader className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <DollarSign className="h-10 w-10 text-green-500 group-hover:scale-110 transition-transform" />
+                    <span className="text-2xl font-bold text-muted-foreground">
+                      ${stats.revenue.toLocaleString()}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-lg">Billing & Payments</h3>
+                  <CardDescription>
+                    Create invoices, record payments, and manage financial transactions
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+
+              <Card
+                className="group hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-orange-500 hover:border-l-orange-400"
+                onClick={() => navigate("/queue")}
+              >
+                <CardHeader className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <List className="h-10 w-10 text-orange-500 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Queue Management</h3>
+                  <CardDescription>
+                    Monitor patient flow, manage queues, and track wait times
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+
+              <Card
+                className="group hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-indigo-500 hover:border-l-indigo-400"
+                onClick={() => navigate("/orders")}
+              >
+                <CardHeader className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Stethoscope className="h-10 w-10 text-indigo-500 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Lab & Imaging Orders</h3>
+                  <CardDescription>
+                    Create and track lab tests, imaging studies, and referrals
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+
+              <Card
+                className="group hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-pink-500 hover:border-l-pink-400"
+                onClick={() => navigate("/communications")}
+              >
+                <CardHeader className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Mail className="h-10 w-10 text-pink-500 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Communications</h3>
+                  <CardDescription>
+                    Send notifications, messages, and manage patient communications
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+
+              <Card
+                className="group hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-cyan-500 hover:border-l-cyan-400"
+                onClick={() => navigate("/reports")}
+              >
+                <CardHeader className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <ClipboardList className="h-10 w-10 text-cyan-500 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Analytics & Reports</h3>
+                  <CardDescription>
+                    View comprehensive analytics, reports, and business intelligence
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </div>
+          </main>
         </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.patients}</div>
-              <p className="text-xs text-muted-foreground">Registered in system</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Appointments</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.appointments}</div>
-              <p className="text-xs text-muted-foreground">Total scheduled</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${stats.revenue.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">Total invoiced</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/patients")}>
-            <CardHeader>
-              <Users className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Patients</CardTitle>
-              <CardDescription>Register and manage patient records</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/appointments")}>
-            <CardHeader>
-              <Calendar className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Appointments</CardTitle>
-              <CardDescription>Schedule and track appointments</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/clinical")}>
-            <CardHeader>
-              <FileText className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Clinical Records</CardTitle>
-              <CardDescription>Assessments, protocols, and sessions</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/billing")}>
-            <CardHeader>
-              <DollarSign className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Billing</CardTitle>
-              <CardDescription>Manage invoices and payments</CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/queue")}>
-            <CardHeader>
-              <List className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Queue Management</CardTitle>
-              <CardDescription>Monitor and manage patient queues</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/orders")}>
-            <CardHeader>
-              <Stethoscope className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Lab & Imaging Orders</CardTitle>
-              <CardDescription>Create and track medical orders</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/communications")}>
-            <CardHeader>
-              <Mail className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Communications</CardTitle>
-              <CardDescription>Send notifications and messages</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/reports")}>
-            <CardHeader>
-              <ClipboardList className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Reports</CardTitle>
-              <CardDescription>View analytics and reports</CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-
-        {isAdmin && (
-          <div className="mt-6">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-primary" onClick={() => navigate("/admin")}>
-              <CardHeader>
-                <Shield className="h-8 w-8 mb-2 text-primary" />
-                <CardTitle>System Administration</CardTitle>
-                <CardDescription>Manage settings, audit logs, and analytics</CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-        )}
-      </main>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
