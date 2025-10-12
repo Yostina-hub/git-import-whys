@@ -85,7 +85,7 @@ export const SendNotificationDialog = ({ onSent }: SendNotificationDialogProps) 
         // Simple variable replacement
         body = template.body_template
           .replace(/{{patient_name}}/g, `${patient.first_name} ${patient.last_name}`)
-          .replace(/{{clinic_name}}/g, "SONIK EMR");
+          .replace(/{{clinic_name}}/g, "Zemar EMR");
         
         subject = template.subject?.replace(/{{patient_name}}/g, `${patient.first_name} ${patient.last_name}`);
       }

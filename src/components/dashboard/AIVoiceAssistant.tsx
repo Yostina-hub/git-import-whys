@@ -52,7 +52,7 @@ export function AIVoiceAssistant({ open, onOpenChange }: AIVoiceAssistantProps) 
               </div>
               <div>
                 <h3 className="font-semibold text-sm tracking-tight">AI Voice Assistant</h3>
-                <p className="text-xs text-muted-foreground">Powered by SONIK AI</p>
+                <p className="text-xs text-muted-foreground">Powered by Zemar AI</p>
               </div>
             </div>
             <Button

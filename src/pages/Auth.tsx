@@ -178,7 +178,7 @@ const Auth = () => {
               <Stethoscope className="h-10 w-10 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">SONIK EMR System</CardTitle>
+          <CardTitle className="text-2xl font-bold">Zemar EMR System</CardTitle>
           <CardDescription>Welcome to the clinic management platform</CardDescription>
         </CardHeader>
         <CardContent>

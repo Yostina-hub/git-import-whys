@@ -12,7 +12,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Stethoscope className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">SONIK EMR</h1>
+            <h1 className="text-2xl font-bold">Zemar EMR</h1>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate("/register")}>
@@ -146,7 +146,7 @@ const Index = () => {
             <CardHeader>
               <CardTitle className="text-2xl">Ready to Transform Your Clinic?</CardTitle>
               <CardDescription className="text-lg">
-                Join clinics worldwide using SONIK EMR to deliver better patient care
+                Join clinics worldwide using Zemar EMR to deliver better patient care
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -160,7 +160,7 @@ const Index = () => {
 
       <footer className="border-t bg-card/50 mt-16">
         <div className="container mx-auto px-4 py-8 text-center text-muted-foreground">
-          <p>© 2025 SONIK EMR. Built with modern technology for healthcare excellence.</p>
+          <p>© 2025 Zemar EMR. Built with modern technology for healthcare excellence.</p>
         </div>
       </footer>
     </div>

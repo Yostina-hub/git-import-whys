@@ -82,7 +82,7 @@ export function AppSidebar({ isAdmin }: AppSidebarProps) {
               <Activity className="w-6 h-6 text-primary-foreground" />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-lg text-sidebar-foreground">SONIK</span>
+              <span className="font-bold text-lg text-sidebar-foreground">Zemar</span>
               <span className="text-xs text-muted-foreground">EMR System</span>
             </div>
           </div>

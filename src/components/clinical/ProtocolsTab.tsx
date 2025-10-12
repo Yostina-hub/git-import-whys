@@ -136,7 +136,7 @@ const ProtocolsTab = ({ patientId }: ProtocolsTabProps) => {
                   <Input
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g., SONIK Treatment - 6 Sessions"
+                    placeholder="e.g., Zemar Treatment - 6 Sessions"
                     required
                   />
                 </div>
