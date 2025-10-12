@@ -10,10 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, ArrowLeft, Eye, Receipt, UserCheck, History, Calendar, RotateCcw } from "lucide-react";
+import { Plus, Search, ArrowLeft, Eye, Receipt, UserCheck, History, Calendar, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import { DocumentsTab } from "@/components/documents/DocumentsTab";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 interface Patient {
   id: string;
@@ -35,6 +36,11 @@ const Patients = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const ITEMS_PER_PAGE = 10;
 
   // Form state
   const [formData, setFormData] = useState({
@@ -58,7 +64,6 @@ const Patients = () => {
 
   useEffect(() => {
     checkAuth();
-    loadPatients();
   }, []);
 
   const checkAuth = async () => {
@@ -68,12 +73,25 @@ const Patients = () => {
     }
   };
 
-  const loadPatients = async () => {
+  const loadPatients = async (page: number = 1) => {
     setLoading(true);
+    
+    const from = (page - 1) * ITEMS_PER_PAGE;
+    const to = from + ITEMS_PER_PAGE - 1;
+
+    // Get total count
+    const { count } = await supabase
+      .from("patients")
+      .select("*", { count: "exact", head: true });
+
+    setTotalCount(count || 0);
+
+    // Get paginated data
     const { data, error } = await supabase
       .from("patients")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) {
       toast({
@@ -86,6 +104,10 @@ const Patients = () => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    loadPatients(currentPage);
+  }, [currentPage]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,7 +170,8 @@ const Patients = () => {
       }
 
       setIsDialogOpen(false);
-      loadPatients();
+      setCurrentPage(1);
+      loadPatients(1);
       // Reset form
       setFormData({
         first_name: "",
@@ -219,6 +242,13 @@ const Patients = () => {
       patient.phone_mobile.includes(search)
     );
   });
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   if (selectedPatient) {
     return (
@@ -523,9 +553,77 @@ const Patients = () => {
               </Table>
             </div>
 
-            {filteredPatients.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No patients found. Register your first patient to get started.
+            {filteredPatients.length === 0 && !loading && (
+              <div className="text-center py-12 text-muted-foreground">
+                {searchTerm ? "No patients found matching your search." : "No patients found. Register your first patient to get started."}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex items-center justify-between border-t pt-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to{" "}
+                  {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount} patients
+                </div>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="gap-1"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Previous
+                      </Button>
+                    </PaginationItem>
+                    
+                    {[...Array(totalPages)].map((_, index) => {
+                      const page = index + 1;
+                      // Show first, last, current, and adjacent pages
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              onClick={() => handlePageChange(page)}
+                              isActive={currentPage === page}
+                              className="cursor-pointer"
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      } else if (page === currentPage - 2 || page === currentPage + 2) {
+                        return (
+                          <PaginationItem key={page}>
+                            <span className="px-3 text-muted-foreground">...</span>
+                          </PaginationItem>
+                        );
+                      }
+                      return null;
+                    })}
+
+                    <PaginationItem>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="gap-1"
+                      >
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             )}
           </CardContent>
