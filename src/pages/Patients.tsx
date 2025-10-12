@@ -73,25 +73,28 @@ const Patients = () => {
     }
   };
 
-  const loadPatients = async (page: number = 1) => {
+  const loadPatients = async (page: number = 1, search: string = "") => {
     setLoading(true);
     
     const from = (page - 1) * ITEMS_PER_PAGE;
     const to = from + ITEMS_PER_PAGE - 1;
 
-    // Get total count
-    const { count } = await supabase
+    let query = supabase
       .from("patients")
-      .select("*", { count: "exact", head: true });
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false });
 
+    // Apply search filter if exists
+    if (search) {
+      query = query.or(`mrn.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%,phone_mobile.ilike.%${search}%`);
+    }
+
+    // Get total count with search filter
+    const { count } = await query;
     setTotalCount(count || 0);
 
     // Get paginated data
-    const { data, error } = await supabase
-      .from("patients")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .range(from, to);
+    const { data, error } = await query.range(from, to);
 
     if (error) {
       toast({
@@ -99,6 +102,7 @@ const Patients = () => {
         title: "Error loading patients",
         description: error.message,
       });
+      setPatients([]);
     } else {
       setPatients(data || []);
     }
@@ -106,7 +110,7 @@ const Patients = () => {
   };
 
   useEffect(() => {
-    loadPatients(currentPage);
+    loadPatients(currentPage, searchTerm);
   }, [currentPage]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -233,21 +237,17 @@ const Patients = () => {
     });
   };
 
-  const filteredPatients = patients.filter((patient) => {
-    const search = searchTerm.toLowerCase();
-    return (
-      patient.mrn.toLowerCase().includes(search) ||
-      patient.first_name.toLowerCase().includes(search) ||
-      patient.last_name.toLowerCase().includes(search) ||
-      patient.phone_mobile.includes(search)
-    );
-  });
-
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+    loadPatients(1, value);
   };
 
   if (selectedPatient) {
@@ -457,7 +457,7 @@ const Patients = () => {
               <Input
                 placeholder="Search by MRN, name, or phone..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
                 className="max-w-sm"
               />
             </div>
@@ -476,7 +476,7 @@ const Patients = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredPatients.map((patient) => (
+                  {patients.map((patient) => (
                     <TableRow key={patient.id} className="hover:bg-muted/30 transition-colors">
                       <TableCell className="font-mono font-medium text-primary">{patient.mrn}</TableCell>
                       <TableCell className="font-medium">
@@ -553,14 +553,14 @@ const Patients = () => {
               </Table>
             </div>
 
-            {filteredPatients.length === 0 && !loading && (
+            {patients.length === 0 && !loading && (
               <div className="text-center py-12 text-muted-foreground">
                 {searchTerm ? "No patients found matching your search." : "No patients found. Register your first patient to get started."}
               </div>
             )}
 
             {/* Pagination */}
-            {totalPages > 1 && (
+            {!loading && totalCount > 0 && (
               <div className="mt-6 flex items-center justify-between border-t pt-4">
                 <div className="text-sm text-muted-foreground">
                   Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to{" "}
