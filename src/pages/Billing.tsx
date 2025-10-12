@@ -44,19 +44,18 @@ const Billing = () => {
     
     let query = supabase
       .from("invoices")
-      .select("*, patients(first_name, last_name, mrn)")
-      .order("created_at", { ascending: false });
+      .select("*, patients!inner(first_name, last_name, mrn)")
+      .order("created_at", { ascending: false })
+      .limit(50);
 
-    // Filter by patient if viewing specific patient
     if (patientId) {
       query = query.eq("patient_id", patientId);
       
-      // Load patient info
       const { data: patient } = await supabase
         .from("patients")
         .select("first_name, last_name, mrn")
         .eq("id", patientId)
-        .single();
+        .maybeSingle();
       
       setPatientInfo(patient);
     }

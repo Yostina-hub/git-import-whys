@@ -25,25 +25,25 @@ export function AdminDashboard() {
 
   const loadAdminStats = async () => {
     try {
-      const [patients, appointments, invoices, clinics, users, todayAppts] = await Promise.all([
+      const today = new Date().toISOString().split("T")[0];
+      const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
+
+      const [patients, appointments, clinics, users, todayAppts] = await Promise.all([
         supabase.from("patients").select("id", { count: "exact", head: true }),
         supabase.from("appointments").select("id", { count: "exact", head: true }),
-        supabase.from("invoices").select("total_amount"),
         supabase.from("clinics").select("id", { count: "exact", head: true }).eq("is_active", true),
         supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "active"),
         supabase
           .from("appointments")
           .select("id", { count: "exact", head: true })
-          .gte("scheduled_start", new Date().toISOString().split("T")[0])
-          .lt("scheduled_start", new Date(Date.now() + 86400000).toISOString().split("T")[0]),
+          .gte("scheduled_start", today)
+          .lt("scheduled_start", tomorrow),
       ]);
-
-      const revenue = invoices.data?.reduce((sum, inv) => sum + Number(inv.total_amount || 0), 0) || 0;
 
       setStats({
         totalPatients: patients.count || 0,
         totalAppointments: appointments.count || 0,
-        totalRevenue: revenue,
+        totalRevenue: 0,
         activeClinics: clinics.count || 0,
         activeUsers: users.count || 0,
         todayAppointments: todayAppts.count || 0,

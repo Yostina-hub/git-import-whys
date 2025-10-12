@@ -64,10 +64,11 @@ const Appointments = () => {
     const [apptRes, patRes, provRes, clinRes, svcRes] = await Promise.all([
       supabase
         .from("appointments")
-        .select("*, patients(first_name, last_name, mrn), profiles(first_name, last_name), services(name)")
-        .order("scheduled_start", { ascending: false }),
-      supabase.from("patients").select("*").order("first_name"),
-      supabase.from("profiles").select("*").order("first_name"),
+        .select("*, patients!inner(first_name, last_name, mrn), profiles!inner(first_name, last_name), services!inner(name)")
+        .order("scheduled_start", { ascending: false })
+        .limit(100),
+      supabase.from("patients").select("id, first_name, last_name, mrn").order("first_name").limit(100),
+      supabase.from("profiles").select("id, first_name, last_name").order("first_name"),
       supabase.from("clinics").select("*").eq("is_active", true),
       supabase.from("services").select("*").eq("is_active", true),
     ]);
@@ -78,7 +79,6 @@ const Appointments = () => {
     if (clinRes.data) setClinics(clinRes.data);
     if (svcRes.data) setServices(svcRes.data);
 
-    // Set default clinic
     if (clinRes.data && clinRes.data.length > 0) {
       setFormData(prev => ({ ...prev, clinic_id: clinRes.data[0].id }));
     }
