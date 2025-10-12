@@ -835,6 +835,45 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_types: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          requires_reference: boolean | null
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          requires_reference?: boolean | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          requires_reference?: boolean | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -958,6 +997,93 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      price_list_items: {
+        Row: {
+          created_at: string | null
+          custom_price: number
+          discount_percentage: number | null
+          id: string
+          price_list_id: string
+          service_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          custom_price: number
+          discount_percentage?: number | null
+          id?: string
+          price_list_id: string
+          service_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          custom_price?: number
+          discount_percentage?: number | null
+          id?: string
+          price_list_id?: string
+          service_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_list_items_price_list_id_fkey"
+            columns: ["price_list_id"]
+            isOneToOne: false
+            referencedRelation: "price_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_list_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      price_lists: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          markup_percentage: number | null
+          name: string
+          updated_at: string | null
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          markup_percentage?: number | null
+          name: string
+          updated_at?: string | null
+          valid_from: string
+          valid_to?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          markup_percentage?: number | null
+          name?: string
+          updated_at?: string | null
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

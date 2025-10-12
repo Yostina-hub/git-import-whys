@@ -24,6 +24,7 @@ import AppLayout from "./layouts/AppLayout";
 import PublicPortal from "./pages/PublicPortal";
 import Resources from "./pages/Resources";
 import QueueDisplay from "./pages/QueueDisplay";
+import Configuration from "./pages/Configuration";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
             <Route path="/resources" element={<Resources />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/configuration" element={<Configuration />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
