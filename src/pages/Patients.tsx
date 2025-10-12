@@ -42,6 +42,13 @@ const Patients = () => {
   const [totalCount, setTotalCount] = useState(0);
   const ITEMS_PER_PAGE = 10;
 
+  // Registration service state
+  const [registrationService, setRegistrationService] = useState<{
+    id: string;
+    unit_price: number;
+    name: string;
+  } | null>(null);
+
   // Form state
   const [formData, setFormData] = useState({
     first_name: "",
@@ -60,10 +67,35 @@ const Patients = () => {
     emergency_contact_phone: "",
   });
 
-  const REGISTRATION_FEE = 50.00; // Registration fee amount
+  const loadRegistrationService = async () => {
+    const { data, error } = await supabase
+      .from("services")
+      .select("id, name, unit_price")
+      .eq("code", "REG-FEE")
+      .eq("is_active", true)
+      .single();
+
+    if (error) {
+      console.error("Error loading registration service:", error);
+      toast({
+        variant: "destructive",
+        title: "Warning",
+        description: "Could not load registration fee service. Using default value.",
+      });
+      // Set default fallback
+      setRegistrationService({
+        id: "",
+        name: "Registration Fee",
+        unit_price: 50.00
+      });
+    } else {
+      setRegistrationService(data);
+    }
+  };
 
   useEffect(() => {
     checkAuth();
+    loadRegistrationService();
   }, []);
 
   const checkAuth = async () => {
@@ -115,6 +147,16 @@ const Patients = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!registrationService) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Registration service not loaded. Please refresh the page.",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -138,18 +180,19 @@ const Patients = () => {
       const invoiceData = {
         patient_id: patientData.id,
         status: "issued" as const,
-        subtotal: REGISTRATION_FEE,
+        subtotal: registrationService.unit_price,
         tax_amount: 0,
-        total_amount: REGISTRATION_FEE,
-        balance_due: REGISTRATION_FEE,
+        total_amount: registrationService.unit_price,
+        balance_due: registrationService.unit_price,
         issued_at: new Date().toISOString(),
         created_by: user?.id,
         lines: [
           {
-            description: "Patient Registration Fee",
+            service_id: registrationService.id,
+            description: registrationService.name,
             quantity: 1,
-            unit_price: REGISTRATION_FEE,
-            total: REGISTRATION_FEE,
+            unit_price: registrationService.unit_price,
+            total: registrationService.unit_price,
             item_type: "service",
           },
         ],
@@ -492,7 +535,9 @@ const Patients = () => {
                       </TableCell>
                       <TableCell className="font-medium">{patient.phone_mobile}</TableCell>
                       <TableCell>
-                        <Badge variant="secondary">${REGISTRATION_FEE.toFixed(2)}</Badge>
+                        <Badge variant="secondary">
+                          ${registrationService?.unit_price.toFixed(2) || "0.00"}
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
