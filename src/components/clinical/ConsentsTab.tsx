@@ -407,7 +407,7 @@ By signing below, I acknowledge that I have read and understood this consent.`,
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-md border" />
+                          <video ref={videoRef} autoPlay playsInline muted onLoadedMetadata={() => videoRef.current?.play()} className="w-full rounded-md border" />
                           <canvas ref={canvasRef} className="hidden" />
                           <div className="flex gap-2">
                             <Button type="button" onClick={capturePhoto} className="flex-1">
@@ -471,7 +471,10 @@ By signing below, I acknowledge that I have read and understood this consent.`,
                   <div className="border-2 border-input rounded-md bg-white">
                     <SignatureCanvas
                       ref={signaturePadRef}
+                      penColor="#111827"
                       canvasProps={{
+                        width: 600,
+                        height: 160,
                         className: "w-full h-40 cursor-crosshair",
                         style: { touchAction: 'none' }
                       }}
