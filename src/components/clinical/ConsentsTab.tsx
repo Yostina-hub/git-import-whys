@@ -133,34 +133,59 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'user',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
-      });
+      // Stop any previous stream
+      if (videoRef.current?.srcObject) {
+        const prev = videoRef.current.srcObject as MediaStream;
+        prev.getTracks().forEach(t => t.stop());
+        videoRef.current.srcObject = null;
+      }
+
+      // First request to prompt for permission on iOS/Safari
+      const permissionStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+
+      // Try to pick the front camera explicitly
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoInputs = devices.filter(d => d.kind === 'videoinput');
+      const frontRegex = /front|user|facetime/i;
+      const frontCamId = videoInputs.find(d => frontRegex.test(d.label))?.deviceId || videoInputs[0]?.deviceId;
+
+      let stream: MediaStream = permissionStream;
+      if (frontCamId) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { deviceId: { exact: frontCamId }, width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: false,
+          });
+          // Close the initial permission stream
+          permissionStream.getTracks().forEach(t => t.stop());
+        } catch (e) {
+          console.warn('Exact device selection failed, using permission stream instead', e);
+        }
+      }
+
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.muted = true;
-        videoRef.current.playsInline = true;
-        
-        // Wait for metadata to load before playing
-        videoRef.current.onloadedmetadata = async () => {
+        const el = videoRef.current;
+        el.srcObject = stream;
+        el.muted = true;
+        el.playsInline = true;
+        el.setAttribute('playsinline', 'true');
+        el.setAttribute('autoplay', 'true');
+
+        el.onloadedmetadata = async () => {
           try {
-            await videoRef.current!.play();
+            await el.play();
             setIsCameraOpen(true);
           } catch (playError) {
-            console.error("Play error:", playError);
+            console.error('Play error:', playError);
           }
         };
       }
     } catch (error) {
-      console.error("Camera access error:", error);
+      console.error('Camera access error:', error);
       toast({
-        variant: "destructive",
-        title: "Camera Error",
-        description: "Could not access camera. Please check permissions.",
+        variant: 'destructive',
+        title: 'Camera Error',
+        description: 'Could not access camera. Please check permissions.',
       });
     }
   };
@@ -472,8 +497,7 @@ By signing below, I acknowledge that I have read and understood this consent.`,
                             autoPlay 
                             playsInline 
                             muted 
-                            className="w-full rounded-md border bg-black"
-                            style={{ maxHeight: '300px' }}
+                            className="w-full aspect-video h-56 sm:h-64 rounded-md border bg-black object-cover"
                           />
                           <canvas ref={canvasRef} className="hidden" />
                           <div className="flex gap-2">
