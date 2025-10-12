@@ -93,33 +93,45 @@ export function AIVoiceAssistant({ open, onOpenChange }: AIVoiceAssistantProps) 
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 justify-center">
+          <div className="flex flex-col items-center gap-3">
             <Button
               size="lg"
               onClick={toggleListening}
-              className="gap-2"
+              className="gap-2 min-w-[200px] bg-slate-700 hover:bg-slate-800 text-white"
               variant={isListening ? "destructive" : "default"}
             >
-              <Mic className="h-5 w-5" />
               {isListening ? "Stop Listening" : "Click to speak"}
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => setIsMuted(!isMuted)}
-              className="gap-2"
+            <Button 
+              variant="link" 
+              className="text-primary font-medium"
             >
-              {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-              {isMuted ? "Unmute" : "Mute"}
+              View All
             </Button>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 border-t bg-muted/30 p-4">
-          <p className="text-xs text-center text-muted-foreground">
-            Voice commands are processed securely. Your privacy is protected.
-          </p>
+        {/* Floating Status Button */}
+        <div className="absolute bottom-6 right-6">
+          <div className="relative">
+            <Button
+              size="icon"
+              onClick={() => setIsMuted(!isMuted)}
+              className={`h-20 w-20 rounded-full ${
+                isMuted 
+                  ? 'bg-red-400 hover:bg-red-500' 
+                  : 'bg-primary hover:bg-primary/90'
+              }`}
+            >
+              {isMuted ? <MicOff className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
+            </Button>
+            {isListening && (
+              <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
+                <p className="text-sm font-medium text-green-600">completed</p>
+                <p className="text-xs text-muted-foreground">10 min ago</p>
+              </div>
+            )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>
