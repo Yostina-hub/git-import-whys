@@ -76,14 +76,6 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
       return;
     }
 
-    if (!photoData) {
-      toast({
-        variant: "destructive",
-        title: "Photo required",
-        description: "Please take a photo to verify identity.",
-      });
-      return;
-    }
 
     setLoading(true);
 
@@ -402,7 +394,7 @@ By signing below, I acknowledge that I have read and understood this consent.`,
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Photo Verification *</Label>
+                  <Label>Photo Verification (Optional)</Label>
                   {!photoData ? (
                     <div className="space-y-3">
                       {!isCameraOpen ? (
