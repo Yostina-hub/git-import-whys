@@ -150,7 +150,7 @@ const Patients = () => {
             .eq("patient_id", patient.id)
             .order("created_at", { ascending: false })
             .limit(1)
-            .single();
+            .maybeSingle();
 
           const { data: queueData } = await supabase
             .from("tickets")
@@ -159,7 +159,7 @@ const Patients = () => {
             .in("status", ["waiting", "called"])
             .order("created_at", { ascending: false })
             .limit(1)
-            .single();
+            .maybeSingle();
 
           return {
             ...patient,
