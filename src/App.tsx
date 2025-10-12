@@ -20,6 +20,7 @@ import Services from "./pages/Services";
 import Packages from "./pages/Packages";
 import Visits from "./pages/Visits";
 import NotFound from "./pages/NotFound";
+import AppLayout from "./layouts/AppLayout";
 
 const queryClient = new QueryClient();
 
@@ -32,21 +33,24 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/patients" element={<Patients />} />
-          <Route path="/appointments" element={<Appointments />} />
-          <Route path="/billing" element={<Billing />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/clinical" element={<ClinicalRecords />} />
-          <Route path="/queue" element={<QueueManagement />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/communications" element={<Communications />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/packages" element={<Packages />} />
-          <Route path="/visits" element={<Visits />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/profile" element={<Profile />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+
+          <Route element={<AppLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/patients" element={<Patients />} />
+            <Route path="/appointments" element={<Appointments />} />
+            <Route path="/billing" element={<Billing />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/clinical" element={<ClinicalRecords />} />
+            <Route path="/queue" element={<QueueManagement />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/communications" element={<Communications />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/packages" element={<Packages />} />
+            <Route path="/visits" element={<Visits />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
