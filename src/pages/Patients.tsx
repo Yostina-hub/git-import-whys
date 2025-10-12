@@ -10,11 +10,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, ArrowLeft, Eye, Receipt, UserCheck, History, Calendar, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, ArrowLeft, Eye, Receipt, UserCheck, History, Calendar, RotateCcw, ChevronLeft, ChevronRight, ListPlus } from "lucide-react";
 import { DocumentsTab } from "@/components/documents/DocumentsTab";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { AddToQueueDialog } from "@/components/patients/AddToQueueDialog";
 
 interface Patient {
   id: string;
@@ -28,6 +29,8 @@ interface Patient {
   email?: string;
   registration_invoice_status?: string;
   registration_invoice_id?: string;
+  queue_status?: string;
+  queue_token?: string;
 }
 
 const Patients = () => {
@@ -138,7 +141,7 @@ const Patients = () => {
       });
       setPatients([]);
     } else {
-      // Fetch registration invoice status for each patient
+      // Fetch registration invoice status and queue status for each patient
       const patientsWithStatus = await Promise.all(
         (data || []).map(async (patient) => {
           const { data: invoiceData } = await supabase
@@ -149,10 +152,21 @@ const Patients = () => {
             .limit(1)
             .single();
 
+          const { data: queueData } = await supabase
+            .from("tickets")
+            .select("status, token_number")
+            .eq("patient_id", patient.id)
+            .in("status", ["waiting", "called"])
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
           return {
             ...patient,
             registration_invoice_status: invoiceData?.status || "pending",
             registration_invoice_id: invoiceData?.id || null,
+            queue_status: queueData?.status || null,
+            queue_token: queueData?.token_number || null,
           };
         })
       );
@@ -575,6 +589,7 @@ const Patients = () => {
                     <TableHead className="font-semibold">Phone</TableHead>
                     <TableHead className="font-semibold">Reg. Fee</TableHead>
                     <TableHead className="font-semibold">Payment Status</TableHead>
+                    <TableHead className="font-semibold">Queue Status</TableHead>
                     <TableHead className="text-right font-semibold">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -598,6 +613,20 @@ const Patients = () => {
                         <span className="font-semibold text-primary">
                           ${registrationService?.unit_price.toFixed(2) || "0.00"}
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        {patient.queue_status ? (
+                          <div className="flex items-center gap-2">
+                            <Badge variant={patient.queue_status === "waiting" ? "default" : "secondary"}>
+                              {patient.queue_token}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground capitalize">
+                              {patient.queue_status}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Not in queue</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         {getStatusBadge(patient.registration_invoice_status)}
@@ -648,6 +677,14 @@ const Patients = () => {
                             >
                               <RotateCcw className="h-4 w-4 mr-2" />
                               Schedule Recheck
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                              <AddToQueueDialog
+                                patientId={patient.id}
+                                patientName={`${patient.first_name} ${patient.last_name}`}
+                                onSuccess={() => loadPatients(currentPage, searchTerm)}
+                              />
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleViewPatient(patient)}
