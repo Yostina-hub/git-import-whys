@@ -52,10 +52,10 @@ export const SendNotificationDialog = ({ onSent }: SendNotificationDialogProps) 
 
   const loadTemplates = async () => {
     const { data } = await supabase
-      .from("notification_templates")
+      .from("notification_templates" as any)
       .select("*")
       .eq("is_active", true);
-    setTemplates(data || []);
+    setTemplates(data as any || []);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,7 +91,7 @@ export const SendNotificationDialog = ({ onSent }: SendNotificationDialogProps) 
       }
 
       // Log the notification (in a real system, this would trigger actual sending)
-      const { error } = await supabase.from("notifications_log").insert({
+      const { error } = await supabase.from("notifications_log" as any).insert({
         recipient_type: "patient",
         recipient_id: selectedPatient,
         notification_type: template?.type || "internal",
@@ -99,7 +99,7 @@ export const SendNotificationDialog = ({ onSent }: SendNotificationDialogProps) 
         body: body,
         status: "sent", // In production, this would be "pending" until actually sent
         sent_at: new Date().toISOString(),
-      });
+      } as any);
 
       if (error) throw error;
 

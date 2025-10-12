@@ -37,13 +37,13 @@ const Communications = () => {
 
     // Get total sent notifications
     const { count: totalSent } = await supabase
-      .from("notifications_log")
+      .from("notifications_log" as any)
       .select("*", { count: "exact", head: true })
       .eq("status", "sent");
 
     // Get pending scheduled notifications
     const { count: pendingScheduled } = await supabase
-      .from("scheduled_notifications")
+      .from("scheduled_notifications" as any)
       .select("*", { count: "exact", head: true })
       .eq("status", "pending");
 
@@ -51,7 +51,7 @@ const Communications = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const { count: failedToday } = await supabase
-      .from("notifications_log")
+      .from("notifications_log" as any)
       .select("*", { count: "exact", head: true })
       .eq("status", "failed")
       .gte("created_at", today.toISOString());

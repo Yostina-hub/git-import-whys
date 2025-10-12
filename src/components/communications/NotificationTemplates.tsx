@@ -40,12 +40,12 @@ export const NotificationTemplates = () => {
   const loadTemplates = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("notification_templates")
+      .from("notification_templates" as any)
       .select("*")
       .order("created_at", { ascending: false });
 
     if (!error && data) {
-      setTemplates(data);
+      setTemplates(data as any);
     }
     setLoading(false);
   };

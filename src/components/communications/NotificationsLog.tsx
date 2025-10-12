@@ -35,13 +35,13 @@ export const NotificationsLog = () => {
   const loadNotifications = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("notifications_log")
+      .from("notifications_log" as any)
       .select("*")
       .order("created_at", { ascending: false })
       .limit(100);
 
     if (!error && data) {
-      setNotifications(data);
+      setNotifications(data as any);
     }
     setLoading(false);
   };
