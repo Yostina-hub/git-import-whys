@@ -72,6 +72,7 @@ export function ClinicsTab() {
             <TableHeader>
               <TableRow>
                 <TableHead>Clinic Name</TableHead>
+                <TableHead>Code</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Timezone</TableHead>
@@ -87,6 +88,9 @@ export function ClinicsTab() {
                       <Building2 className="h-4 w-4 text-primary" />
                       {clinic.name}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{clinic.code || "—"}</Badge>
                   </TableCell>
                   <TableCell>
                     {clinic.city && clinic.country ? (

@@ -20,6 +20,7 @@ export function ManageClinicDialog({ open, onOpenChange, clinic, onSuccess }: Ma
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
+    code: "",
     address_line1: "",
     address_line2: "",
     city: "",
@@ -36,6 +37,7 @@ export function ManageClinicDialog({ open, onOpenChange, clinic, onSuccess }: Ma
     if (clinic) {
       setFormData({
         name: clinic.name || "",
+        code: clinic.code || "",
         address_line1: clinic.address_line1 || "",
         address_line2: clinic.address_line2 || "",
         city: clinic.city || "",
@@ -50,6 +52,7 @@ export function ManageClinicDialog({ open, onOpenChange, clinic, onSuccess }: Ma
     } else {
       setFormData({
         name: "",
+        code: "",
         address_line1: "",
         address_line2: "",
         city: "",
@@ -97,15 +100,29 @@ export function ManageClinicDialog({ open, onOpenChange, clinic, onSuccess }: Ma
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="name">Clinic Name *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Main Clinic"
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="name">Clinic Name *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Main Clinic"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="code">Clinic Code *</Label>
+              <Input
+                id="code"
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                placeholder="HQ, BR-001, etc."
+                required
+                maxLength={20}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Unique identifier for this clinic</p>
+            </div>
           </div>
 
           <div className="space-y-4">
