@@ -102,7 +102,8 @@ const Billing = () => {
                     <TableRow>
                       <TableHead>Invoice #</TableHead>
                       <TableHead>Patient</TableHead>
-                      <TableHead>Total Amount</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Amount</TableHead>
                       <TableHead>Balance Due</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Date</TableHead>
@@ -110,14 +111,25 @@ const Billing = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {invoices.map((invoice) => (
+                    {invoices.map((invoice) => {
+                      const lines = Array.isArray(invoice.lines) ? invoice.lines : [];
+                      const description = lines.length > 0 
+                        ? lines[0].description || "Invoice"
+                        : "Invoice";
+                      
+                      return (
                       <TableRow key={invoice.id}>
                         <TableCell className="font-medium">{invoice.id.slice(0, 8)}</TableCell>
                         <TableCell>
                           {invoice.patients?.mrn} - {invoice.patients?.first_name} {invoice.patients?.last_name}
                         </TableCell>
-                        <TableCell>${Number(invoice.total_amount || 0).toFixed(2)}</TableCell>
-                        <TableCell>${Number(invoice.balance_due || 0).toFixed(2)}</TableCell>
+                        <TableCell className="text-muted-foreground">{description}</TableCell>
+                        <TableCell className="font-semibold">
+                          ${Number(invoice.total_amount || 0).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="font-semibold text-destructive">
+                          ${Number(invoice.balance_due || 0).toFixed(2)}
+                        </TableCell>
                         <TableCell>
                           <Badge className={getStatusColor(invoice.status)}>
                             {invoice.status}
@@ -138,7 +150,8 @@ const Billing = () => {
                           )}
                         </TableCell>
                       </TableRow>
-                    ))}
+                      );
+                    })}
                   </TableBody>
                 </Table>
 
