@@ -26,6 +26,8 @@ interface Patient {
   sex_at_birth: string;
   phone_mobile: string;
   email?: string;
+  registration_invoice_status?: string;
+  registration_invoice_id?: string;
 }
 
 const Patients = () => {
@@ -136,13 +138,54 @@ const Patients = () => {
       });
       setPatients([]);
     } else {
-      setPatients(data || []);
+      // Fetch registration invoice status for each patient
+      const patientsWithStatus = await Promise.all(
+        (data || []).map(async (patient) => {
+          const { data: invoiceData } = await supabase
+            .from("invoices")
+            .select("id, status")
+            .eq("patient_id", patient.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
+          return {
+            ...patient,
+            registration_invoice_status: invoiceData?.status || "pending",
+            registration_invoice_id: invoiceData?.id || null,
+          };
+        })
+      );
+
+      setPatients(patientsWithStatus);
     }
     setLoading(false);
   };
 
   useEffect(() => {
     loadPatients(currentPage, searchTerm);
+
+    // Subscribe to invoice changes for realtime updates
+    const channel = supabase
+      .channel('invoice-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'invoices'
+        },
+        (payload) => {
+          console.log('Invoice changed:', payload);
+          // Reload patients to get updated status
+          loadPatients(currentPage, searchTerm);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [currentPage]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -212,7 +255,7 @@ const Patients = () => {
       } else {
         toast({
           title: "Patient registered successfully",
-          description: `MRN: ${mrn}. Registration fee invoice created.`,
+          description: `MRN: ${mrn}. Registration fee invoice created and sent to billing.`,
         });
       }
 
@@ -250,8 +293,12 @@ const Patients = () => {
     setSelectedPatient(patient);
   };
 
-  const handleViewInvoices = (patientId: string, patientName: string) => {
-    navigate(`/billing?patient=${patientId}`);
+  const handleViewInvoices = (patientId: string, invoiceId: string | undefined, patientName: string) => {
+    if (invoiceId) {
+      navigate(`/billing?invoice=${invoiceId}`);
+    } else {
+      navigate(`/billing?patient=${patientId}`);
+    }
     toast({
       title: "Opening Billing",
       description: `Viewing invoices for ${patientName}`,
@@ -278,6 +325,18 @@ const Patients = () => {
       title: "Schedule Recheck",
       description: "Recheck scheduling feature - coming soon",
     });
+  };
+
+  const getStatusBadge = (status?: string) => {
+    if (!status || status === "pending" || status === "issued" || status === "draft") {
+      return <Badge variant="destructive">Unpaid</Badge>;
+    } else if (status === "paid") {
+      return <Badge variant="default" className="bg-green-600">Paid</Badge>;
+    } else if (status === "partial") {
+      return <Badge variant="secondary">Partial</Badge>;
+    } else {
+      return <Badge variant="outline">{status}</Badge>;
+    }
   };
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
@@ -514,7 +573,7 @@ const Patients = () => {
                     <TableHead className="font-semibold">Gender</TableHead>
                     <TableHead className="font-semibold">DOB</TableHead>
                     <TableHead className="font-semibold">Phone</TableHead>
-                    <TableHead className="font-semibold">Reg. Fee</TableHead>
+                    <TableHead className="font-semibold">Payment Status</TableHead>
                     <TableHead className="text-right font-semibold">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -535,9 +594,7 @@ const Patients = () => {
                       </TableCell>
                       <TableCell className="font-medium">{patient.phone_mobile}</TableCell>
                       <TableCell>
-                        <Badge variant="secondary">
-                          ${registrationService?.unit_price.toFixed(2) || "0.00"}
-                        </Badge>
+                        {getStatusBadge(patient.registration_invoice_status)}
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
@@ -555,7 +612,11 @@ const Patients = () => {
                               View Details
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleViewInvoices(patient.id, `${patient.first_name} ${patient.last_name}`)}
+                              onClick={() => handleViewInvoices(
+                                patient.id, 
+                                patient.registration_invoice_id,
+                                `${patient.first_name} ${patient.last_name}`
+                              )}
                               className="cursor-pointer"
                             >
                               <Receipt className="h-4 w-4 mr-2" />
