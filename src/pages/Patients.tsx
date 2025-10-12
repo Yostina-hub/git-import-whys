@@ -140,36 +140,53 @@ const Patients = () => {
         description: error.message,
       });
       setPatients([]);
-    } else {
-      // Fetch registration invoice status and queue status for each patient
-      const patientsWithStatus = await Promise.all(
-        (data || []).map(async (patient) => {
-          const { data: invoiceData } = await supabase
-            .from("invoices")
-            .select("id, status")
-            .eq("patient_id", patient.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+    } else if (data) {
+      // Get all patient IDs for batch queries
+      const patientIds = data.map(p => p.id);
 
-          const { data: queueData } = await supabase
-            .from("tickets")
-            .select("status, token_number")
-            .eq("patient_id", patient.id)
-            .in("status", ["waiting", "called"])
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+      // Batch fetch all invoices at once
+      const { data: invoices } = await supabase
+        .from("invoices")
+        .select("id, status, patient_id, created_at")
+        .in("patient_id", patientIds)
+        .order("created_at", { ascending: false });
 
-          return {
-            ...patient,
-            registration_invoice_status: invoiceData?.status || "pending",
-            registration_invoice_id: invoiceData?.id || null,
-            queue_status: queueData?.status || null,
-            queue_token: queueData?.token_number || null,
-          };
-        })
-      );
+      // Batch fetch all active tickets at once
+      const { data: tickets } = await supabase
+        .from("tickets")
+        .select("status, token_number, patient_id, created_at")
+        .in("patient_id", patientIds)
+        .in("status", ["waiting", "called"])
+        .order("created_at", { ascending: false });
+
+      // Create lookup maps for O(1) access
+      const invoiceMap = new Map();
+      invoices?.forEach(inv => {
+        if (!invoiceMap.has(inv.patient_id)) {
+          invoiceMap.set(inv.patient_id, inv);
+        }
+      });
+
+      const ticketMap = new Map();
+      tickets?.forEach(ticket => {
+        if (!ticketMap.has(ticket.patient_id)) {
+          ticketMap.set(ticket.patient_id, ticket);
+        }
+      });
+
+      // Map patients with their related data
+      const patientsWithStatus = data.map(patient => {
+        const invoice = invoiceMap.get(patient.id);
+        const ticket = ticketMap.get(patient.id);
+
+        return {
+          ...patient,
+          registration_invoice_status: invoice?.status || "pending",
+          registration_invoice_id: invoice?.id || null,
+          queue_status: ticket?.status || null,
+          queue_token: ticket?.token_number || null,
+        };
+      });
 
       setPatients(patientsWithStatus);
     }
