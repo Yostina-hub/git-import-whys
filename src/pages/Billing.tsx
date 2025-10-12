@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, DollarSign, Plus } from "lucide-react";
+import { ArrowLeft, DollarSign } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { CreateInvoiceDialog } from "@/components/billing/CreateInvoiceDialog";
+import { RecordPaymentDialog } from "@/components/billing/RecordPaymentDialog";
 
 const Billing = () => {
   const navigate = useNavigate();
@@ -74,10 +76,7 @@ const Billing = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Invoices</CardTitle>
-              <Button disabled>
-                <Plus className="h-4 w-4 mr-2" />
-                New Invoice
-              </Button>
+              <CreateInvoiceDialog onInvoiceCreated={loadInvoices} />
             </div>
           </CardHeader>
           <CardContent>
@@ -90,6 +89,7 @@ const Billing = () => {
                   <TableHead>Balance Due</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -111,6 +111,14 @@ const Billing = () => {
                         ? new Date(invoice.issued_at).toLocaleDateString()
                         : new Date(invoice.created_at).toLocaleDateString()
                       }
+                    </TableCell>
+                    <TableCell>
+                      {invoice.balance_due > 0 && invoice.status !== 'void' && (
+                        <RecordPaymentDialog 
+                          invoice={invoice} 
+                          onPaymentRecorded={loadInvoices} 
+                        />
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
