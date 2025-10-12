@@ -177,33 +177,46 @@ const TriageQueue = () => {
   };
 
   const callNext = async () => {
-    const nextTicket = tickets.find(t => t.status === "waiting");
-    
-    if (!nextTicket) {
-      toast({
-        title: "No patients waiting",
-        description: "There are no patients in the triage queue.",
-      });
-      return;
-    }
+    try {
+      const nextTicket = tickets.find(t => t.status === "waiting");
+      
+      if (!nextTicket) {
+        toast({
+          title: "No patients waiting",
+          description: "There are no patients in the triage queue.",
+        });
+        return;
+      }
 
-    const { error } = await supabase
-      .from("tickets")
-      .update({ status: "called", called_at: new Date().toISOString() })
-      .eq("id", nextTicket.id);
+      const { error } = await supabase
+        .from("tickets")
+        .update({ 
+          status: "called", 
+          called_at: new Date().toISOString() 
+        })
+        .eq("id", nextTicket.id);
 
-    if (error) {
+      if (error) {
+        console.error("Error calling next patient:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
+      } else {
+        toast({
+          title: "Patient called",
+          description: `${nextTicket.patients.first_name} ${nextTicket.patients.last_name}`,
+        });
+        await loadTriageQueue();
+      }
+    } catch (err) {
+      console.error("Error in callNext:", err);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: "Failed to call next patient",
       });
-    } else {
-      toast({
-        title: "Patient called",
-        description: `${nextTicket.patients.first_name} ${nextTicket.patients.last_name}`,
-      });
-      loadTriageQueue();
     }
   };
 
