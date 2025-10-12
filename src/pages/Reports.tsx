@@ -2,11 +2,14 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { StatsCards } from "@/components/reports/StatsCards";
 import { RevenueChart } from "@/components/reports/RevenueChart";
+import { AppointmentChart } from "@/components/reports/AppointmentChart";
+import { PatientDemographics } from "@/components/reports/PatientDemographics";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -14,19 +17,22 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalPatients: 0,
-    newPatientsThisMonth: 0,
-    appointmentsToday: 0,
-    appointmentsThisWeek: 0,
-    revenue30d: 0,
-    revenueGrowth: 0,
-    outstanding: 0,
-    outstandingInvoices: 0,
+    totalAppointments: 0,
+    totalRevenue: 0,
+    activeSessions: 0,
+    pendingInvoices: 0,
+    completedToday: 0,
   });
-  const [revenueData, setRevenueData] = useState<any[]>([]);
+  const [revenueData, setRevenueData] = useState<Array<{ date: string; revenue: number; outstanding: number }>>([]);
+  const [appointmentData, setAppointmentData] = useState<Array<{ date: string; booked: number; completed: number; cancelled: number }>>([]);
+  const [demographicsData, setDemographicsData] = useState<Array<{ name: string; value: number }>>([]);
 
   useEffect(() => {
     checkAuth();
-    loadReportData();
+    loadStats();
+    loadRevenueData();
+    loadAppointmentData();
+    loadDemographicsData();
   }, []);
 
   const checkAuth = async () => {
@@ -36,102 +42,109 @@ const Reports = () => {
     }
   };
 
-  const loadReportData = async () => {
+  const loadStats = async () => {
     setLoading(true);
-
     try {
-      // Get patient stats
-      const { count: totalPatients } = await supabase
-        .from("patients")
-        .select("*", { count: "exact", head: true });
-
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const { count: newPatientsThisMonth } = await supabase
-        .from("patients")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", thirtyDaysAgo.toISOString());
-
-      // Get appointment stats
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const today = format(new Date(), 'yyyy-MM-dd');
       
-      const { count: appointmentsToday } = await supabase
-        .from("appointments")
-        .select("*", { count: "exact", head: true })
-        .gte("scheduled_start", today.toISOString());
+      const [patientsRes, appointmentsRes, revenueRes, sessionsRes, pendingRes, completedRes] = await Promise.all([
+        supabase.from("patients").select("*", { count: "exact" }),
+        supabase.from("appointments").select("*", { count: "exact" }),
+        supabase.from("invoices").select("total_amount"),
+        supabase.from("treatment_sessions" as any).select("*", { count: "exact" }).gte("performed_at", today),
+        supabase.from("invoices").select("*", { count: "exact" }).in("status", ["issued", "partial"]),
+        supabase.from("appointments").select("*", { count: "exact" }).eq("status", "completed").gte("scheduled_start", today),
+      ]);
 
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-
-      const { count: appointmentsThisWeek } = await supabase
-        .from("appointments")
-        .select("*", { count: "exact", head: true })
-        .gte("scheduled_start", weekAgo.toISOString());
-
-      // Get revenue stats
-      const { data: payments30d } = await supabase
-        .from("payments")
-        .select("amount")
-        .gte("received_at", thirtyDaysAgo.toISOString());
-
-      const revenue30d = payments30d?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-
-      // Get outstanding invoices
-      const { data: outstandingInvoices } = await supabase
-        .from("invoices")
-        .select("balance_due")
-        .gt("balance_due", 0)
-        .neq("status", "void");
-
-      const outstanding = outstandingInvoices?.reduce((sum, inv) => sum + Number(inv.balance_due), 0) || 0;
-
-      // Get revenue trend for last 7 days
-      const revenueByDay = [];
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        date.setHours(0, 0, 0, 0);
-        
-        const nextDay = new Date(date);
-        nextDay.setDate(nextDay.getDate() + 1);
-
-        const { data: dayPayments } = await supabase
-          .from("payments")
-          .select("amount")
-          .gte("received_at", date.toISOString())
-          .lt("received_at", nextDay.toISOString());
-
-        const revenue = dayPayments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-
-        revenueByDay.push({
-          date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-          revenue,
-        });
-      }
+      const revenue = revenueRes.data?.reduce((sum, inv) => sum + (inv.total_amount || 0), 0) || 0;
 
       setStats({
-        totalPatients: totalPatients || 0,
-        newPatientsThisMonth: newPatientsThisMonth || 0,
-        appointmentsToday: appointmentsToday || 0,
-        appointmentsThisWeek: appointmentsThisWeek || 0,
-        revenue30d,
-        revenueGrowth: 12, // Placeholder
-        outstanding,
-        outstandingInvoices: outstandingInvoices?.length || 0,
+        totalPatients: patientsRes.count || 0,
+        totalAppointments: appointmentsRes.count || 0,
+        totalRevenue: revenue,
+        activeSessions: sessionsRes.count || 0,
+        pendingInvoices: pendingRes.count || 0,
+        completedToday: completedRes.count || 0,
       });
-
-      setRevenueData(revenueByDay);
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error loading report data",
+        title: "Error loading statistics",
         description: error.message,
       });
     }
-
     setLoading(false);
+  };
+
+  const loadRevenueData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("revenue_analytics" as any)
+        .select("*")
+        .order("report_date", { ascending: true })
+        .limit(30);
+
+      if (error) throw error;
+
+      const chartData = (data || []).map((row: any) => ({
+        date: format(new Date(row.report_date), 'MMM dd'),
+        revenue: Number(row.total_revenue) || 0,
+        outstanding: Number(row.outstanding_balance) || 0,
+      }));
+
+      setRevenueData(chartData);
+    } catch (error: any) {
+      console.error("Error loading revenue data:", error);
+    }
+  };
+
+  const loadAppointmentData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("appointment_analytics" as any)
+        .select("*")
+        .order("report_date", { ascending: true })
+        .limit(30);
+
+      if (error) throw error;
+
+      const grouped = (data || []).reduce((acc: any, row: any) => {
+        const date = format(new Date(row.report_date), 'MMM dd');
+        if (!acc[date]) {
+          acc[date] = { date, booked: 0, completed: 0, cancelled: 0 };
+        }
+        if (row.status === 'booked') acc[date].booked += row.appointment_count;
+        if (row.status === 'completed') acc[date].completed += row.appointment_count;
+        if (row.status === 'cancelled') acc[date].cancelled += row.appointment_count;
+        return acc;
+      }, {});
+
+      setAppointmentData(Object.values(grouped));
+    } catch (error: any) {
+      console.error("Error loading appointment data:", error);
+    }
+  };
+
+  const loadDemographicsData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("patient_demographics" as any)
+        .select("*")
+        .limit(10);
+
+      if (error) throw error;
+
+      const chartData = (data || [])
+        .filter((row: any) => row.gender_identity)
+        .map((row: any) => ({
+          name: row.gender_identity || 'Unknown',
+          value: row.patient_count || 0,
+        }));
+
+      setDemographicsData(chartData);
+    } catch (error: any) {
+      console.error("Error loading demographics data:", error);
+    }
   };
 
   return (
@@ -147,16 +160,35 @@ const Reports = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {!loading && (
-          <div className="space-y-6">
-            <StatsCards stats={stats} />
-            <RevenueChart data={revenueData} />
-          </div>
-        )}
-
         {loading && (
           <div className="text-center py-8 text-muted-foreground">
             Loading report data...
+          </div>
+        )}
+
+        {!loading && (
+          <div className="space-y-6">
+            <StatsCards stats={stats} />
+
+            <Tabs defaultValue="revenue" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="revenue">Revenue</TabsTrigger>
+                <TabsTrigger value="appointments">Appointments</TabsTrigger>
+                <TabsTrigger value="demographics">Demographics</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="revenue">
+                <RevenueChart data={revenueData} />
+              </TabsContent>
+
+              <TabsContent value="appointments">
+                <AppointmentChart data={appointmentData} />
+              </TabsContent>
+
+              <TabsContent value="demographics">
+                <PatientDemographics data={demographicsData} />
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </main>

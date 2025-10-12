@@ -1300,7 +1300,46 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      appointment_analytics: {
+        Row: {
+          appointment_count: number | null
+          report_date: string | null
+          status: Database["public"]["Enums"]["appointment_status"] | null
+          unique_patients: number | null
+          unique_providers: number | null
+        }
+        Relationships: []
+      }
+      clinical_activity: {
+        Row: {
+          active_clinicians: number | null
+          report_date: string | null
+          session_count: number | null
+          unique_patients: number | null
+        }
+        Relationships: []
+      }
+      patient_demographics: {
+        Row: {
+          age_bracket: number | null
+          gender_identity: Database["public"]["Enums"]["gender_identity"] | null
+          patient_count: number | null
+          sex_at_birth: Database["public"]["Enums"]["sex_at_birth"] | null
+        }
+        Relationships: []
+      }
+      revenue_analytics: {
+        Row: {
+          draft_revenue: number | null
+          invoice_count: number | null
+          outstanding_balance: number | null
+          paid_revenue: number | null
+          report_date: string | null
+          total_revenue: number | null
+          unique_patients: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       generate_mrn: {

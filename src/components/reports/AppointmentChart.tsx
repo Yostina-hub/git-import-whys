@@ -1,23 +1,24 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 
-interface RevenueChartProps {
+interface AppointmentChartProps {
   data: Array<{
     date: string;
-    revenue: number;
-    outstanding: number;
+    booked: number;
+    completed: number;
+    cancelled: number;
   }>;
 }
 
-export const RevenueChart = ({ data }: RevenueChartProps) => {
+export const AppointmentChart = ({ data }: AppointmentChartProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Revenue Overview (Last 30 Days)</CardTitle>
+        <CardTitle>Appointment Trends</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
+          <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis 
               dataKey="date" 
@@ -36,21 +37,10 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
               }}
             />
             <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="revenue" 
-              stroke="hsl(var(--primary))" 
-              strokeWidth={2}
-              name="Revenue"
-            />
-            <Line 
-              type="monotone" 
-              dataKey="outstanding" 
-              stroke="hsl(var(--destructive))" 
-              strokeWidth={2}
-              name="Outstanding"
-            />
-          </LineChart>
+            <Bar dataKey="booked" fill="hsl(var(--primary))" name="Booked" />
+            <Bar dataKey="completed" fill="hsl(var(--chart-2))" name="Completed" />
+            <Bar dataKey="cancelled" fill="hsl(var(--destructive))" name="Cancelled" />
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
