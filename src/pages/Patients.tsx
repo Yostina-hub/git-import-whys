@@ -1,365 +1,38 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { usePatients, Patient } from "@/hooks/usePatients";
+import { useRegistrationService } from "@/hooks/useRegistrationService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, ArrowLeft, Eye, Receipt, UserCheck, History, Calendar, RotateCcw, ChevronLeft, ChevronRight, ListPlus } from "lucide-react";
+import { Plus, Search, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { DocumentsTab } from "@/components/documents/DocumentsTab";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { AddToQueueDialog } from "@/components/patients/AddToQueueDialog";
-
-interface Patient {
-  id: string;
-  mrn: string;
-  first_name: string;
-  middle_name?: string;
-  last_name: string;
-  date_of_birth: string;
-  sex_at_birth: string;
-  phone_mobile: string;
-  email?: string;
-  registration_invoice_status?: string;
-  registration_invoice_id?: string;
-  queue_status?: string;
-  queue_token?: string;
-}
+import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
+import { PatientTable } from "@/components/patients/PatientTable";
+import { PatientRegistrationForm } from "@/components/patients/PatientRegistrationForm";
 
 const Patients = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const ITEMS_PER_PAGE = 10;
-
-  // Registration service state
-  const [registrationService, setRegistrationService] = useState<{
-    id: string;
-    unit_price: number;
-    name: string;
-  } | null>(null);
-
-  // Form state
-  const [formData, setFormData] = useState({
-    first_name: "",
-    middle_name: "",
-    last_name: "",
-    date_of_birth: "",
-    sex_at_birth: "male" as const,
-    phone_mobile: "",
-    phone_alt: "",
-    email: "",
-    national_id: "",
-    address_line1: "",
-    city: "",
-    country: "",
-    emergency_contact_name: "",
-    emergency_contact_phone: "",
-  });
-
-  const loadRegistrationService = async () => {
-    const { data, error } = await supabase
-      .from("services")
-      .select("id, name, unit_price")
-      .eq("code", "REG-FEE")
-      .eq("is_active", true)
-      .single();
-
-    if (error) {
-      console.error("Error loading registration service:", error);
-      toast({
-        variant: "destructive",
-        title: "Warning",
-        description: "Could not load registration fee service. Using default value.",
-      });
-      // Set default fallback
-      setRegistrationService({
-        id: "",
-        name: "Registration Fee",
-        unit_price: 50.00
-      });
-    } else {
-      setRegistrationService(data);
-    }
-  };
-
-  useEffect(() => {
-    checkAuth();
-    loadRegistrationService();
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-    }
-  };
-
-  const loadPatients = async (page: number = 1, search: string = "") => {
-    setLoading(true);
-    
-    const from = (page - 1) * ITEMS_PER_PAGE;
-    const to = from + ITEMS_PER_PAGE - 1;
-
-    let query = supabase
-      .from("patients")
-      .select("*", { count: "exact" })
-      .order("created_at", { ascending: false });
-
-    // Apply search filter if exists
-    if (search) {
-      query = query.or(`mrn.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%,phone_mobile.ilike.%${search}%`);
-    }
-
-    // Get total count with search filter
-    const { count } = await query;
-    setTotalCount(count || 0);
-
-    // Get paginated data
-    const { data, error } = await query.range(from, to);
-
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error loading patients",
-        description: error.message,
-      });
-      setPatients([]);
-    } else if (data) {
-      // Get all patient IDs for batch queries
-      const patientIds = data.map(p => p.id);
-
-      // Batch fetch all invoices at once
-      const { data: invoices } = await supabase
-        .from("invoices")
-        .select("id, status, patient_id, created_at")
-        .in("patient_id", patientIds)
-        .order("created_at", { ascending: false });
-
-      // Batch fetch all active tickets at once
-      const { data: tickets } = await supabase
-        .from("tickets")
-        .select("status, token_number, patient_id, created_at")
-        .in("patient_id", patientIds)
-        .in("status", ["waiting", "called"])
-        .order("created_at", { ascending: false });
-
-      // Create lookup maps for O(1) access
-      const invoiceMap = new Map();
-      invoices?.forEach(inv => {
-        if (!invoiceMap.has(inv.patient_id)) {
-          invoiceMap.set(inv.patient_id, inv);
-        }
-      });
-
-      const ticketMap = new Map();
-      tickets?.forEach(ticket => {
-        if (!ticketMap.has(ticket.patient_id)) {
-          ticketMap.set(ticket.patient_id, ticket);
-        }
-      });
-
-      // Map patients with their related data
-      const patientsWithStatus = data.map(patient => {
-        const invoice = invoiceMap.get(patient.id);
-        const ticket = ticketMap.get(patient.id);
-
-        return {
-          ...patient,
-          registration_invoice_status: invoice?.status || "pending",
-          registration_invoice_id: invoice?.id || null,
-          queue_status: ticket?.status || null,
-          queue_token: ticket?.token_number || null,
-        };
-      });
-
-      setPatients(patientsWithStatus);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    loadPatients(currentPage, searchTerm);
-
-    // Subscribe to invoice changes for realtime updates
-    const channel = supabase
-      .channel('invoice-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'invoices'
-        },
-        (payload) => {
-          console.log('Invoice changed:', payload);
-          // Reload patients to get updated status
-          loadPatients(currentPage, searchTerm);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [currentPage]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!registrationService) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Registration service not loaded. Please refresh the page.",
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // Generate MRN
-      const { data: mrnData } = await supabase.rpc("generate_mrn");
-      const mrn = mrnData || `MRN${Date.now()}`;
-
-      // Get current user for created_by
-      const { data: { user } } = await supabase.auth.getUser();
-
-      // Insert patient
-      const { data: patientData, error: patientError } = await supabase
-        .from("patients")
-        .insert([{ ...formData, mrn }])
-        .select()
-        .single();
-
-      if (patientError) throw patientError;
-
-      // Create registration invoice
-      const invoiceData = {
-        patient_id: patientData.id,
-        status: "issued" as const,
-        subtotal: registrationService.unit_price,
-        tax_amount: 0,
-        total_amount: registrationService.unit_price,
-        balance_due: registrationService.unit_price,
-        issued_at: new Date().toISOString(),
-        created_by: user?.id,
-        lines: [
-          {
-            service_id: registrationService.id,
-            description: registrationService.name,
-            quantity: 1,
-            unit_price: registrationService.unit_price,
-            total: registrationService.unit_price,
-            item_type: "service",
-          },
-        ],
-      };
-
-      const { error: invoiceError } = await supabase
-        .from("invoices")
-        .insert([invoiceData]);
-
-      if (invoiceError) {
-        console.error("Error creating invoice:", invoiceError);
-        toast({
-          title: "Patient registered with warning",
-          description: `MRN: ${mrn}. Invoice creation failed - please create manually.`,
-          variant: "destructive",
-        });
-      } else {
-        // Auto-add patient to Triage queue after successful invoice creation
-        const { data: triageQueue } = await supabase
-          .from("queues")
-          .select("id")
-          .eq("queue_type", "triage")
-          .eq("is_active", true)
-          .single();
-
-        if (triageQueue) {
-          // Generate token number
-          const { data: tokenData } = await supabase.rpc("generate_ticket_token", {
-            queue_prefix: "Q"
-          });
-          const tokenNumber = tokenData || `Q${Date.now()}`;
-
-          // Create ticket in Triage queue
-          const { error: ticketError } = await supabase
-            .from("tickets")
-            .insert([{
-              queue_id: triageQueue.id,
-              patient_id: patientData.id,
-              token_number: tokenNumber,
-              status: "waiting",
-              priority: "routine",
-              notes: "Auto-added after registration",
-            }]);
-
-          if (ticketError) {
-            console.error("Error adding to queue:", ticketError);
-            toast({
-              title: "Patient registered successfully",
-              description: `MRN: ${mrn}. Invoice created. Please manually add to Triage queue.`,
-            });
-          } else {
-            toast({
-              title: "Patient registered and queued",
-              description: `MRN: ${mrn}. Token: ${tokenNumber}. Added to Triage queue automatically.`,
-            });
-          }
-        } else {
-          toast({
-            title: "Patient registered successfully",
-            description: `MRN: ${mrn}. Registration fee invoice created. No Triage queue found.`,
-          });
-        }
-      }
-
-      setIsDialogOpen(false);
-      setCurrentPage(1);
-      loadPatients(1);
-      // Reset form
-      setFormData({
-        first_name: "",
-        middle_name: "",
-        last_name: "",
-        date_of_birth: "",
-        sex_at_birth: "male",
-        phone_mobile: "",
-        phone_alt: "",
-        email: "",
-        national_id: "",
-        address_line1: "",
-        city: "",
-        country: "",
-        emergency_contact_name: "",
-        emergency_contact_phone: "",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error creating patient",
-        description: error.message,
-      });
-    }
-    setLoading(false);
-  };
+  const registrationService = useRegistrationService();
+  const {
+    patients,
+    loading,
+    totalCount,
+    currentPage,
+    setCurrentPage,
+    searchTerm,
+    setSearchTerm,
+    refetch,
+    ITEMS_PER_PAGE,
+  } = usePatients();
 
   const handleViewPatient = (patient: Patient) => {
     setSelectedPatient(patient);
@@ -385,30 +58,10 @@ const Patients = () => {
     });
   };
 
-  const handleAssignProvider = (patientId: string) => {
-    toast({
-      title: "Assign Provider",
-      description: "Provider assignment feature - coming soon",
-    });
-  };
-
-  const handleRecheck = (patientId: string) => {
-    toast({
-      title: "Schedule Recheck",
-      description: "Recheck scheduling feature - coming soon",
-    });
-  };
-
-  const getStatusBadge = (status?: string) => {
-    if (!status || status === "pending" || status === "issued" || status === "draft") {
-      return <Badge variant="destructive">Unpaid</Badge>;
-    } else if (status === "paid") {
-      return <Badge variant="default" className="bg-green-600">Paid</Badge>;
-    } else if (status === "partial") {
-      return <Badge variant="secondary">Partial</Badge>;
-    } else {
-      return <Badge variant="outline">{status}</Badge>;
-    }
+  const handleRegistrationSuccess = () => {
+    setIsDialogOpen(false);
+    setCurrentPage(1);
+    refetch();
   };
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
@@ -421,9 +74,9 @@ const Patients = () => {
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     setCurrentPage(1);
-    loadPatients(1, value);
   };
 
+  // Patient Detail View
   if (selectedPatient) {
     return (
       <div className="min-h-screen bg-background">
@@ -491,6 +144,7 @@ const Patients = () => {
     );
   }
 
+  // Patient List View
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
@@ -519,108 +173,14 @@ const Patients = () => {
                   <DialogHeader>
                     <DialogTitle>Register New Patient</DialogTitle>
                   </DialogHeader>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="first_name">First Name *</Label>
-                        <Input
-                          id="first_name"
-                          value={formData.first_name}
-                          onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="last_name">Last Name *</Label>
-                        <Input
-                          id="last_name"
-                          value={formData.last_name}
-                          onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="date_of_birth">Date of Birth *</Label>
-                        <Input
-                          id="date_of_birth"
-                          type="date"
-                          value={formData.date_of_birth}
-                          onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="sex_at_birth">Gender *</Label>
-                        <Select value={formData.sex_at_birth} onValueChange={(value) => setFormData({ ...formData, sex_at_birth: value as any })}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="phone_mobile">Mobile Phone *</Label>
-                        <Input
-                          id="phone_mobile"
-                          type="tel"
-                          value={formData.phone_mobile}
-                          onChange={(e) => setFormData({ ...formData, phone_mobile: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="address_line1">Address</Label>
-                      <Input
-                        id="address_line1"
-                        value={formData.address_line1}
-                        onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="emergency_contact_name">Emergency Contact Name</Label>
-                        <Input
-                          id="emergency_contact_name"
-                          value={formData.emergency_contact_name}
-                          onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="emergency_contact_phone">Emergency Contact Phone</Label>
-                        <Input
-                          id="emergency_contact_phone"
-                          type="tel"
-                          value={formData.emergency_contact_phone}
-                          onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })}
-                        />
-                      </div>
-                    </div>
-
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? "Registering..." : "Register Patient"}
-                    </Button>
-                  </form>
+                  {registrationService && (
+                    <PatientRegistrationForm
+                      registrationServiceId={registrationService.id}
+                      registrationPrice={registrationService.unit_price}
+                      onSuccess={handleRegistrationSuccess}
+                      onCancel={() => setIsDialogOpen(false)}
+                    />
+                  )}
                 </DialogContent>
               </Dialog>
             </div>
@@ -636,202 +196,91 @@ const Patients = () => {
               />
             </div>
 
-            <div className="rounded-lg border border-border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="font-semibold">MRN</TableHead>
-                    <TableHead className="font-semibold">Name</TableHead>
-                    <TableHead className="font-semibold">Gender</TableHead>
-                    <TableHead className="font-semibold">DOB</TableHead>
-                    <TableHead className="font-semibold">Phone</TableHead>
-                    <TableHead className="font-semibold">Reg. Fee</TableHead>
-                    <TableHead className="font-semibold">Payment Status</TableHead>
-                    <TableHead className="font-semibold">Queue Status</TableHead>
-                    <TableHead className="text-right font-semibold">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {patients.map((patient) => (
-                    <TableRow key={patient.id} className="hover:bg-muted/30 transition-colors">
-                      <TableCell className="font-mono font-medium text-primary">{patient.mrn}</TableCell>
-                      <TableCell className="font-medium">
-                        {patient.first_name} {patient.middle_name} {patient.last_name}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {patient.sex_at_birth}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(patient.date_of_birth).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="font-medium">{patient.phone_mobile}</TableCell>
-                      <TableCell>
-                        <span className="font-semibold text-primary">
-                          ${registrationService?.unit_price.toFixed(2) || "0.00"}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {patient.queue_status ? (
-                          <div className="flex items-center gap-2">
-                            <Badge variant={patient.queue_status === "waiting" ? "default" : "secondary"}>
-                              {patient.queue_token}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground capitalize">
-                              {patient.queue_status}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Not in queue</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(patient.registration_invoice_status)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8">
-                              Actions
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 bg-popover">
-                            <DropdownMenuItem 
-                              onClick={() => handleViewPatient(patient)}
-                              className="cursor-pointer"
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleViewInvoices(
-                                patient.id, 
-                                patient.registration_invoice_id,
-                                `${patient.first_name} ${patient.last_name}`
-                              )}
-                              className="cursor-pointer"
-                            >
-                              <Receipt className="h-4 w-4 mr-2" />
-                              Invoices & Billing
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleViewAppointments(patient.id, `${patient.first_name} ${patient.last_name}`)}
-                              className="cursor-pointer"
-                            >
-                              <Calendar className="h-4 w-4 mr-2" />
-                              Appointments
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleAssignProvider(patient.id)}
-                              className="cursor-pointer"
-                            >
-                              <UserCheck className="h-4 w-4 mr-2" />
-                              Assign Provider
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleRecheck(patient.id)}
-                              className="cursor-pointer"
-                            >
-                              <RotateCcw className="h-4 w-4 mr-2" />
-                              Schedule Recheck
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                              <AddToQueueDialog
-                                patientId={patient.id}
-                                patientName={`${patient.first_name} ${patient.last_name}`}
-                                onSuccess={() => loadPatients(currentPage, searchTerm)}
-                              />
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleViewPatient(patient)}
-                              className="cursor-pointer"
-                            >
-                              <History className="h-4 w-4 mr-2" />
-                              Patient History
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-
-            {patients.length === 0 && !loading && (
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Loading patients...
+              </div>
+            ) : patients.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 {searchTerm ? "No patients found matching your search." : "No patients found. Register your first patient to get started."}
               </div>
-            )}
+            ) : (
+              <>
+                <PatientTable
+                  patients={patients}
+                  registrationFee={registrationService?.unit_price || 0}
+                  onViewPatient={handleViewPatient}
+                  onViewInvoices={handleViewInvoices}
+                  onViewAppointments={handleViewAppointments}
+                  onRefresh={refetch}
+                />
 
-            {/* Pagination */}
-            {!loading && totalCount > 0 && (
-              <div className="mt-6 flex items-center justify-between border-t pt-4">
-                <div className="text-sm text-muted-foreground">
-                  Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to{" "}
-                  {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount} patients
-                </div>
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="gap-1"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                        Previous
-                      </Button>
-                    </PaginationItem>
-                    
-                    {[...Array(totalPages)].map((_, index) => {
-                      const page = index + 1;
-                      // Show first, last, current, and adjacent pages
-                      if (
-                        page === 1 ||
-                        page === totalPages ||
-                        (page >= currentPage - 1 && page <= currentPage + 1)
-                      ) {
-                        return (
-                          <PaginationItem key={page}>
-                            <PaginationLink
-                              onClick={() => handlePageChange(page)}
-                              isActive={currentPage === page}
-                              className="cursor-pointer"
-                            >
-                              {page}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      } else if (page === currentPage - 2 || page === currentPage + 2) {
-                        return (
-                          <PaginationItem key={page}>
-                            <span className="px-3 text-muted-foreground">...</span>
-                          </PaginationItem>
-                        );
-                      }
-                      return null;
-                    })}
+                {totalCount > 0 && (
+                  <div className="mt-6 flex items-center justify-between border-t pt-4">
+                    <div className="text-sm text-muted-foreground">
+                      Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to{" "}
+                      {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount} patients
+                    </div>
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="gap-1"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                            Previous
+                          </Button>
+                        </PaginationItem>
+                        
+                        {[...Array(totalPages)].map((_, index) => {
+                          const page = index + 1;
+                          if (
+                            page === 1 ||
+                            page === totalPages ||
+                            (page >= currentPage - 1 && page <= currentPage + 1)
+                          ) {
+                            return (
+                              <PaginationItem key={page}>
+                                <PaginationLink
+                                  onClick={() => handlePageChange(page)}
+                                  isActive={currentPage === page}
+                                  className="cursor-pointer"
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          } else if (page === currentPage - 2 || page === currentPage + 2) {
+                            return (
+                              <PaginationItem key={page}>
+                                <span className="px-3 text-muted-foreground">...</span>
+                              </PaginationItem>
+                            );
+                          }
+                          return null;
+                        })}
 
-                    <PaginationItem>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className="gap-1"
-                      >
-                        Next
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
+                        <PaginationItem>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="gap-1"
+                          >
+                            Next
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
