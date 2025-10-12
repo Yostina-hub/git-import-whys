@@ -276,12 +276,13 @@ By signing below, I acknowledge that I have read and understood this consent.`,
                       Clear
                     </Button>
                   </div>
-                  <div className="border-2 border-input rounded-md bg-white">
+                  <div className="border-2 border-input rounded-md bg-white touch-none">
                     <SignatureCanvas
                       ref={signaturePadRef}
                       canvasProps={{
-                        className: "w-full h-40 cursor-crosshair",
-                        style: { touchAction: 'none' }
+                        width: 600,
+                        height: 160,
+                        className: "w-full"
                       }}
                       backgroundColor="white"
                     />
