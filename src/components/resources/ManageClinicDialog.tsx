@@ -29,7 +29,7 @@ export function ManageClinicDialog({ open, onOpenChange, clinic, onSuccess }: Ma
     country: "",
     phone: "",
     email: "",
-    timezone: "UTC",
+    timezone: "Africa/Addis_Ababa",
     is_active: true,
   });
 
@@ -46,7 +46,7 @@ export function ManageClinicDialog({ open, onOpenChange, clinic, onSuccess }: Ma
         country: clinic.country || "",
         phone: clinic.phone || "",
         email: clinic.email || "",
-        timezone: clinic.timezone || "UTC",
+        timezone: clinic.timezone || "Africa/Addis_Ababa",
         is_active: clinic.is_active ?? true,
       });
     } else {
@@ -61,7 +61,7 @@ export function ManageClinicDialog({ open, onOpenChange, clinic, onSuccess }: Ma
         country: "",
         phone: "",
         email: "",
-        timezone: "UTC",
+        timezone: "Africa/Addis_Ababa",
         is_active: true,
       });
     }
@@ -210,7 +210,10 @@ export function ManageClinicDialog({ open, onOpenChange, clinic, onSuccess }: Ma
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="Africa/Addis_Ababa">Addis Ababa (EAT)</SelectItem>
                   <SelectItem value="UTC">UTC</SelectItem>
+                  <SelectItem value="Africa/Nairobi">Nairobi</SelectItem>
+                  <SelectItem value="Africa/Cairo">Cairo</SelectItem>
                   <SelectItem value="America/New_York">Eastern Time</SelectItem>
                   <SelectItem value="America/Chicago">Central Time</SelectItem>
                   <SelectItem value="America/Denver">Mountain Time</SelectItem>

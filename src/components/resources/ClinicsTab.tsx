@@ -5,15 +5,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Building2, Edit, MapPin } from "lucide-react";
+import { Plus, Building2, Edit, MapPin, Eye, Trash2 } from "lucide-react";
 import { ManageClinicDialog } from "./ManageClinicDialog";
+import { ViewClinicDialog } from "./ViewClinicDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function ClinicsTab() {
   const { toast } = useToast();
   const [clinics, setClinics] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingClinic, setEditingClinic] = useState<any>(null);
+  const [viewingClinic, setViewingClinic] = useState<any>(null);
+  const [deletingClinic, setDeletingClinic] = useState<any>(null);
 
   useEffect(() => {
     loadClinics();
@@ -41,6 +56,41 @@ export function ClinicsTab() {
   const handleEdit = (clinic: any) => {
     setEditingClinic(clinic);
     setDialogOpen(true);
+  };
+
+  const handleView = (clinic: any) => {
+    setViewingClinic(clinic);
+    setViewDialogOpen(true);
+  };
+
+  const handleDelete = (clinic: any) => {
+    setDeletingClinic(clinic);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingClinic) return;
+
+    const { error } = await supabase
+      .from("clinics")
+      .update({ is_active: false })
+      .eq("id", deletingClinic.id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error deactivating clinic",
+        description: error.message,
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Clinic deactivated successfully",
+      });
+      loadClinics();
+    }
+    setDeleteDialogOpen(false);
+    setDeletingClinic(null);
   };
 
   const handleCloseDialog = () => {
@@ -109,17 +159,32 @@ export function ClinicsTab() {
                       {!clinic.phone && !clinic.email && <span className="text-muted-foreground">—</span>}
                     </div>
                   </TableCell>
-                  <TableCell>{clinic.timezone || "UTC"}</TableCell>
+                  <TableCell>{clinic.timezone || "Africa/Addis_Ababa"}</TableCell>
                   <TableCell>
-                    <Badge className={clinic.is_active ? "bg-green-500" : "bg-gray-500"}>
+                    <Badge variant={clinic.is_active ? "default" : "secondary"}>
                       {clinic.is_active ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button size="sm" variant="outline" onClick={() => handleEdit(clinic)}>
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleView(clinic)}>
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(clinic)}>
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => handleDelete(clinic)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Deactivate
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -134,6 +199,28 @@ export function ClinicsTab() {
         clinic={editingClinic}
         onSuccess={loadClinics}
       />
+
+      <ViewClinicDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        clinic={viewingClinic}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate Clinic?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will deactivate "{deletingClinic?.name}". The clinic will be marked as inactive
+              but all associated data will be preserved. You can reactivate it later by editing the clinic.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Deactivate</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
