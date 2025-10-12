@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, CheckCircle, Clock, Camera, Mic, StopCircle } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
@@ -27,6 +28,10 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
     patient_id: patientId || "",
     consent_type: "general_treatment" as const,
     signed_by: "patient",
+    guardian_name: "",
+    guardian_relationship: "",
+    guardian_phone: "",
+    guardian_national_id: "",
   });
   const signaturePadRef = useRef<SignatureCanvas>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -113,6 +118,10 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
         patient_id: patientId || "",
         consent_type: "general_treatment",
         signed_by: "patient",
+        guardian_name: "",
+        guardian_relationship: "",
+        guardian_phone: "",
+        guardian_national_id: "",
       });
     }
     setLoading(false);
@@ -381,6 +390,49 @@ By signing below, I acknowledge that I have read and understood this consent.`,
                     </SelectContent>
                   </Select>
                 </div>
+
+                {formData.signed_by === "guardian" && (
+                  <div className="space-y-3 p-4 border rounded-md bg-muted/30">
+                    <h4 className="font-medium text-sm">Guardian Information</h4>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Guardian Name *</Label>
+                        <Input
+                          value={formData.guardian_name}
+                          onChange={(e) => setFormData({ ...formData, guardian_name: e.target.value })}
+                          placeholder="Full name"
+                          required={formData.signed_by === "guardian"}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Relationship to Patient *</Label>
+                        <Input
+                          value={formData.guardian_relationship}
+                          onChange={(e) => setFormData({ ...formData, guardian_relationship: e.target.value })}
+                          placeholder="e.g., Parent, Spouse"
+                          required={formData.signed_by === "guardian"}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Guardian Phone *</Label>
+                        <Input
+                          value={formData.guardian_phone}
+                          onChange={(e) => setFormData({ ...formData, guardian_phone: e.target.value })}
+                          placeholder="Phone number"
+                          required={formData.signed_by === "guardian"}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>National ID/Passport</Label>
+                        <Input
+                          value={formData.guardian_national_id}
+                          onChange={(e) => setFormData({ ...formData, guardian_national_id: e.target.value })}
+                          placeholder="ID number"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label className="text-lg font-semibold">
