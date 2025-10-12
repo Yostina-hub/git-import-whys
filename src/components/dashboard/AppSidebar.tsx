@@ -67,8 +67,8 @@ export function AppSidebar({ isAdmin }: AppSidebarProps) {
       : "hover:bg-sidebar-accent/50";
 
   return (
-    <Sidebar collapsible="none" className="w-64">
-      <SidebarContent className="gap-0">
+    <Sidebar collapsible="none" className="w-64 border-r">
+      <SidebarContent className="gap-0 bg-sidebar">
         {/* Logo Section */}
         <div className="p-4 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
