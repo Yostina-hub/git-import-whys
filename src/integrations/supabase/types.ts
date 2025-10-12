@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_summary: {
+        Row: {
+          actions_count: number | null
+          appointments_created: number | null
+          created_at: string
+          id: string
+          invoices_created: number | null
+          last_login: string | null
+          patients_viewed: number | null
+          summary_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actions_count?: number | null
+          appointments_created?: number | null
+          created_at?: string
+          id?: string
+          invoices_created?: number | null
+          last_login?: string | null
+          patients_viewed?: number | null
+          summary_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actions_count?: number | null
+          appointments_created?: number | null
+          created_at?: string
+          id?: string
+          invoices_created?: number | null
+          last_login?: string | null
+          patients_viewed?: number | null
+          summary_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           clinic_id: string
@@ -806,9 +845,14 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          department: string | null
           first_name: string
+          hire_date: string | null
           id: string
+          job_title: string | null
+          last_login: string | null
           last_name: string
+          license_number: string | null
           middle_name: string | null
           phone_alt: string | null
           phone_mobile: string | null
@@ -819,9 +863,14 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          department?: string | null
           first_name: string
+          hire_date?: string | null
           id: string
+          job_title?: string | null
+          last_login?: string | null
           last_name: string
+          license_number?: string | null
           middle_name?: string | null
           phone_alt?: string | null
           phone_mobile?: string | null
@@ -832,9 +881,14 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          department?: string | null
           first_name?: string
+          hire_date?: string | null
           id?: string
+          job_title?: string | null
+          last_login?: string | null
           last_name?: string
+          license_number?: string | null
           middle_name?: string | null
           phone_alt?: string | null
           phone_mobile?: string | null
@@ -1257,12 +1311,38 @@ export type Database = {
         Args: { queue_prefix: string }
         Returns: string
       }
+      get_user_with_roles: {
+        Args: { user_uuid: string }
+        Returns: {
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone_mobile: string
+          roles: string[]
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      list_all_users_with_roles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone_mobile: string
+          roles: string[]
+          status: string
+        }[]
       }
     }
     Enums: {

@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Settings, Activity, Database } from "lucide-react";
+import { ArrowLeft, Settings, Activity, Database, Users } from "lucide-react";
 import { AuditLogsTab } from "@/components/admin/AuditLogsTab";
 import { SystemSettingsTab } from "@/components/admin/SystemSettingsTab";
 import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
+import { UserManagementTab } from "@/components/admin/UserManagementTab";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -80,10 +81,14 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="analytics" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="analytics">
               <Database className="h-4 w-4 mr-2" />
               Analytics
+            </TabsTrigger>
+            <TabsTrigger value="users">
+              <Users className="h-4 w-4 mr-2" />
+              Users
             </TabsTrigger>
             <TabsTrigger value="audit">
               <Activity className="h-4 w-4 mr-2" />
@@ -99,6 +104,14 @@ const Admin = () => {
             <Card>
               <CardContent className="pt-6">
                 <AnalyticsTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="users">
+            <Card>
+              <CardContent className="pt-6">
+                <UserManagementTab />
               </CardContent>
             </Card>
           </TabsContent>
