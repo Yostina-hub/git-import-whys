@@ -337,7 +337,11 @@ const TriageQueue = () => {
                               {ticket.priority.toUpperCase()}
                             </Badge>
                           </TableCell>
-                          <TableCell>{waitTime} min</TableCell>
+                          <TableCell>
+                            <span className={waitTime > 30 ? "text-destructive font-semibold" : ""}>
+                              {waitTime} min
+                            </span>
+                          </TableCell>
                           <TableCell>
                             <Badge className={getStatusColor(ticket.status)}>
                               {ticket.status}
