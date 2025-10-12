@@ -34,7 +34,7 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
     const [notesRes, patientsRes] = await Promise.all([
       supabase
         .from("emr_notes")
-        .select("*, patients(first_name, last_name, mrn), profiles(first_name, last_name)")
+        .select("*, patients(first_name, last_name, mrn), author:profiles!emr_notes_author_id_fkey(first_name, last_name)")
         .order("created_at", { ascending: false })
         .then(res => patientId ? { ...res, data: res.data?.filter(n => n.patient_id === patientId) } : res),
       supabase.from("patients").select("*").order("first_name"),
@@ -177,7 +177,7 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
               </div>
               <p className="text-sm whitespace-pre-wrap">{note.content}</p>
               <div className="mt-2 text-xs text-muted-foreground">
-                By: {note.profiles?.first_name} {note.profiles?.last_name}
+                By: {note.author?.first_name} {note.author?.last_name}
               </div>
             </div>
           ))}
