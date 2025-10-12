@@ -119,7 +119,9 @@ export const RecordPaymentDialog = ({
               <SelectContent>
                 <SelectItem value="cash">Cash</SelectItem>
                 <SelectItem value="card">Card</SelectItem>
-                <SelectItem value="mobile">Mobile Payment</SelectItem>
+                <SelectItem value="telebirr">TeleBirr</SelectItem>
+                <SelectItem value="cbe_birr">CBE Birr</SelectItem>
+                <SelectItem value="mobile">Other Mobile Payment</SelectItem>
                 <SelectItem value="insurance">Insurance</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>

@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CreateInvoiceDialog } from "@/components/billing/CreateInvoiceDialog";
 import { RecordPaymentDialog } from "@/components/billing/RecordPaymentDialog";
 import { RefundsTab } from "@/components/billing/RefundsTab";
+import { PaymentGatewaySettings } from "@/components/billing/PaymentGatewaySettings";
 
 const Billing = () => {
   const navigate = useNavigate();
@@ -78,6 +79,7 @@ const Billing = () => {
           <TabsList>
             <TabsTrigger value="invoices">Invoices</TabsTrigger>
             <TabsTrigger value="refunds">Refunds</TabsTrigger>
+            <TabsTrigger value="gateways">Payment Gateways</TabsTrigger>
           </TabsList>
 
           <TabsContent value="invoices">
@@ -146,6 +148,10 @@ const Billing = () => {
 
           <TabsContent value="refunds">
             <RefundsTab />
+          </TabsContent>
+
+          <TabsContent value="gateways">
+            <PaymentGatewaySettings />
           </TabsContent>
         </Tabs>
       </main>
