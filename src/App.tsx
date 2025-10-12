@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 import AppLayout from "./layouts/AppLayout";
 import PublicPortal from "./pages/PublicPortal";
 import Resources from "./pages/Resources";
+import QueueDisplay from "./pages/QueueDisplay";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/register" element={<PublicPortal />} />
+          <Route path="/queue-display" element={<QueueDisplay />} />
 
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />

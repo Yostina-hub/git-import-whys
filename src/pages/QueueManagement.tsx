@@ -11,6 +11,7 @@ import { ArrowLeft, CheckCircle, AlertCircle, Users, Clock, Volume2 } from "luci
 import { QueueStatistics } from "@/components/queue/QueueStatistics";
 import { QueueActions } from "@/components/queue/QueueActions";
 import { QueueFilters } from "@/components/queue/QueueFilters";
+import { QueueDisplaySettings } from "@/components/queue/QueueDisplaySettings";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
@@ -216,99 +217,112 @@ const QueueManagement = () => {
           </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Queue Monitor</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={selectedQueue || ""} onValueChange={setSelectedQueue}>
-              <TabsList className="grid w-full grid-cols-5">
-                {queues.map((queue) => (
-                  <TabsTrigger key={queue.id} value={queue.id}>
-                    {queue.name}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+        <Tabs defaultValue="monitor" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="monitor">Queue Monitor</TabsTrigger>
+            <TabsTrigger value="display">Display Settings</TabsTrigger>
+          </TabsList>
 
-              {queues.map((queue) => (
-                <TabsContent key={queue.id} value={queue.id}>
-                  <QueueFilters
+          <TabsContent value="monitor" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Active Queues</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs value={selectedQueue || ""} onValueChange={setSelectedQueue}>
+                  <TabsList className="grid w-full grid-cols-5">
+                  {queues.map((queue) => (
+                    <TabsTrigger key={queue.id} value={queue.id}>
+                      {queue.name}
+                    </TabsTrigger>
+                  ))}
+                  </TabsList>
+
+                  {queues.map((queue) => (
+                    <TabsContent key={queue.id} value={queue.id}>
+                      <QueueFilters
                     priorityFilter={priorityFilter}
-                    setPriorityFilter={setPriorityFilter}
-                    showOnlySLABreaches={showOnlySLABreaches}
-                    setShowOnlySLABreaches={setShowOnlySLABreaches}
-                  />
-                  
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Token</TableHead>
-                        <TableHead>Patient</TableHead>
-                        <TableHead>Priority</TableHead>
-                        <TableHead>Wait Time (SLA: {currentSLA}min)</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredTickets.map((ticket) => {
-                        const waitTime = getWaitTime(ticket.created_at);
-                        const slaBreached = waitTime > currentSLA;
-                        return (
-                          <TableRow key={ticket.id} className={slaBreached ? "bg-red-50 dark:bg-red-950/20" : ""}>
-                            <TableCell className="font-bold">{ticket.token_number}</TableCell>
-                            <TableCell>
-                              {ticket.patients.mrn} - {ticket.patients.first_name} {ticket.patients.last_name}
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getPriorityColor(ticket.priority)}>
-                                {ticket.priority.toUpperCase()}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {slaBreached && <AlertCircle className="h-4 w-4 text-red-500" />}
-                                <span className={slaBreached ? "text-red-600 font-semibold" : ""}>
-                                  {waitTime} min
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getStatusColor(ticket.status)}>
-                                {ticket.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {ticket.status === "called" && (
-                                  <Button size="sm" onClick={() => markServed(ticket.id)}>
-                                    <CheckCircle className="h-4 w-4 mr-1" />
-                                    Complete
-                                  </Button>
-                                )}
-                                <QueueActions 
-                                  ticket={ticket} 
-                                  queues={queues}
-                                  onUpdate={() => selectedQueue && loadTickets(selectedQueue)} 
-                                />
-                              </div>
-                            </TableCell>
+                        setPriorityFilter={setPriorityFilter}
+                        showOnlySLABreaches={showOnlySLABreaches}
+                        setShowOnlySLABreaches={setShowOnlySLABreaches}
+                      />
+                      
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Token</TableHead>
+                            <TableHead>Patient</TableHead>
+                            <TableHead>Priority</TableHead>
+                            <TableHead>Wait Time (SLA: {currentSLA}min)</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
                           </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredTickets.map((ticket) => {
+                            const waitTime = getWaitTime(ticket.created_at);
+                            const slaBreached = waitTime > currentSLA;
+                            return (
+                              <TableRow key={ticket.id} className={slaBreached ? "bg-red-50 dark:bg-red-950/20" : ""}>
+                                <TableCell className="font-bold">{ticket.token_number}</TableCell>
+                                <TableCell>
+                                  {ticket.patients.mrn} - {ticket.patients.first_name} {ticket.patients.last_name}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={getPriorityColor(ticket.priority)}>
+                                    {ticket.priority.toUpperCase()}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    {slaBreached && <AlertCircle className="h-4 w-4 text-red-500" />}
+                                    <span className={slaBreached ? "text-red-600 font-semibold" : ""}>
+                                      {waitTime} min
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={getStatusColor(ticket.status)}>
+                                    {ticket.status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    {ticket.status === "called" && (
+                                      <Button size="sm" onClick={() => markServed(ticket.id)}>
+                                        <CheckCircle className="h-4 w-4 mr-1" />
+                                        Complete
+                                      </Button>
+                                    )}
+                                    <QueueActions 
+                                      ticket={ticket} 
+                                      queues={queues}
+                                      onUpdate={() => selectedQueue && loadTickets(selectedQueue)} 
+                                    />
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
 
-                  {filteredTickets.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      {tickets.length === 0 ? "No patients in queue" : "No patients match the current filters"}
-                    </div>
-                  )}
-                </TabsContent>
-              ))}
-            </Tabs>
-          </CardContent>
-        </Card>
+                      {filteredTickets.length === 0 && (
+                        <div className="text-center py-8 text-muted-foreground">
+                          {tickets.length === 0 ? "No patients in queue" : "No patients match the current filters"}
+                        </div>
+                      )}
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="display" className="space-y-4">
+            <QueueDisplaySettings />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
