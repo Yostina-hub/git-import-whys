@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Calendar, DollarSign, ClipboardList, LogOut, FileText, List, Stethoscope, Mail } from "lucide-react";
+import { Users, Calendar, DollarSign, ClipboardList, LogOut, FileText, List, Stethoscope, Mail, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
@@ -17,6 +17,7 @@ const Dashboard = () => {
     appointments: 0,
     revenue: 0,
   });
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -32,9 +33,20 @@ const Dashboard = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
-      return;
+    } else {
+      setUser(session.user);
+      
+      // Check if user is admin or manager
+      const { data: roles } = await supabase
+        .from("user_roles" as any)
+        .select("role")
+        .eq("user_id", session.user.id);
+      
+      const hasAdminAccess = roles?.some(
+        (r: any) => r.role === "admin" || r.role === "manager"
+      );
+      setIsAdmin(hasAdminAccess || false);
     }
-    setUser(session.user);
     setLoading(false);
   };
 
@@ -189,6 +201,18 @@ const Dashboard = () => {
             </CardHeader>
           </Card>
         </div>
+
+        {isAdmin && (
+          <div className="mt-6">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-primary" onClick={() => navigate("/admin")}>
+              <CardHeader>
+                <Shield className="h-8 w-8 mb-2 text-primary" />
+                <CardTitle>System Administration</CardTitle>
+                <CardDescription>Manage settings, audit logs, and analytics</CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        )}
       </main>
     </div>
   );
