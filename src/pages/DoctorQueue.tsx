@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle, AlertCircle, Clock, FileText, Stethoscope, Pill, TestTube } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, CheckCircle, AlertCircle, Clock, FileText, Stethoscope, Pill, TestTube, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -22,13 +22,28 @@ const DoctorQueue = () => {
   const [loading, setLoading] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [showPatientDialog, setShowPatientDialog] = useState(false);
+  
+  // Pagination and search state
+  const [todaySearch, setTodaySearch] = useState("");
+  const [previousSearch, setPreviousSearch] = useState("");
+  const [todayPage, setTodayPage] = useState(1);
+  const [previousPage, setPreviousPage] = useState(1);
+  const [todayTotal, setTodayTotal] = useState(0);
+  const [previousTotal, setPreviousTotal] = useState(0);
+  const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
     checkAuth();
     loadDoctorQueue();
-    loadCompletedToday();
-    loadPreviousWork();
   }, []);
+
+  useEffect(() => {
+    loadCompletedToday();
+  }, [todayPage, todaySearch]);
+
+  useEffect(() => {
+    loadPreviousWork();
+  }, [previousPage, previousSearch]);
 
   useEffect(() => {
     // Poll for updates every 10 seconds
@@ -96,18 +111,31 @@ const DoctorQueue = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const { data, error } = await supabase
+    const from = (todayPage - 1) * ITEMS_PER_PAGE;
+    const to = from + ITEMS_PER_PAGE - 1;
+
+    let query = supabase
       .from("tickets")
-      .select("*, patients(id, first_name, last_name, mrn, date_of_birth)")
+      .select("*, patients(id, first_name, last_name, mrn, date_of_birth)", { count: "exact" })
       .eq("status", "served")
       .eq("served_by", user.id)
       .gte("served_at", today.toISOString())
-      .order("served_at", { ascending: false });
+      .order("served_at", { ascending: false })
+      .range(from, to);
+
+    if (todaySearch) {
+      query = query.or(
+        `token_number.ilike.%${todaySearch}%,patients.first_name.ilike.%${todaySearch}%,patients.last_name.ilike.%${todaySearch}%,patients.mrn.ilike.%${todaySearch}%`
+      );
+    }
+
+    const { data, error, count } = await query;
 
     if (error) {
       console.error("Error loading completed consultations:", error);
     } else {
       setCompletedToday(data || []);
+      setTodayTotal(count || 0);
     }
   };
 
@@ -118,19 +146,31 @@ const DoctorQueue = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const { data, error } = await supabase
+    const from = (previousPage - 1) * ITEMS_PER_PAGE;
+    const to = from + ITEMS_PER_PAGE - 1;
+
+    let query = supabase
       .from("tickets")
-      .select("*, patients(id, first_name, last_name, mrn, date_of_birth)")
+      .select("*, patients(id, first_name, last_name, mrn, date_of_birth)", { count: "exact" })
       .eq("status", "served")
       .eq("served_by", user.id)
       .lt("served_at", today.toISOString())
       .order("served_at", { ascending: false })
-      .limit(100);
+      .range(from, to);
+
+    if (previousSearch) {
+      query = query.or(
+        `token_number.ilike.%${previousSearch}%,patients.first_name.ilike.%${previousSearch}%,patients.last_name.ilike.%${previousSearch}%,patients.mrn.ilike.%${previousSearch}%`
+      );
+    }
+
+    const { data, error, count } = await query;
 
     if (error) {
       console.error("Error loading previous work:", error);
     } else {
       setPreviousWork(data || []);
+      setPreviousTotal(count || 0);
     }
   };
 
@@ -344,7 +384,21 @@ const DoctorQueue = () => {
           <TabsContent value="completed">
             <Card>
               <CardHeader>
-                <CardTitle>Completed Consultations Today</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Completed Consultations Today</CardTitle>
+                  <div className="relative w-64">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by name, MRN, token..."
+                      value={todaySearch}
+                      onChange={(e) => {
+                        setTodaySearch(e.target.value);
+                        setTodayPage(1);
+                      }}
+                      className="pl-8"
+                    />
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -391,7 +445,38 @@ const DoctorQueue = () => {
 
                 {completedToday.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
-                    No consultations completed today yet
+                    {todaySearch ? "No matching consultations found" : "No consultations completed today yet"}
+                  </div>
+                )}
+
+                {todayTotal > ITEMS_PER_PAGE && (
+                  <div className="flex items-center justify-between mt-4">
+                    <p className="text-sm text-muted-foreground">
+                      Showing {((todayPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(todayPage * ITEMS_PER_PAGE, todayTotal)} of {todayTotal} consultations
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTodayPage(p => Math.max(1, p - 1))}
+                        disabled={todayPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Previous
+                      </Button>
+                      <span className="text-sm">
+                        Page {todayPage} of {Math.ceil(todayTotal / ITEMS_PER_PAGE)}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTodayPage(p => p + 1)}
+                        disabled={todayPage >= Math.ceil(todayTotal / ITEMS_PER_PAGE)}
+                      >
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -401,7 +486,21 @@ const DoctorQueue = () => {
           <TabsContent value="previous">
             <Card>
               <CardHeader>
-                <CardTitle>Previous Consultations</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Previous Consultations</CardTitle>
+                  <div className="relative w-64">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by name, MRN, token..."
+                      value={previousSearch}
+                      onChange={(e) => {
+                        setPreviousSearch(e.target.value);
+                        setPreviousPage(1);
+                      }}
+                      className="pl-8"
+                    />
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -452,7 +551,38 @@ const DoctorQueue = () => {
 
                 {previousWork.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
-                    No previous consultations found
+                    {previousSearch ? "No matching consultations found" : "No previous consultations found"}
+                  </div>
+                )}
+
+                {previousTotal > ITEMS_PER_PAGE && (
+                  <div className="flex items-center justify-between mt-4">
+                    <p className="text-sm text-muted-foreground">
+                      Showing {((previousPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(previousPage * ITEMS_PER_PAGE, previousTotal)} of {previousTotal} consultations
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPreviousPage(p => Math.max(1, p - 1))}
+                        disabled={previousPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Previous
+                      </Button>
+                      <span className="text-sm">
+                        Page {previousPage} of {Math.ceil(previousTotal / ITEMS_PER_PAGE)}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPreviousPage(p => p + 1)}
+                        disabled={previousPage >= Math.ceil(previousTotal / ITEMS_PER_PAGE)}
+                      >
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 )}
               </CardContent>
