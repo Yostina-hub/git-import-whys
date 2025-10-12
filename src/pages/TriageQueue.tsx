@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, CheckCircle, Clock, FileText, Stethoscope, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { TriageAssessmentDialog } from "@/components/queue/TriageAssessmentDialog";
+import { QueueActions } from "@/components/queue/QueueActions";
 
 const TriageQueue = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const TriageQueue = () => {
   const [completedToday, setCompletedToday] = useState<any[]>([]);
   const [previousWork, setPreviousWork] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [queues, setQueues] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<{
     id: string;
     name: string;
@@ -37,6 +39,7 @@ const TriageQueue = () => {
   useEffect(() => {
     checkAuth();
     loadTriageQueue();
+    loadQueues();
   }, []);
 
   useEffect(() => {
@@ -54,6 +57,20 @@ const TriageQueue = () => {
     }, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  const loadQueues = async () => {
+    const { data, error } = await supabase
+      .from("queues")
+      .select("*")
+      .eq("is_active", true)
+      .order("name");
+
+    if (error) {
+      console.error("Error loading queues:", error);
+    } else {
+      setQueues(data || []);
+    }
+  };
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -344,6 +361,11 @@ const TriageQueue = () => {
                                   Assess
                                 </Button>
                               )}
+                              <QueueActions 
+                                ticket={ticket} 
+                                queues={queues} 
+                                onUpdate={loadTriageQueue} 
+                              />
                             </div>
                           </TableCell>
                         </TableRow>
