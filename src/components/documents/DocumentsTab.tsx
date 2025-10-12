@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { UploadDocumentDialog } from "./UploadDocumentDialog";
 import { DocumentsList } from "./DocumentsList";
+import { DocumentFilters } from "./DocumentFilters";
 
 interface DocumentsTabProps {
   patientId: string;
@@ -8,6 +9,8 @@ interface DocumentsTabProps {
 
 export const DocumentsTab = ({ patientId }: DocumentsTabProps) => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [documentType, setDocumentType] = useState("all");
 
   const handleUploadComplete = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -27,7 +30,20 @@ export const DocumentsTab = ({ patientId }: DocumentsTabProps) => {
           onUploadComplete={handleUploadComplete}
         />
       </div>
-      <DocumentsList patientId={patientId} refreshTrigger={refreshTrigger} />
+
+      <DocumentFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        documentType={documentType}
+        onTypeChange={setDocumentType}
+      />
+
+      <DocumentsList
+        patientId={patientId}
+        refreshTrigger={refreshTrigger}
+        searchQuery={searchQuery}
+        documentType={documentType}
+      />
     </div>
   );
 };

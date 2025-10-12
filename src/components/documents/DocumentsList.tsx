@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Trash2, FileText, Image } from "lucide-react";
+import { Download, Trash2, FileText, Image, Eye } from "lucide-react";
 import { format } from "date-fns";
 import {
   AlertDialog,
@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { DocumentPreviewDialog } from "./DocumentPreviewDialog";
 
 interface Document {
   id: string;
@@ -41,20 +42,29 @@ interface Document {
 interface DocumentsListProps {
   patientId: string;
   refreshTrigger?: number;
+  searchQuery?: string;
+  documentType?: string;
 }
 
-export const DocumentsList = ({ patientId, refreshTrigger }: DocumentsListProps) => {
+export const DocumentsList = ({ patientId, refreshTrigger, searchQuery = "", documentType = "all" }: DocumentsListProps) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewDocument, setPreviewDocument] = useState<Document | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const { toast } = useToast();
 
   const loadDocuments = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    let query = supabase
       .from("document_attachments")
       .select("*")
-      .eq("patient_id", patientId)
-      .order("created_at", { ascending: false });
+      .eq("patient_id", patientId);
+
+    if (documentType !== "all") {
+      query = query.eq("document_type", documentType);
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
 
     if (error) {
       toast({
@@ -70,7 +80,7 @@ export const DocumentsList = ({ patientId, refreshTrigger }: DocumentsListProps)
 
   useEffect(() => {
     loadDocuments();
-  }, [patientId, refreshTrigger]);
+  }, [patientId, refreshTrigger, documentType]);
 
   const handleDownload = async (doc: Document) => {
     const { data, error } = await supabase.storage
@@ -149,14 +159,24 @@ export const DocumentsList = ({ patientId, refreshTrigger }: DocumentsListProps)
     return colors[type] || "bg-gray-500";
   };
 
+  // Filter documents by search query
+  const filteredDocuments = documents.filter((doc) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      doc.file_name.toLowerCase().includes(searchLower) ||
+      doc.description?.toLowerCase().includes(searchLower) ||
+      doc.document_type.toLowerCase().includes(searchLower)
+    );
+  });
+
   if (loading) {
     return <div className="text-center py-8">Loading documents...</div>;
   }
 
-  if (documents.length === 0) {
+  if (filteredDocuments.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        No documents uploaded yet
+        {documents.length === 0 ? "No documents uploaded yet" : "No documents match your search"}
       </div>
     );
   }
@@ -175,7 +195,7 @@ export const DocumentsList = ({ patientId, refreshTrigger }: DocumentsListProps)
           </TableRow>
         </TableHeader>
         <TableBody>
-          {documents.map((doc) => (
+          {filteredDocuments.map((doc) => (
             <TableRow key={doc.id}>
               <TableCell>
                 <div className="flex items-center gap-2">
@@ -213,6 +233,16 @@ export const DocumentsList = ({ patientId, refreshTrigger }: DocumentsListProps)
                   <Button
                     size="sm"
                     variant="outline"
+                    onClick={() => {
+                      setPreviewDocument(doc);
+                      setPreviewOpen(true);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
                     onClick={() => handleDownload(doc)}
                   >
                     <Download className="h-4 w-4" />
@@ -245,6 +275,12 @@ export const DocumentsList = ({ patientId, refreshTrigger }: DocumentsListProps)
           ))}
         </TableBody>
       </Table>
+
+      <DocumentPreviewDialog
+        document={previewDocument}
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+      />
     </div>
   );
 };
