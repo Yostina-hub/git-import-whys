@@ -116,6 +116,11 @@ const Billing = () => {
               <CardTitle>Patient Invoices</CardTitle>
             </CardHeader>
             <CardContent>
+              {loading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Loading invoices...
+                </div>
+              ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -169,8 +174,9 @@ const Billing = () => {
                   })}
                 </TableBody>
               </Table>
+              )}
 
-              {invoices.length === 0 && (
+              {!loading && invoices.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No invoices found for this patient.</p>
@@ -200,6 +206,11 @@ const Billing = () => {
                 </div>
               </CardHeader>
               <CardContent>
+                {loading ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Loading invoices...
+                  </div>
+                ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -257,8 +268,9 @@ const Billing = () => {
                     })}
                   </TableBody>
                 </Table>
+                )}
 
-                {invoices.length === 0 && (
+                {!loading && invoices.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
                     <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>No invoices created yet.</p>
