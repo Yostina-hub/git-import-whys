@@ -6,6 +6,8 @@ import { ArrowLeft, Settings } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PaymentTypesConfig } from "@/components/configuration/PaymentTypesConfig";
 import { PriceListsConfig } from "@/components/configuration/PriceListsConfig";
+import { RulesEngine } from "@/components/configuration/RulesEngine";
+import { DiscountExemptionPolicies } from "@/components/configuration/DiscountExemptionPolicies";
 
 const Configuration = () => {
   const navigate = useNavigate();
@@ -60,21 +62,11 @@ const Configuration = () => {
           </TabsContent>
 
           <TabsContent value="rules" className="space-y-4">
-            <div className="text-center py-12 text-muted-foreground">
-              <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-semibold mb-2">Rules Engine</h3>
-              <p>Configure business rules and automation workflows</p>
-              <p className="text-sm mt-2">Coming soon...</p>
-            </div>
+            <RulesEngine />
           </TabsContent>
 
           <TabsContent value="policies" className="space-y-4">
-            <div className="text-center py-12 text-muted-foreground">
-              <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-semibold mb-2">Discount & Exemption Policies</h3>
-              <p>Define discount rules and exemption criteria</p>
-              <p className="text-sm mt-2">Coming soon...</p>
-            </div>
+            <DiscountExemptionPolicies />
           </TabsContent>
         </Tabs>
       </main>

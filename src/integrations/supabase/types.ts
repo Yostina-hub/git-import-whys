@@ -280,6 +280,60 @@ export type Database = {
           },
         ]
       }
+      business_rules: {
+        Row: {
+          actions: Json
+          category: string | null
+          code: string
+          conditions: Json
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          priority: number | null
+          rule_type: string
+          updated_at: string | null
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          actions?: Json
+          category?: string | null
+          code: string
+          conditions?: Json
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          priority?: number | null
+          rule_type: string
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          actions?: Json
+          category?: string | null
+          code?: string
+          conditions?: Json
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          priority?: number | null
+          rule_type?: string
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: []
+      }
       clinics: {
         Row: {
           address_line1: string | null
@@ -386,6 +440,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      discount_policies: {
+        Row: {
+          applicable_items: Json | null
+          applicable_to: string
+          code: string
+          created_at: string | null
+          customer_eligibility: Json | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean | null
+          max_discount_amount: number | null
+          min_purchase_amount: number | null
+          name: string
+          requires_approval: boolean | null
+          updated_at: string | null
+          usage_limit: number | null
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          applicable_items?: Json | null
+          applicable_to: string
+          code: string
+          created_at?: string | null
+          customer_eligibility?: Json | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          id?: string
+          is_active?: boolean | null
+          max_discount_amount?: number | null
+          min_purchase_amount?: number | null
+          name: string
+          requires_approval?: boolean | null
+          updated_at?: string | null
+          usage_limit?: number | null
+          valid_from: string
+          valid_to?: string | null
+        }
+        Update: {
+          applicable_items?: Json | null
+          applicable_to?: string
+          code?: string
+          created_at?: string | null
+          customer_eligibility?: Json | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean | null
+          max_discount_amount?: number | null
+          min_purchase_amount?: number | null
+          name?: string
+          requires_approval?: boolean | null
+          updated_at?: string | null
+          usage_limit?: number | null
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: []
       }
       document_attachments: {
         Row: {
@@ -499,6 +616,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      exemption_policies: {
+        Row: {
+          applicable_items: Json | null
+          applies_to: string
+          approval_workflow: Json | null
+          code: string
+          created_at: string | null
+          description: string | null
+          eligibility_criteria: Json
+          exemption_percentage: number | null
+          exemption_type: string
+          id: string
+          is_active: boolean | null
+          name: string
+          required_documents: Json | null
+          requires_documentation: boolean | null
+          updated_at: string | null
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          applicable_items?: Json | null
+          applies_to: string
+          approval_workflow?: Json | null
+          code: string
+          created_at?: string | null
+          description?: string | null
+          eligibility_criteria?: Json
+          exemption_percentage?: number | null
+          exemption_type: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          required_documents?: Json | null
+          requires_documentation?: boolean | null
+          updated_at?: string | null
+          valid_from: string
+          valid_to?: string | null
+        }
+        Update: {
+          applicable_items?: Json | null
+          applies_to?: string
+          approval_workflow?: Json | null
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          eligibility_criteria?: Json
+          exemption_percentage?: number | null
+          exemption_type?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          required_documents?: Json | null
+          requires_documentation?: boolean | null
+          updated_at?: string | null
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: []
       }
       invoices: {
         Row: {
@@ -1217,6 +1394,50 @@ export type Database = {
             columns: ["payment_id"]
             isOneToOne: false
             referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rule_execution_log: {
+        Row: {
+          actions_taken: Json | null
+          conditions_met: Json | null
+          error_message: string | null
+          executed_at: string | null
+          executed_by: string | null
+          execution_context: Json | null
+          id: string
+          result: string | null
+          rule_id: string | null
+        }
+        Insert: {
+          actions_taken?: Json | null
+          conditions_met?: Json | null
+          error_message?: string | null
+          executed_at?: string | null
+          executed_by?: string | null
+          execution_context?: Json | null
+          id?: string
+          result?: string | null
+          rule_id?: string | null
+        }
+        Update: {
+          actions_taken?: Json | null
+          conditions_met?: Json | null
+          error_message?: string | null
+          executed_at?: string | null
+          executed_by?: string | null
+          execution_context?: Json | null
+          id?: string
+          result?: string | null
+          rule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rule_execution_log_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "business_rules"
             referencedColumns: ["id"]
           },
         ]
