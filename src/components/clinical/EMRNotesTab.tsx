@@ -31,16 +31,30 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
   }, [patientId]);
 
   const loadData = async () => {
-    const [notesRes, patientsRes] = await Promise.all([
-      supabase
-        .from("emr_notes")
-        .select("*, patients(first_name, last_name, mrn), author:profiles!emr_notes_author_id_fkey(first_name, last_name)")
-        .order("created_at", { ascending: false })
-        .then(res => patientId ? { ...res, data: res.data?.filter(n => n.patient_id === patientId) } : res),
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    let query = supabase
+      .from("emr_notes")
+      .select("*, patients(first_name, last_name, mrn)")
+      .order("created_at", { ascending: false });
+
+    if (patientId) {
+      query = query.eq("patient_id", patientId);
+    }
+
+    const [notesRes, patientsRes, profilesRes] = await Promise.all([
+      query,
       supabase.from("patients").select("*").order("first_name"),
+      supabase.from("profiles").select("id, first_name, last_name"),
     ]);
 
-    if (notesRes.data) setNotes(notesRes.data);
+    // Merge author data manually
+    const notesWithAuthors = notesRes.data?.map(note => ({
+      ...note,
+      author: profilesRes.data?.find(p => p.id === note.author_id)
+    })) || [];
+
+    setNotes(notesWithAuthors);
     if (patientsRes.data) setPatients(patientsRes.data);
   };
 
