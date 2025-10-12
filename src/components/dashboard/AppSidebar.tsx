@@ -54,7 +54,6 @@ const adminNavItems = [
 ];
 
 export function AppSidebar({ isAdmin }: AppSidebarProps) {
-  const { open } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -65,7 +64,7 @@ export function AppSidebar({ isAdmin }: AppSidebarProps) {
       : "hover:bg-sidebar-accent/50";
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="none" className="w-64">
       <SidebarContent className="gap-0">
         {/* Logo Section */}
         <div className="p-4 border-b border-sidebar-border">
@@ -73,12 +72,10 @@ export function AppSidebar({ isAdmin }: AppSidebarProps) {
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
               <Activity className="w-6 h-6 text-primary-foreground" />
             </div>
-            {open && (
-              <div className="flex flex-col">
-                <span className="font-bold text-lg text-sidebar-foreground">SONIK</span>
-                <span className="text-xs text-muted-foreground">EMR System</span>
-              </div>
-            )}
+            <div className="flex flex-col">
+              <span className="font-bold text-lg text-sidebar-foreground">SONIK</span>
+              <span className="text-xs text-muted-foreground">EMR System</span>
+            </div>
           </div>
         </div>
 

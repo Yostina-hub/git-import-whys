@@ -87,7 +87,7 @@ const Dashboard = () => {
   }
 
   return (
-    <SidebarProvider defaultOpen>
+    <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar isAdmin={isAdmin} />
         
