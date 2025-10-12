@@ -325,7 +325,8 @@ By signing below, I acknowledge that I have read and understood this consent.`,
                   Review the consent details below, capture a photo, optionally record voice consent, and sign to proceed.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="max-h-[70vh] overflow-y-auto pr-2">
+                <form onSubmit={handleSubmit} className="space-y-4 pb-4">
                 {!patientId && (
                   <div className="space-y-2">
                     <Label>Patient *</Label>
@@ -490,6 +491,7 @@ By signing below, I acknowledge that I have read and understood this consent.`,
                   {loading ? "Recording..." : "I Agree and Submit"}
                 </Button>
               </form>
+            </div>
             </DialogContent>
           </Dialog>
         </div>
