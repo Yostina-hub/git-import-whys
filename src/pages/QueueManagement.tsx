@@ -7,8 +7,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle, AlertCircle, Users, Clock } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, Users, Clock, Volume2 } from "lucide-react";
 import { QueueStatistics } from "@/components/queue/QueueStatistics";
+import { QueueActions } from "@/components/queue/QueueActions";
+import { QueueFilters } from "@/components/queue/QueueFilters";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 const QueueManagement = () => {
   const navigate = useNavigate();
@@ -18,6 +22,9 @@ const QueueManagement = () => {
   const [selectedQueue, setSelectedQueue] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [currentSLA, setCurrentSLA] = useState(30);
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [showOnlySLABreaches, setShowOnlySLABreaches] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(true);
 
   useEffect(() => {
     checkAuth();
@@ -74,6 +81,20 @@ const QueueManagement = () => {
     if (data) setTickets(data);
   };
 
+  const getWaitTime = (createdAt: string) => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffMinutes = Math.floor((now.getTime() - created.getTime()) / 60000);
+    return diffMinutes;
+  };
+
+  const playNotificationSound = () => {
+    if (audioEnabled) {
+      const audio = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZRQ0PVqzn77BdGAg+ltryxnIlBSp+zPLaizsIGGS57OihUBELTKXh8bllHAU2jdXx0H0pBSd6yfDckTsHE1qw6u2nVBML");
+      audio.play().catch(e => console.log("Audio play failed:", e));
+    }
+  };
+
   const callNext = async () => {
     if (!selectedQueue) return;
     
@@ -98,6 +119,7 @@ const QueueManagement = () => {
         description: error.message,
       });
     } else {
+      playNotificationSound();
       toast({
         title: "Patient called",
         description: `Token ${nextTicket.token_number} - ${nextTicket.patients.first_name} ${nextTicket.patients.last_name}`,
@@ -146,18 +168,20 @@ const QueueManagement = () => {
   const getPriorityColor = (priority: string) => {
     const colors: Record<string, string> = {
       routine: "bg-gray-500",
+      urgent: "bg-orange-500",
       stat: "bg-red-500",
       vip: "bg-purple-500",
     };
     return colors[priority] || "bg-gray-500";
   };
 
-  const getWaitTime = (createdAt: string) => {
-    const now = new Date();
-    const created = new Date(createdAt);
-    const diffMinutes = Math.floor((now.getTime() - created.getTime()) / 60000);
-    return diffMinutes;
-  };
+  const filteredTickets = tickets.filter((ticket) => {
+    const waitTime = getWaitTime(ticket.created_at);
+    const matchesPriority = priorityFilter === "all" || ticket.priority === priorityFilter;
+    const matchesSLA = !showOnlySLABreaches || waitTime > currentSLA;
+    return matchesPriority && matchesSLA;
+  });
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -174,10 +198,22 @@ const QueueManagement = () => {
       <main className="container mx-auto px-4 py-8">
         <QueueStatistics tickets={tickets} slaMinutes={currentSLA} />
         
-        <div className="mt-6 mb-6">
-          <Button onClick={callNext} size="lg" className="w-full md:w-auto">
+        <div className="mt-6 mb-6 flex items-center justify-between">
+          <Button onClick={callNext} size="lg">
             Call Next Patient
           </Button>
+          
+          <div className="flex items-center gap-2">
+            <Switch
+              id="audio-enabled"
+              checked={audioEnabled}
+              onCheckedChange={setAudioEnabled}
+            />
+            <Label htmlFor="audio-enabled" className="flex items-center gap-2">
+              <Volume2 className="h-4 w-4" />
+              Sound notifications
+            </Label>
+          </div>
         </div>
 
         <Card>
@@ -196,6 +232,13 @@ const QueueManagement = () => {
 
               {queues.map((queue) => (
                 <TabsContent key={queue.id} value={queue.id}>
+                  <QueueFilters
+                    priorityFilter={priorityFilter}
+                    setPriorityFilter={setPriorityFilter}
+                    showOnlySLABreaches={showOnlySLABreaches}
+                    setShowOnlySLABreaches={setShowOnlySLABreaches}
+                  />
+                  
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -208,7 +251,7 @@ const QueueManagement = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {tickets.map((ticket) => {
+                      {filteredTickets.map((ticket) => {
                         const waitTime = getWaitTime(ticket.created_at);
                         const slaBreached = waitTime > currentSLA;
                         return (
@@ -236,12 +279,19 @@ const QueueManagement = () => {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              {ticket.status === "called" && (
-                                <Button size="sm" onClick={() => markServed(ticket.id)}>
-                                  <CheckCircle className="h-4 w-4 mr-1" />
-                                  Complete
-                                </Button>
-                              )}
+                              <div className="flex items-center gap-2">
+                                {ticket.status === "called" && (
+                                  <Button size="sm" onClick={() => markServed(ticket.id)}>
+                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                    Complete
+                                  </Button>
+                                )}
+                                <QueueActions 
+                                  ticket={ticket} 
+                                  queues={queues}
+                                  onUpdate={() => selectedQueue && loadTickets(selectedQueue)} 
+                                />
+                              </div>
                             </TableCell>
                           </TableRow>
                         );
@@ -249,9 +299,9 @@ const QueueManagement = () => {
                     </TableBody>
                   </Table>
 
-                  {tickets.length === 0 && (
+                  {filteredTickets.length === 0 && (
                     <div className="text-center py-8 text-muted-foreground">
-                      No patients in queue
+                      {tickets.length === 0 ? "No patients in queue" : "No patients match the current filters"}
                     </div>
                   )}
                 </TabsContent>
