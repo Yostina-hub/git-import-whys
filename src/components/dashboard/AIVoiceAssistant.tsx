@@ -42,7 +42,7 @@ export function AIVoiceAssistant({ open, onOpenChange }: AIVoiceAssistantProps) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[100px]">
+      <SheetContent side="bottom" className="h-[500px]">
         <SheetHeader className="border-b pb-3">
           <SheetTitle className="flex items-center gap-2 text-xl">
             <Sparkles className="h-5 w-5 text-primary" />
