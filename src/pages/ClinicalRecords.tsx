@@ -79,13 +79,11 @@ const ClinicalRecords = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="vitals" className="w-full">
-          <TabsList className="grid w-full grid-cols-8 h-auto flex-wrap">
+          <TabsList className="grid w-full grid-cols-6 h-auto flex-wrap">
             <TabsTrigger value="vitals">Vitals</TabsTrigger>
             <TabsTrigger value="medications">Medications</TabsTrigger>
             <TabsTrigger value="allergies">Allergies</TabsTrigger>
             <TabsTrigger value="assessments">Assessments</TabsTrigger>
-            <TabsTrigger value="protocols">Protocols</TabsTrigger>
-            <TabsTrigger value="sessions">Sessions</TabsTrigger>
             <TabsTrigger value="notes">EMR Notes</TabsTrigger>
             <TabsTrigger value="consents">Consents</TabsTrigger>
           </TabsList>
@@ -106,13 +104,14 @@ const ClinicalRecords = () => {
               <AssessmentsTab patientId={patientId} />
             </TabsContent>
 
-          <TabsContent value="protocols">
+          {/* Hidden for future use */}
+          {/* <TabsContent value="protocols">
             <ProtocolsTab patientId={patientId} />
           </TabsContent>
 
           <TabsContent value="sessions">
             <SessionsTab patientId={patientId} />
-          </TabsContent>
+          </TabsContent> */}
 
           <TabsContent value="notes">
             <EMRNotesTab patientId={patientId} />
