@@ -11,19 +11,28 @@ import { Plus, CheckCircle, Clock } from "lucide-react";
 
 interface ConsentsTabProps {
   patientId: string | null;
+  autoOpen?: boolean;
+  onAutoOpenChange?: (open: boolean) => void;
 }
 
-const ConsentsTab = ({ patientId }: ConsentsTabProps) => {
+const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: ConsentsTabProps) => {
   const { toast } = useToast();
   const [consents, setConsents] = useState<any[]>([]);
   const [patients, setPatients] = useState<any[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(autoOpen);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     patient_id: patientId || "",
     consent_type: "general_treatment" as const,
     signed_by: "patient",
   });
+
+  useEffect(() => {
+    if (autoOpen) {
+      setIsDialogOpen(true);
+      onAutoOpenChange?.(false);
+    }
+  }, [autoOpen]);
 
   useEffect(() => {
     loadData();

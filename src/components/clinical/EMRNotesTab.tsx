@@ -11,9 +11,10 @@ import { Plus } from "lucide-react";
 
 interface EMRNotesTabProps {
   patientId: string | null;
+  onNoteCreated?: (patientId: string) => void;
 }
 
-const EMRNotesTab = ({ patientId }: EMRNotesTabProps) => {
+const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
   const { toast } = useToast();
   const [notes, setNotes] = useState<any[]>([]);
   const [patients, setPatients] = useState<any[]>([]);
@@ -69,6 +70,12 @@ const EMRNotesTab = ({ patientId }: EMRNotesTabProps) => {
       });
       setIsDialogOpen(false);
       loadData();
+      
+      // Trigger consent dialog
+      if (onNoteCreated && formData.patient_id) {
+        onNoteCreated(formData.patient_id);
+      }
+      
       setFormData({
         patient_id: patientId || "",
         note_type: "subjective",

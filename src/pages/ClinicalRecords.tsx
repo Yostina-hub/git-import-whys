@@ -21,6 +21,7 @@ const ClinicalRecords = () => {
   const [searchParams] = useSearchParams();
   const patientId = searchParams.get("patient");
   const [patient, setPatient] = useState<any>(null);
+  const [showConsentDialog, setShowConsentDialog] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -115,11 +116,18 @@ const ClinicalRecords = () => {
           </TabsContent>
 
           <TabsContent value="notes">
-            <EMRNotesTab patientId={patientId} />
+            <EMRNotesTab 
+              patientId={patientId} 
+              onNoteCreated={() => setShowConsentDialog(true)}
+            />
           </TabsContent>
 
           <TabsContent value="consents">
-            <ConsentsTab patientId={patientId} />
+            <ConsentsTab 
+              patientId={patientId} 
+              autoOpen={showConsentDialog}
+              onAutoOpenChange={(open) => setShowConsentDialog(open)}
+            />
           </TabsContent>
         </Tabs>
       </main>
