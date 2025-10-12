@@ -1322,6 +1322,88 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_schedules: {
+        Row: {
+          break_end: string | null
+          break_start: string | null
+          clinic_id: string
+          created_at: string
+          created_by: string | null
+          day_of_week: Database["public"]["Enums"]["day_of_week"]
+          effective_from: string
+          effective_until: string | null
+          end_time: string
+          id: string
+          is_active: boolean | null
+          max_appointments: number | null
+          notes: string | null
+          provider_id: string
+          schedule_type: Database["public"]["Enums"]["schedule_type"]
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          break_end?: string | null
+          break_start?: string | null
+          clinic_id: string
+          created_at?: string
+          created_by?: string | null
+          day_of_week: Database["public"]["Enums"]["day_of_week"]
+          effective_from?: string
+          effective_until?: string | null
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          max_appointments?: number | null
+          notes?: string | null
+          provider_id: string
+          schedule_type?: Database["public"]["Enums"]["schedule_type"]
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          break_end?: string | null
+          break_start?: string | null
+          clinic_id?: string
+          created_at?: string
+          created_by?: string | null
+          day_of_week?: Database["public"]["Enums"]["day_of_week"]
+          effective_from?: string
+          effective_until?: string | null
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          max_appointments?: number | null
+          notes?: string | null
+          provider_id?: string
+          schedule_type?: Database["public"]["Enums"]["schedule_type"]
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_schedules_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_schedules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_schedules_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       queues: {
         Row: {
           clinic_id: string
@@ -1441,6 +1523,66 @@ export type Database = {
             columns: ["rule_id"]
             isOneToOne: false
             referencedRelation: "business_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_exceptions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          end_time: string | null
+          exception_date: string
+          exception_type: Database["public"]["Enums"]["schedule_type"]
+          id: string
+          provider_id: string
+          reason: string
+          start_time: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          end_time?: string | null
+          exception_date: string
+          exception_type: Database["public"]["Enums"]["schedule_type"]
+          id?: string
+          provider_id: string
+          reason: string
+          start_time?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          end_time?: string | null
+          exception_date?: string
+          exception_type?: Database["public"]["Enums"]["schedule_type"]
+          id?: string
+          provider_id?: string
+          reason?: string
+          start_time?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_exceptions_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_exceptions_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1977,6 +2119,14 @@ export type Database = {
         | "telehealth"
         | "package_treatment"
         | "research"
+      day_of_week:
+        | "monday"
+        | "tuesday"
+        | "wednesday"
+        | "thursday"
+        | "friday"
+        | "saturday"
+        | "sunday"
       gender_identity:
         | "male"
         | "female"
@@ -2029,6 +2179,7 @@ export type Database = {
         | "imaging"
         | "cashier"
         | "pharmacy"
+      schedule_type: "regular" | "override" | "leave"
       sex_at_birth: "male" | "female" | "intersex" | "unknown"
       ticket_status: "waiting" | "called" | "no_show" | "served" | "transferred"
     }
@@ -2192,6 +2343,15 @@ export const Constants = {
         "package_treatment",
         "research",
       ],
+      day_of_week: [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+      ],
       gender_identity: [
         "male",
         "female",
@@ -2238,6 +2398,7 @@ export const Constants = {
       priority_level: ["routine", "stat", "vip"],
       protocol_status: ["draft", "active", "on_hold", "completed", "cancelled"],
       queue_type: ["triage", "doctor", "lab", "imaging", "cashier", "pharmacy"],
+      schedule_type: ["regular", "override", "leave"],
       sex_at_birth: ["male", "female", "intersex", "unknown"],
       ticket_status: ["waiting", "called", "no_show", "served", "transferred"],
     },
