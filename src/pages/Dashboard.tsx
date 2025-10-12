@@ -20,8 +20,13 @@ const Dashboard = () => {
 
   useEffect(() => {
     checkAuth();
-    loadStats();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      loadStats();
+    }
+  }, [user]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
