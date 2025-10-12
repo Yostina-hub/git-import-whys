@@ -9,10 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, CheckCircle, AlertCircle, Clock, FileText, Stethoscope, Pill, TestTube } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AllergiesTab } from "@/components/clinical/AllergiesTab";
-import { MedicationsTab } from "@/components/clinical/MedicationsTab";
-import { VitalSignsTab } from "@/components/clinical/VitalSignsTab";
-import EMRNotesTab from "@/components/clinical/EMRNotesTab";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 const DoctorQueue = () => {
   const navigate = useNavigate();
@@ -285,38 +284,86 @@ const DoctorQueue = () => {
 
       {/* Patient Details Dialog */}
       <Dialog open={showPatientDialog} onOpenChange={setShowPatientDialog}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              Patient: {selectedPatient?.first_name} {selectedPatient?.last_name} (MRN: {selectedPatient?.mrn})
+              Patient Consultation
             </DialogTitle>
           </DialogHeader>
           
           {selectedPatient && (
-            <Tabs defaultValue="vitals" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="vitals">Vitals</TabsTrigger>
-                <TabsTrigger value="allergies">Allergies</TabsTrigger>
-                <TabsTrigger value="medications">Medications</TabsTrigger>
-                <TabsTrigger value="notes">EMR Notes</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="vitals">
-                <VitalSignsTab patientId={selectedPatient.id} />
-              </TabsContent>
-              
-              <TabsContent value="allergies">
-                <AllergiesTab patientId={selectedPatient.id} />
-              </TabsContent>
-              
-              <TabsContent value="medications">
-                <MedicationsTab patientId={selectedPatient.id} />
-              </TabsContent>
-              
-              <TabsContent value="notes">
-                <EMRNotesTab patientId={selectedPatient.id} />
-              </TabsContent>
-            </Tabs>
+            <div className="space-y-6">
+              {/* Patient Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Patient Information</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Name</p>
+                    <p className="font-medium">{selectedPatient.first_name} {selectedPatient.last_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">MRN</p>
+                    <p className="font-medium">{selectedPatient.mrn}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Date of Birth</p>
+                    <p className="font-medium">{new Date(selectedPatient.date_of_birth).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Age</p>
+                    <p className="font-medium">
+                      {Math.floor((new Date().getTime() - new Date(selectedPatient.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} years
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quick Actions */}
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => navigate(`/clinical?patient=${selectedPatient.id}`)}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  View Full Clinical Record
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => navigate(`/orders?patient=${selectedPatient.id}`)}
+                >
+                  <TestTube className="h-4 w-4 mr-2" />
+                  Create Order
+                </Button>
+              </div>
+
+              {/* Quick Consultation Note */}
+              <div className="space-y-2">
+                <Label htmlFor="quick-note">Quick Consultation Note</Label>
+                <Textarea 
+                  id="quick-note"
+                  placeholder="Enter consultation notes..."
+                  rows={6}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setShowPatientDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={() => {
+                  const ticket = tickets.find(t => t.patients.id === selectedPatient.id);
+                  if (ticket) completeConsultation(ticket.id);
+                }}>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Complete Consultation
+                </Button>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>
