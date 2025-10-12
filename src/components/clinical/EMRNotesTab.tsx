@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus } from "lucide-react";
+import { Plus, Edit } from "lucide-react";
 
 interface EMRNotesTabProps {
   patientId: string | null;
@@ -20,6 +20,8 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
   const [patients, setPatients] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [editingNote, setEditingNote] = useState<any>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     patient_id: patientId || "",
     note_type: "subjective" as const,
@@ -28,7 +30,13 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
 
   useEffect(() => {
     loadData();
+    getCurrentUser();
   }, [patientId]);
+
+  const getCurrentUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setCurrentUserId(user?.id || null);
+  };
 
   const loadData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -64,39 +72,97 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
 
     const { data: { user } } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from("emr_notes").insert([
-      {
-        ...formData,
-        author_id: user?.id,
-      },
-    ]);
+    if (editingNote) {
+      // Update existing note
+      const { error } = await supabase
+        .from("emr_notes")
+        .update({
+          note_type: formData.note_type,
+          content: formData.content,
+        })
+        .eq("id", editingNote.id);
 
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error creating note",
-        description: error.message,
-      });
-    } else {
-      toast({
-        title: "Note created",
-        description: "The EMR note has been saved successfully.",
-      });
-      setIsDialogOpen(false);
-      loadData();
-      
-      // Trigger consent dialog
-      if (onNoteCreated && formData.patient_id) {
-        onNoteCreated(formData.patient_id);
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error updating note",
+          description: error.message,
+        });
+      } else {
+        toast({
+          title: "Note updated",
+          description: "The EMR note has been updated successfully.",
+        });
+        setIsDialogOpen(false);
+        setEditingNote(null);
+        loadData();
       }
-      
-      setFormData({
-        patient_id: patientId || "",
-        note_type: "subjective",
-        content: "",
-      });
+    } else {
+      // Create new note
+      const { error } = await supabase.from("emr_notes").insert([
+        {
+          ...formData,
+          author_id: user?.id,
+        },
+      ]);
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error creating note",
+          description: error.message,
+        });
+      } else {
+        toast({
+          title: "Note created",
+          description: "The EMR note has been saved successfully.",
+        });
+        setIsDialogOpen(false);
+        loadData();
+        
+        // Trigger consent dialog
+        if (onNoteCreated && formData.patient_id) {
+          onNoteCreated(formData.patient_id);
+        }
+        
+        setFormData({
+          patient_id: patientId || "",
+          note_type: "subjective",
+          content: "",
+        });
+      }
     }
     setLoading(false);
+  };
+
+  const canEditNote = (note: any) => {
+    if (!currentUserId || note.author_id !== currentUserId) return false;
+    
+    const createdAt = new Date(note.created_at);
+    const now = new Date();
+    const diffInMinutes = (now.getTime() - createdAt.getTime()) / (1000 * 60);
+    
+    return diffInMinutes <= 5;
+  };
+
+  const handleEditNote = (note: any) => {
+    setEditingNote(note);
+    setFormData({
+      patient_id: note.patient_id,
+      note_type: note.note_type,
+      content: note.content,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingNote(null);
+    setFormData({
+      patient_id: patientId || "",
+      note_type: "subjective",
+      content: "",
+    });
   };
 
   return (
@@ -104,7 +170,7 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>EMR Notes</CardTitle>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={handleCloseDialog}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
@@ -113,10 +179,10 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Create EMR Note</DialogTitle>
+                <DialogTitle>{editingNote ? "Edit EMR Note" : "Create EMR Note"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                {!patientId && (
+                {!patientId && !editingNote && (
                   <div className="space-y-2">
                     <Label>Patient *</Label>
                     <Select value={formData.patient_id} onValueChange={(value) => setFormData({ ...formData, patient_id: value })}>
@@ -165,7 +231,7 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
                 </div>
 
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Saving..." : "Save Note"}
+                  {loading ? "Saving..." : editingNote ? "Update Note" : "Save Note"}
                 </Button>
               </form>
             </DialogContent>
@@ -185,8 +251,19 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
                     ({note.note_type})
                   </span>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {new Date(note.created_at).toLocaleString()}
+                <div className="flex items-center gap-2">
+                  <div className="text-sm text-muted-foreground">
+                    {new Date(note.created_at).toLocaleString()}
+                  </div>
+                  {canEditNote(note) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditNote(note)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
               <p className="text-sm whitespace-pre-wrap">{note.content}</p>
