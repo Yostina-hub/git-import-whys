@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Calendar, DollarSign, ClipboardList, LogOut, FileText, List, Stethoscope } from "lucide-react";
+import { Users, Calendar, DollarSign, ClipboardList, LogOut, FileText, List, Stethoscope, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
@@ -156,7 +156,7 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/queue")}>
             <CardHeader>
               <List className="h-8 w-8 mb-2 text-primary" />
@@ -170,6 +170,14 @@ const Dashboard = () => {
               <Stethoscope className="h-8 w-8 mb-2 text-primary" />
               <CardTitle>Lab & Imaging Orders</CardTitle>
               <CardDescription>Create and track medical orders</CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/communications")}>
+            <CardHeader>
+              <Mail className="h-8 w-8 mb-2 text-primary" />
+              <CardTitle>Communications</CardTitle>
+              <CardDescription>Send notifications and messages</CardDescription>
             </CardHeader>
           </Card>
 
