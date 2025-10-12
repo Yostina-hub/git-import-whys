@@ -414,6 +414,121 @@ export type Database = {
           },
         ]
       }
+      orders: {
+        Row: {
+          appointment_id: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          linked_invoice_id: string | null
+          notes: string | null
+          order_payload: Json
+          order_type: Database["public"]["Enums"]["order_type"]
+          ordered_by: string
+          patient_id: string
+          priority: Database["public"]["Enums"]["priority_level"] | null
+          result_payload: Json | null
+          scheduled_at: string | null
+          status: Database["public"]["Enums"]["order_status"] | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          linked_invoice_id?: string | null
+          notes?: string | null
+          order_payload?: Json
+          order_type: Database["public"]["Enums"]["order_type"]
+          ordered_by: string
+          patient_id: string
+          priority?: Database["public"]["Enums"]["priority_level"] | null
+          result_payload?: Json | null
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          linked_invoice_id?: string | null
+          notes?: string | null
+          order_payload?: Json
+          order_type?: Database["public"]["Enums"]["order_type"]
+          ordered_by?: string
+          patient_id?: string
+          priority?: Database["public"]["Enums"]["priority_level"] | null
+          result_payload?: Json | null
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_linked_invoice_id_fkey"
+            columns: ["linked_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packages: {
+        Row: {
+          bundle_price: number
+          code: string
+          components: Json
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+          validity_days: number | null
+        }
+        Insert: {
+          bundle_price: number
+          code: string
+          components?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+          validity_days?: number | null
+        }
+        Update: {
+          bundle_price?: number
+          code?: string
+          components?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+          validity_days?: number | null
+        }
+        Relationships: []
+      }
       patients: {
         Row: {
           address_line1: string | null
@@ -671,6 +786,85 @@ export type Database = {
         }
         Relationships: []
       }
+      queues: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+          queue_type: Database["public"]["Enums"]["queue_type"]
+          sla_minutes: number | null
+          updated_at: string
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          queue_type: Database["public"]["Enums"]["queue_type"]
+          sla_minutes?: number | null
+          updated_at?: string
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          queue_type?: Database["public"]["Enums"]["queue_type"]
+          sla_minutes?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "queues_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      refunds: {
+        Row: {
+          amount: number
+          approved_by: string | null
+          created_at: string
+          id: string
+          payment_id: string
+          processed_at: string | null
+          reason: string
+        }
+        Insert: {
+          amount: number
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          payment_id: string
+          processed_at?: string | null
+          reason: string
+        }
+        Update: {
+          amount?: number
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          payment_id?: string
+          processed_at?: string | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refunds_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           code: string
@@ -709,6 +903,76 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      tickets: {
+        Row: {
+          appointment_id: string | null
+          called_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          patient_id: string
+          priority: Database["public"]["Enums"]["priority_level"] | null
+          queue_id: string
+          served_at: string | null
+          served_by: string | null
+          status: Database["public"]["Enums"]["ticket_status"] | null
+          token_number: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          called_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          priority?: Database["public"]["Enums"]["priority_level"] | null
+          queue_id: string
+          served_at?: string | null
+          served_by?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"] | null
+          token_number: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          called_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          priority?: Database["public"]["Enums"]["priority_level"] | null
+          queue_id?: string
+          served_at?: string | null
+          served_by?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"] | null
+          token_number?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "queues"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       treatment_protocols: {
         Row: {
@@ -867,6 +1131,60 @@ export type Database = {
         }
         Relationships: []
       }
+      visits: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          id: string
+          linked_invoice_id: string | null
+          opened_at: string
+          patient_id: string
+          primary_provider_id: string | null
+          state: string | null
+          updated_at: string
+          visit_type: string | null
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          linked_invoice_id?: string | null
+          opened_at?: string
+          patient_id: string
+          primary_provider_id?: string | null
+          state?: string | null
+          updated_at?: string
+          visit_type?: string | null
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          linked_invoice_id?: string | null
+          opened_at?: string
+          patient_id?: string
+          primary_provider_id?: string | null
+          state?: string | null
+          updated_at?: string
+          visit_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visits_linked_invoice_id_fkey"
+            columns: ["linked_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -874,6 +1192,10 @@ export type Database = {
     Functions: {
       generate_mrn: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_ticket_token: {
+        Args: { queue_prefix: string }
         Returns: string
       }
       has_role: {
@@ -937,6 +1259,14 @@ export type Database = {
         | "admin"
         | "follow_up"
         | "message"
+      order_status:
+        | "draft"
+        | "billed_pending_payment"
+        | "scheduled"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
+      order_type: "lab" | "imaging" | "procedure" | "other"
       payment_method:
         | "cash"
         | "card"
@@ -945,13 +1275,22 @@ export type Database = {
         | "wallet"
         | "insurance"
         | "online"
+      priority_level: "routine" | "stat" | "vip"
       protocol_status:
         | "draft"
         | "active"
         | "on_hold"
         | "completed"
         | "cancelled"
+      queue_type:
+        | "triage"
+        | "doctor"
+        | "lab"
+        | "imaging"
+        | "cashier"
+        | "pharmacy"
       sex_at_birth: "male" | "female" | "intersex" | "unknown"
+      ticket_status: "waiting" | "called" | "no_show" | "served" | "transferred"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1138,6 +1477,15 @@ export const Constants = {
         "follow_up",
         "message",
       ],
+      order_status: [
+        "draft",
+        "billed_pending_payment",
+        "scheduled",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ],
+      order_type: ["lab", "imaging", "procedure", "other"],
       payment_method: [
         "cash",
         "card",
@@ -1147,8 +1495,11 @@ export const Constants = {
         "insurance",
         "online",
       ],
+      priority_level: ["routine", "stat", "vip"],
       protocol_status: ["draft", "active", "on_hold", "completed", "cancelled"],
+      queue_type: ["triage", "doctor", "lab", "imaging", "cashier", "pharmacy"],
       sex_at_birth: ["male", "female", "intersex", "unknown"],
+      ticket_status: ["waiting", "called", "no_show", "served", "transferred"],
     },
   },
 } as const

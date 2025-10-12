@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Calendar, DollarSign, ClipboardList, LogOut, FileText } from "lucide-react";
+import { Users, Calendar, DollarSign, ClipboardList, LogOut, FileText, List, Stethoscope } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
@@ -117,7 +117,7 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/patients")}>
             <CardHeader>
               <Users className="h-8 w-8 mb-2 text-primary" />
@@ -147,6 +147,24 @@ const Dashboard = () => {
               <DollarSign className="h-8 w-8 mb-2 text-primary" />
               <CardTitle>Billing</CardTitle>
               <CardDescription>Manage invoices and payments</CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/queue")}>
+            <CardHeader>
+              <List className="h-8 w-8 mb-2 text-primary" />
+              <CardTitle>Queue Management</CardTitle>
+              <CardDescription>Monitor and manage patient queues</CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/orders")}>
+            <CardHeader>
+              <Stethoscope className="h-8 w-8 mb-2 text-primary" />
+              <CardTitle>Lab & Imaging Orders</CardTitle>
+              <CardDescription>Create and track medical orders</CardDescription>
             </CardHeader>
           </Card>
 
