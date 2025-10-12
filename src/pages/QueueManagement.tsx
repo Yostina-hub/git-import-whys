@@ -73,7 +73,8 @@ const QueueManagement = () => {
   };
 
   const loadTickets = async (queueId: string) => {
-    const { data } = await supabase
+    console.log("Loading tickets for queue:", queueId);
+    const { data, error } = await supabase
       .from("tickets")
       .select("*, patients(first_name, last_name, mrn), profiles(first_name, last_name)")
       .eq("queue_id", queueId)
@@ -81,7 +82,12 @@ const QueueManagement = () => {
       .order("priority", { ascending: false })
       .order("created_at", { ascending: true });
 
-    if (data) setTickets(data);
+    if (error) {
+      console.error("Error loading tickets:", error);
+    } else {
+      console.log("Loaded tickets:", data);
+      setTickets(data || []);
+    }
   };
 
   const getWaitTime = (createdAt: string) => {
@@ -101,11 +107,14 @@ const QueueManagement = () => {
   const callNext = async () => {
     if (!selectedQueue) return;
     
+    console.log("Current tickets:", tickets);
     const nextTicket = tickets.find(t => t.status === "waiting");
+    console.log("Next ticket to call:", nextTicket);
+    
     if (!nextTicket) {
       toast({
         title: "No tickets waiting",
-        description: "There are no patients waiting in this queue.",
+        description: `There are ${tickets.length} total tickets, but none with 'waiting' status.`,
       });
       return;
     }
