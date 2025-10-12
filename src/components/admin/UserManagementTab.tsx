@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Edit, UserPlus } from "lucide-react";
 import { ManageRolesDialog } from "./ManageRolesDialog";
+import { ManageClinicAccessDialog } from "./ManageClinicAccessDialog";
 
 interface User {
   id: string;
@@ -31,6 +32,7 @@ export const UserManagementTab = () => {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [rolesDialogOpen, setRolesDialogOpen] = useState(false);
+  const [clinicAccessDialogOpen, setClinicAccessDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -94,6 +96,7 @@ export const UserManagementTab = () => {
               <TableHead>Roles</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created</TableHead>
+              <TableHead>Clinic Access</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -125,18 +128,34 @@ export const UserManagementTab = () => {
                 <TableCell>
                   {format(new Date(user.created_at), "MMM d, yyyy")}
                 </TableCell>
+                <TableCell>
+                  <Badge variant="secondary">—</Badge>
+                </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setSelectedUser(user);
-                      setRolesDialogOpen(true);
-                    }}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Manage Roles
-                  </Button>
+                  <div className="flex gap-2 justify-end">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setRolesDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Roles
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setClinicAccessDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Clinics
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -151,15 +170,23 @@ export const UserManagementTab = () => {
       )}
 
       {selectedUser && (
-        <ManageRolesDialog
-          user={selectedUser}
-          open={rolesDialogOpen}
-          onOpenChange={setRolesDialogOpen}
-          onSuccess={() => {
-            loadUsers();
-            setRolesDialogOpen(false);
-          }}
-        />
+        <>
+          <ManageRolesDialog
+            user={selectedUser}
+            open={rolesDialogOpen}
+            onOpenChange={setRolesDialogOpen}
+            onSuccess={() => {
+              loadUsers();
+              setRolesDialogOpen(false);
+            }}
+          />
+          <ManageClinicAccessDialog
+            open={clinicAccessDialogOpen}
+            onOpenChange={setClinicAccessDialogOpen}
+            userId={selectedUser.id}
+            userName={`${selectedUser.first_name} ${selectedUser.last_name}`}
+          />
+        </>
       )}
     </div>
   );
