@@ -74,13 +74,18 @@ const AssessmentsTab = ({ patientId }: AssessmentsTabProps) => {
 
     const { data: { user } } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from("assessments").insert([
-      {
-        ...formData,
-        completed_by: user?.id,
-        completed_at: new Date().toISOString(),
-      },
-    ]);
+    const { data, error } = await supabase.from("assessments")
+      .insert([
+        {
+          ...formData,
+          completed_by: user?.id,
+          completed_at: new Date().toISOString(),
+        },
+      ])
+      .select("*, patients(first_name, last_name, mrn), assessment_templates(name)")
+      .single();
+
+    setLoading(false);
 
     if (error) {
       toast({
@@ -89,14 +94,22 @@ const AssessmentsTab = ({ patientId }: AssessmentsTabProps) => {
         description: error.message,
       });
     } else {
+      // Optimistically add to list instead of reloading everything
+      setAssessments(prev => [data, ...prev]);
+      
       toast({
         title: "Assessment created",
         description: "The assessment has been saved successfully.",
       });
       setIsDialogOpen(false);
-      loadData();
+      setFormData({
+        patient_id: patientId || "",
+        template_id: "",
+        assessment_stage: "S3" as const,
+        responses: {},
+      });
+      setSelectedTemplate(null);
     }
-    setLoading(false);
   };
 
   const renderField = (field: any) => {
