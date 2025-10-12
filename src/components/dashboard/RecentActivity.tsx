@@ -85,33 +85,33 @@ export function RecentActivity({ activities }: RecentActivityProps) {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl">Recent Activity</CardTitle>
-          <Button variant="link" className="text-primary">
+          <CardTitle className="text-lg">Recent Activity</CardTitle>
+          <Button variant="link" className="text-primary text-sm h-auto p-0">
             View All
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {displayActivities.map((activity) => (
             <div
               key={activity.id}
-              className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
+              className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/5 transition-all cursor-pointer hover-scale"
             >
-              <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-muted">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-muted">
                   {getStatusIcon(activity.status)}
                 </div>
                 <div>
-                  <p className="font-medium">{activity.patientName}</p>
-                  <p className="text-sm text-muted-foreground">{activity.action}</p>
+                  <p className="text-sm font-medium">{activity.patientName}</p>
+                  <p className="text-xs text-muted-foreground">{activity.action}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {getStatusBadge(activity.status)}
-                <span className="text-sm text-muted-foreground min-w-[80px] text-right">
+                <span className="text-xs text-muted-foreground min-w-[70px] text-right">
                   {activity.time}
                 </span>
               </div>

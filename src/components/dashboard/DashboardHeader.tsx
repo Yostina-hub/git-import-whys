@@ -39,17 +39,17 @@ export function DashboardHeader({
   };
 
   return (
-    <div className="space-y-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">{title}</h1>
-          <p className="text-muted-foreground mt-1">{subtitle}</p>
+    <div className="space-y-4">
+      <header className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2" onClick={() => setAiAssistantOpen(true)}>
+        <div className="flex items-center gap-2">
+          <Button variant="default" size="sm" className="gap-2" onClick={() => setAiAssistantOpen(true)}>
             <Sparkles className="h-4 w-4" />
-            AI Assistant
+            <span className="hidden sm:inline">AI Assistant</span>
           </Button>
 
           <DropdownMenu>
@@ -58,24 +58,24 @@ export function DashboardHeader({
                 <Bell className="h-5 w-5" />
                 <Badge 
                   variant="destructive" 
-                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                  className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px]"
                 >
                   2
                 </Badge>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 bg-popover">
+            <DropdownMenuContent align="end" className="w-72 bg-popover">
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer py-3">
                 <div className="flex flex-col gap-1">
-                  <p className="font-medium">New appointment booked</p>
+                  <p className="text-sm font-medium">New appointment booked</p>
                   <p className="text-xs text-muted-foreground">Sarah Johnson - 10 minutes ago</p>
                 </div>
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer py-3">
                 <div className="flex flex-col gap-1">
-                  <p className="font-medium">Patient checked in</p>
+                  <p className="text-sm font-medium">Patient checked in</p>
                   <p className="text-xs text-muted-foreground">Michael Brown - 25 minutes ago</p>
                 </div>
               </DropdownMenuItem>
@@ -92,7 +92,7 @@ export function DashboardHeader({
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-popover">
+            <DropdownMenuContent align="end" className="w-48 bg-popover">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onProfileClick} className="cursor-pointer">
@@ -110,11 +110,11 @@ export function DashboardHeader({
 
       {/* Voice Assistant Floating Button */}
       <Button
-        size="lg"
-        className="fixed bottom-8 right-8 h-14 w-14 rounded-full shadow-lg z-50"
+        size="icon"
+        className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-110 z-50"
         onClick={() => setVoiceAssistantOpen(true)}
       >
-        <Mic className="h-6 w-6" />
+        <Mic className="h-5 w-5" />
       </Button>
 
       {/* AI Dialogs */}

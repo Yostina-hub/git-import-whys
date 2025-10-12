@@ -17,25 +17,25 @@ interface StatsGridProps {
 
 export function StatsGrid({ stats }: StatsGridProps) {
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
       {/* Total Patients */}
-      <Card className="relative overflow-hidden">
-        <CardContent className="p-6">
+      <Card className="relative overflow-hidden hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
           <div className="flex items-start justify-between">
-            <div className="space-y-3">
+            <div className="space-y-2 w-full">
               <div className="flex items-center justify-between">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Users className="h-6 w-6 text-primary" />
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-primary" />
                 </div>
                 {stats.patientsChange && (
-                  <Badge variant="secondary" className="bg-green-50 text-green-600 hover:bg-green-50">
+                  <Badge variant="secondary" className="bg-green-50 text-green-600 hover:bg-green-50 text-xs">
                     +{stats.patientsChange}%
                   </Badge>
                 )}
               </div>
               <div>
-                <div className="text-3xl font-bold">{stats.totalPatients.toLocaleString()}</div>
-                <p className="text-sm text-muted-foreground mt-1">Total Patients</p>
+                <div className="text-2xl font-bold">{stats.totalPatients.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Total Patients</p>
               </div>
             </div>
           </div>
@@ -43,23 +43,23 @@ export function StatsGrid({ stats }: StatsGridProps) {
       </Card>
 
       {/* Today's Appointments */}
-      <Card className="relative overflow-hidden">
-        <CardContent className="p-6">
+      <Card className="relative overflow-hidden hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
           <div className="flex items-start justify-between">
-            <div className="space-y-3">
+            <div className="space-y-2 w-full">
               <div className="flex items-center justify-between">
-                <div className="h-12 w-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-                  <Calendar className="h-6 w-6 text-cyan-600" />
+                <div className="h-10 w-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-cyan-600" />
                 </div>
                 {stats.pendingAppointments !== undefined && (
-                  <Badge variant="secondary" className="bg-cyan-50 text-cyan-600 hover:bg-cyan-50">
+                  <Badge variant="secondary" className="bg-cyan-50 text-cyan-600 hover:bg-cyan-50 text-xs">
                     {stats.pendingAppointments} pending
                   </Badge>
                 )}
               </div>
               <div>
-                <div className="text-3xl font-bold">{stats.todayAppointments}</div>
-                <p className="text-sm text-muted-foreground mt-1">Today's Appointments</p>
+                <div className="text-2xl font-bold">{stats.todayAppointments}</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Today's Appointments</p>
               </div>
             </div>
           </div>
@@ -67,23 +67,23 @@ export function StatsGrid({ stats }: StatsGridProps) {
       </Card>
 
       {/* Active Treatments */}
-      <Card className="relative overflow-hidden">
-        <CardContent className="p-6">
+      <Card className="relative overflow-hidden hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
           <div className="flex items-start justify-between">
-            <div className="space-y-3">
+            <div className="space-y-2 w-full">
               <div className="flex items-center justify-between">
-                <div className="h-12 w-12 rounded-xl bg-green-500/10 flex items-center justify-center">
-                  <Activity className="h-6 w-6 text-green-600" />
+                <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                  <Activity className="h-5 w-5 text-green-600" />
                 </div>
                 {stats.treatmentsChange && (
-                  <Badge variant="secondary" className="bg-green-50 text-green-600 hover:bg-green-50">
+                  <Badge variant="secondary" className="bg-green-50 text-green-600 hover:bg-green-50 text-xs">
                     +{stats.treatmentsChange}%
                   </Badge>
                 )}
               </div>
               <div>
-                <div className="text-3xl font-bold">{stats.activeTreatments}</div>
-                <p className="text-sm text-muted-foreground mt-1">Active Treatments</p>
+                <div className="text-2xl font-bold">{stats.activeTreatments}</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Active Treatments</p>
               </div>
             </div>
           </div>
@@ -91,23 +91,23 @@ export function StatsGrid({ stats }: StatsGridProps) {
       </Card>
 
       {/* Avg Wait Time */}
-      <Card className="relative overflow-hidden">
-        <CardContent className="p-6">
+      <Card className="relative overflow-hidden hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
           <div className="flex items-start justify-between">
-            <div className="space-y-3">
+            <div className="space-y-2 w-full">
               <div className="flex items-center justify-between">
-                <div className="h-12 w-12 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                  <Clock className="h-6 w-6 text-orange-600" />
+                <div className="h-10 w-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-orange-600" />
                 </div>
                 {stats.waitTimeChange && (
-                  <Badge variant="secondary" className="bg-orange-50 text-orange-600 hover:bg-orange-50">
+                  <Badge variant="secondary" className="bg-orange-50 text-orange-600 hover:bg-orange-50 text-xs">
                     {stats.waitTimeChange > 0 ? '+' : ''}{stats.waitTimeChange} min
                   </Badge>
                 )}
               </div>
               <div>
-                <div className="text-3xl font-bold">{stats.avgWaitTime || 12} min</div>
-                <p className="text-sm text-muted-foreground mt-1">Avg. Wait Time</p>
+                <div className="text-2xl font-bold">{stats.avgWaitTime || 12} min</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Avg. Wait Time</p>
               </div>
             </div>
           </div>
