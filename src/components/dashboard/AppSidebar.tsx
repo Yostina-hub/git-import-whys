@@ -14,6 +14,7 @@ import {
   Package,
   ShoppingCart,
   ClipboardCheck,
+  Building2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -53,6 +54,7 @@ const operationsNavItems = [
 const adminNavItems = [
   { title: "Services", url: "/services", icon: ShoppingCart },
   { title: "Packages", url: "/packages", icon: Package },
+  { title: "Resources", url: "/resources", icon: Building2 },
   { title: "Administration", url: "/admin", icon: Shield },
 ];
 

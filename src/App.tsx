@@ -22,6 +22,7 @@ import Visits from "./pages/Visits";
 import NotFound from "./pages/NotFound";
 import AppLayout from "./layouts/AppLayout";
 import PublicPortal from "./pages/PublicPortal";
+import Resources from "./pages/Resources";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/services" element={<Services />} />
             <Route path="/packages" element={<Packages />} />
             <Route path="/visits" element={<Visits />} />
+            <Route path="/resources" element={<Resources />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
