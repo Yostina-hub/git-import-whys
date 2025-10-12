@@ -8,8 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, ArrowLeft } from "lucide-react";
+import { Plus, Search, ArrowLeft, X } from "lucide-react";
+import { DocumentsTab } from "@/components/documents/DocumentsTab";
 
 interface Patient {
   id: string;
@@ -30,6 +32,7 @@ const Patients = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -140,6 +143,73 @@ const Patients = () => {
       patient.phone_mobile.includes(search)
     );
   });
+
+  if (selectedPatient) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b bg-card">
+          <div className="container mx-auto px-4 py-4">
+            <Button variant="ghost" onClick={() => setSelectedPatient(null)} className="mb-2">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Patient List
+            </Button>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold">
+                  {selectedPatient.first_name} {selectedPatient.last_name}
+                </h1>
+                <p className="text-muted-foreground">MRN: {selectedPatient.mrn}</p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="container mx-auto px-4 py-8">
+          <Tabs defaultValue="documents" className="w-full">
+            <TabsList>
+              <TabsTrigger value="documents">Documents</TabsTrigger>
+              <TabsTrigger value="info">Patient Info</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="documents">
+              <Card>
+                <CardContent className="pt-6">
+                  <DocumentsTab patientId={selectedPatient.id} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="info">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground">Date of Birth</Label>
+                      <p className="font-medium">
+                        {new Date(selectedPatient.date_of_birth).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Sex at Birth</Label>
+                      <p className="font-medium capitalize">{selectedPatient.sex_at_birth}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Mobile Phone</Label>
+                      <p className="font-medium">{selectedPatient.phone_mobile}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Email</Label>
+                      <p className="font-medium">{selectedPatient.email || "-"}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -300,7 +370,11 @@ const Patients = () => {
               </TableHeader>
               <TableBody>
                 {filteredPatients.map((patient) => (
-                  <TableRow key={patient.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableRow 
+                    key={patient.id} 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => setSelectedPatient(patient)}
+                  >
                     <TableCell className="font-medium">{patient.mrn}</TableCell>
                     <TableCell>
                       {patient.first_name} {patient.middle_name} {patient.last_name}

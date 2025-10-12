@@ -294,6 +294,65 @@ export type Database = {
           },
         ]
       }
+      document_attachments: {
+        Row: {
+          bucket_name: string
+          created_at: string
+          description: string | null
+          document_date: string | null
+          document_type: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          mime_type: string
+          patient_id: string
+          tags: string[] | null
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          bucket_name: string
+          created_at?: string
+          description?: string | null
+          document_date?: string | null
+          document_type: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          mime_type: string
+          patient_id: string
+          tags?: string[] | null
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          bucket_name?: string
+          created_at?: string
+          description?: string | null
+          document_date?: string | null
+          document_type?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          patient_id?: string
+          tags?: string[] | null
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_attachments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emr_notes: {
         Row: {
           appointment_id: string | null
