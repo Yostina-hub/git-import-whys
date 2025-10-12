@@ -42,41 +42,41 @@ export function AIVoiceAssistant({ open, onOpenChange }: AIVoiceAssistantProps) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-auto max-h-[400px]">
-        <SheetHeader className="border-b pb-2">
-          <SheetTitle className="flex items-center gap-2 text-base">
-            <Sparkles className="h-4 w-4 text-primary" />
+      <SheetContent side="bottom" className="h-[600px]">
+        <SheetHeader className="border-b pb-4">
+          <SheetTitle className="flex items-center gap-2 text-2xl">
+            <Sparkles className="h-6 w-6 text-primary" />
             AI Voice Assistant
           </SheetTitle>
         </SheetHeader>
 
-        <div className="py-4 space-y-4">
+        <div className="py-8 space-y-8">
           {/* Status */}
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-3">
             <div className="flex justify-center">
-              <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
+              <div className={`h-24 w-24 rounded-full flex items-center justify-center ${
                 isListening ? 'bg-primary/20 animate-pulse' : 'bg-muted'
               }`}>
-                <Mic className={`h-6 w-6 ${isListening ? 'text-primary' : 'text-muted-foreground'}`} />
+                <Mic className={`h-12 w-12 ${isListening ? 'text-primary' : 'text-muted-foreground'}`} />
               </div>
             </div>
             <div>
-              <Badge variant={isListening ? "default" : "secondary"} className="text-xs px-2 py-0.5">
+              <Badge variant={isListening ? "default" : "secondary"} className="text-lg px-4 py-1">
                 {isListening ? "Listening..." : "Ready"}
               </Badge>
             </div>
           </div>
 
           {/* Commands */}
-          <div className="space-y-2">
-            <h3 className="font-semibold text-center text-xs">Quick Commands:</h3>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-3">
+            <h3 className="font-semibold text-center">Quick Commands:</h3>
+            <div className="grid grid-cols-2 gap-3">
               {SAMPLE_COMMANDS.map((cmd) => (
                 <Button
                   key={cmd.action}
                   variant="outline"
                   onClick={() => handleCommand(cmd.label)}
-                  className="h-auto py-2 text-xs"
+                  className="h-auto py-4"
                 >
                   {cmd.label}
                 </Button>
@@ -85,39 +85,40 @@ export function AIVoiceAssistant({ open, onOpenChange }: AIVoiceAssistantProps) 
           </div>
 
           {/* Example Commands */}
-          <div className="text-center">
-            <p className="text-[10px] text-muted-foreground">
-              Try: <span className="text-primary font-medium">"Show patient John Smith"</span>
+          <div className="text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Try saying: <span className="text-primary font-medium">"Show patient John Smith"</span> or{" "}
+              <span className="text-primary font-medium">"Create appointment"</span>
             </p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-2 justify-center">
+          <div className="flex gap-3 justify-center">
             <Button
-              size="sm"
+              size="lg"
               onClick={toggleListening}
-              className="gap-1.5 h-8 text-xs"
+              className="gap-2"
               variant={isListening ? "destructive" : "default"}
             >
-              <Mic className="h-3 w-3" />
-              {isListening ? "Stop" : "Speak"}
+              <Mic className="h-5 w-5" />
+              {isListening ? "Stop Listening" : "Click to speak"}
             </Button>
             <Button
-              size="sm"
+              size="lg"
               variant="outline"
               onClick={() => setIsMuted(!isMuted)}
-              className="gap-1.5 h-8 text-xs"
+              className="gap-2"
             >
-              {isMuted ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
+              {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
               {isMuted ? "Unmute" : "Mute"}
             </Button>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="border-t bg-muted/30 p-2">
-          <p className="text-[10px] text-center text-muted-foreground">
-            Voice commands are processed securely.
+        <div className="absolute bottom-0 left-0 right-0 border-t bg-muted/30 p-4">
+          <p className="text-xs text-center text-muted-foreground">
+            Voice commands are processed securely. Your privacy is protected.
           </p>
         </div>
       </SheetContent>

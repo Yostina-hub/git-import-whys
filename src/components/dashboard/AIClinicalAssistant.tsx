@@ -94,38 +94,38 @@ export function AIClinicalAssistant({ open, onOpenChange }: AIClinicalAssistantP
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col">
+      <SheetContent side="right" className="w-full sm:max-w-xl p-0 flex flex-col">
         {/* Header */}
-        <SheetHeader className="px-3 py-2 border-b bg-gradient-to-r from-primary to-primary/80">
+        <SheetHeader className="px-4 py-3 border-b bg-gradient-to-r from-blue-600 to-cyan-500">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-md bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <Sparkles className="h-3 w-3 text-white" />
+              <div className="h-8 w-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-white" />
               </div>
               <div>
-                <SheetTitle className="text-white text-sm">AI Clinical Assistant</SheetTitle>
-                <p className="text-[10px] text-white/80">Powered by SONIK Intelligence</p>
+                <SheetTitle className="text-white text-base">AI Clinical Assistant</SheetTitle>
+                <p className="text-xs text-white/90">Powered by SONIK Intelligence</p>
               </div>
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onOpenChange(false)}
-              className="text-white hover:bg-white/20 h-6 w-6"
+              className="text-white hover:bg-white/20 h-8 w-8"
             >
-              <X className="h-3 w-3" />
+              <X className="h-4 w-4" />
             </Button>
           </div>
         </SheetHeader>
 
         {/* Notice */}
-        <div className="px-3 pt-2 pb-1">
+        <div className="px-4 pt-3 pb-2">
           <Card className="border-blue-200 bg-blue-50/50">
-            <CardContent className="p-1.5">
-              <div className="flex gap-1.5">
-                <AlertTriangle className="h-3 w-3 text-blue-600 flex-shrink-0 mt-0.5" />
-                <p className="text-[10px] text-blue-700">
-                  AI suggestions are evidence-based. Always verify with clinical judgment.
+            <CardContent className="p-2.5">
+              <div className="flex gap-2">
+                <AlertTriangle className="h-3.5 w-3.5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-700">
+                  AI suggestions are based on evidence-based guidelines. Always verify with clinical judgment.
                 </p>
               </div>
             </CardContent>
@@ -133,54 +133,54 @@ export function AIClinicalAssistant({ open, onOpenChange }: AIClinicalAssistantP
         </div>
 
         {/* Chat Messages */}
-        <ScrollArea className="flex-1 px-3">
-          <div className="space-y-2 py-2">
+        <ScrollArea className="flex-1 px-4">
+          <div className="space-y-4 py-4">
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-lg px-2 py-1.5 ${
+                  className={`max-w-[85%] rounded-lg px-3 py-2 ${
                     message.role === "user"
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted"
                   }`}
                 >
-                  <p className="text-xs">{message.content}</p>
+                  <p className="text-sm">{message.content}</p>
 
                   {/* Clinical Suggestion Card */}
                   {message.type === "clinical-suggestion" && message.suggestion && (
-                    <Card className="mt-1.5 border bg-background">
-                      <CardContent className="p-2 space-y-1.5">
+                    <Card className="mt-3 border bg-background">
+                      <CardContent className="p-3 space-y-2.5">
                         <div>
-                          <Badge variant="outline" className="mb-1 text-[10px] h-4">DIAGNOSIS</Badge>
-                          <h4 className="font-semibold text-xs">{message.suggestion.title}</h4>
+                          <Badge variant="outline" className="mb-1.5 text-xs">DIAGNOSIS</Badge>
+                          <h4 className="font-semibold text-sm">{message.suggestion.title}</h4>
                         </div>
 
                         {/* Confidence */}
                         <div>
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-[10px] font-medium">Confidence</span>
-                            <span className="text-[10px] font-semibold">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-medium">Confidence Level</span>
+                            <span className="text-xs font-semibold">
                               {message.suggestion.confidence}% - {getConfidenceLabel(message.suggestion.confidence)}
                             </span>
                           </div>
-                          <Progress value={message.suggestion.confidence} className="h-1" />
+                          <Progress value={message.suggestion.confidence} className="h-1.5" />
                         </div>
 
                         {/* Reasoning */}
                         <div>
-                          <h5 className="text-[10px] font-semibold mb-0.5">Reasoning:</h5>
-                          <p className="text-[10px] text-muted-foreground">{message.suggestion.reasoning}</p>
+                          <h5 className="text-xs font-semibold mb-1">Reasoning:</h5>
+                          <p className="text-xs text-muted-foreground">{message.suggestion.reasoning}</p>
                         </div>
 
                         {/* Evidence */}
                         <div>
-                          <h5 className="text-[10px] font-semibold mb-0.5">Evidence:</h5>
+                          <h5 className="text-xs font-semibold mb-1">Evidence:</h5>
                           <ul className="space-y-0.5">
                             {message.suggestion.evidence.map((item, idx) => (
-                              <li key={idx} className="text-[10px] text-muted-foreground flex gap-1">
+                              <li key={idx} className="text-xs text-muted-foreground flex gap-1.5">
                                 <span className="text-blue-600">•</span>
                                 <span>{item}</span>
                               </li>
@@ -189,11 +189,11 @@ export function AIClinicalAssistant({ open, onOpenChange }: AIClinicalAssistantP
                         </div>
 
                         {/* Actions */}
-                        <div className="flex gap-1.5 pt-0.5">
-                          <Button size="sm" variant="default" className="flex-1 h-6 text-[10px]">
+                        <div className="flex gap-2 pt-1">
+                          <Button size="sm" variant="default" className="flex-1 h-7 text-xs">
                             Accept
                           </Button>
-                          <Button size="sm" variant="outline" className="flex-1 h-6 text-[10px]">
+                          <Button size="sm" variant="outline" className="flex-1 h-7 text-xs">
                             Dismiss
                           </Button>
                         </div>
@@ -207,23 +207,23 @@ export function AIClinicalAssistant({ open, onOpenChange }: AIClinicalAssistantP
         </ScrollArea>
 
         {/* Input Area */}
-        <div className="border-t p-2 bg-background">
-          <div className="flex gap-1.5">
-            <Button variant="outline" size="icon" className="flex-shrink-0 h-7 w-7">
-              <Mic className="h-3 w-3" />
+        <div className="border-t p-3 bg-background">
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon" className="flex-shrink-0">
+              <Mic className="h-4 w-4" />
             </Button>
             <Input
-              placeholder="Type message..."
+              placeholder="Type your message or patient info..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSend()}
-              className="flex-1 h-7 text-xs"
+              className="flex-1"
             />
-            <Button onClick={handleSend} size="icon" className="flex-shrink-0 h-7 w-7">
-              <Send className="h-3 w-3" />
+            <Button onClick={handleSend} size="icon" className="flex-shrink-0">
+              <Send className="h-4 w-4" />
             </Button>
           </div>
-          <p className="text-[10px] text-center text-muted-foreground mt-1">
+          <p className="text-xs text-center text-muted-foreground mt-2">
             AI responses are for informational purposes only
           </p>
         </div>
