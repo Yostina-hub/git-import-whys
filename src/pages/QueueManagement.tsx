@@ -7,13 +7,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle, AlertCircle, Users, Clock, Volume2 } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, Users, Clock, Volume2, Stethoscope } from "lucide-react";
 import { QueueStatistics } from "@/components/queue/QueueStatistics";
 import { QueueActions } from "@/components/queue/QueueActions";
 import { QueueFilters } from "@/components/queue/QueueFilters";
 import { QueueDisplaySettings } from "@/components/queue/QueueDisplaySettings";
 import { QueueAnalytics } from "@/components/queue/QueueAnalytics";
 import { RoutingRules } from "@/components/queue/RoutingRules";
+import { TriageAssessmentDialog } from "@/components/queue/TriageAssessmentDialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
@@ -29,6 +30,12 @@ const QueueManagement = () => {
   const [showOnlySLABreaches, setShowOnlySLABreaches] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [queueCounts, setQueueCounts] = useState<Record<string, number>>({});
+  const [showTriageDialog, setShowTriageDialog] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<{
+    id: string;
+    name: string;
+    ticketId: string;
+  } | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -346,6 +353,24 @@ const QueueManagement = () => {
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex items-center gap-2">
+                                    {/* Show Assess button for Triage queue */}
+                                    {queue.queue_type === 'triage' && ticket.status === 'called' && (
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={() => {
+                                          setSelectedPatient({
+                                            id: ticket.patient_id,
+                                            name: `${ticket.patients.first_name} ${ticket.patients.last_name}`,
+                                            ticketId: ticket.id
+                                          });
+                                          setShowTriageDialog(true);
+                                        }}
+                                      >
+                                        <Stethoscope className="h-4 w-4 mr-1" />
+                                        Assess
+                                      </Button>
+                                    )}
                                     {ticket.status === "called" && (
                                       <Button size="sm" onClick={() => markServed(ticket.id)}>
                                         <CheckCircle className="h-4 w-4 mr-1" />
@@ -390,6 +415,23 @@ const QueueManagement = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Triage Assessment Dialog */}
+      {selectedPatient && (
+        <TriageAssessmentDialog
+          open={showTriageDialog}
+          onOpenChange={setShowTriageDialog}
+          patientId={selectedPatient.id}
+          patientName={selectedPatient.name}
+          ticketId={selectedPatient.ticketId}
+          onComplete={() => {
+            if (selectedQueue) {
+              loadTickets(selectedQueue);
+              loadQueueCounts();
+            }
+          }}
+        />
+      )}
     </div>
   );
 };
