@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ClinicsTab } from "@/components/resources/ClinicsTab";
 import { ProviderSchedulesTab } from "@/components/resources/ProviderSchedulesTab";
 import { HolidaysTab } from "@/components/resources/HolidaysTab";
+import { ServicePointsTab } from "@/components/resources/ServicePointsTab";
 
 const Resources = () => {
   const navigate = useNavigate();
@@ -42,14 +43,19 @@ const Resources = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="clinics" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="clinics">Clinics</TabsTrigger>
+            <TabsTrigger value="service-points">Service Points</TabsTrigger>
             <TabsTrigger value="schedules">Provider Schedules</TabsTrigger>
             <TabsTrigger value="holidays">Holidays & Closures</TabsTrigger>
           </TabsList>
 
           <TabsContent value="clinics">
             <ClinicsTab />
+          </TabsContent>
+
+          <TabsContent value="service-points">
+            <ServicePointsTab />
           </TabsContent>
 
           <TabsContent value="schedules">
