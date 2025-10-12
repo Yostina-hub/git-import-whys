@@ -212,40 +212,40 @@ export function AIClinicalAssistant({ open, onOpenChange }: AIClinicalAssistantP
         </ScrollArea>
 
         {/* Input Area */}
-        <div className="border-t p-4 bg-background">
-          <div className="flex gap-3 items-center mb-4">
+        <div className="border-t p-2 bg-background">
+          <div className="flex gap-2 items-center mb-2">
             <Input
-              placeholder="Type your message or patient info..."
+              placeholder="Type your message..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSend()}
-              className="flex-1 h-12 text-base"
+              className="flex-1 h-9 text-sm"
             />
-            <Button onClick={handleSend} size="icon" className="h-12 w-12 flex-shrink-0">
-              <Send className="h-5 w-5" />
+            <Button onClick={handleSend} size="icon" className="h-9 w-9 flex-shrink-0">
+              <Send className="h-4 w-4" />
             </Button>
           </div>
           
           {/* Footer Stats */}
-          <div className="flex items-center justify-between px-4">
+          <div className="flex items-center justify-between px-2">
             <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">2</p>
-              <p className="text-sm text-muted-foreground">Active Suggestions</p>
+              <p className="text-lg font-bold text-green-600">2</p>
+              <p className="text-xs text-muted-foreground">Active Suggestions</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">78%</p>
-              <p className="text-sm text-muted-foreground">Avg. Confidence</p>
+              <p className="text-lg font-bold text-blue-600">78%</p>
+              <p className="text-xs text-muted-foreground">Avg. Confidence</p>
             </div>
           </div>
           
           {/* Floating Mic Button */}
-          <div className="absolute bottom-8 right-8">
+          <div className="absolute bottom-4 right-4">
             <Button
               variant="default"
               size="icon"
-              className="h-16 w-16 rounded-full bg-blue-600 hover:bg-blue-700"
+              className="h-12 w-12 rounded-full bg-blue-600 hover:bg-blue-700"
             >
-              <Mic className="h-7 w-7" />
+              <Mic className="h-5 w-5" />
             </Button>
           </div>
         </div>
