@@ -7,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Users, Clock, CheckCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, Users, Clock } from "lucide-react";
+import { QueueStatistics } from "@/components/queue/QueueStatistics";
 
 const QueueManagement = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const QueueManagement = () => {
   const [tickets, setTickets] = useState<any[]>([]);
   const [selectedQueue, setSelectedQueue] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [currentSLA, setCurrentSLA] = useState(30);
 
   useEffect(() => {
     checkAuth();
@@ -25,10 +27,14 @@ const QueueManagement = () => {
   useEffect(() => {
     if (selectedQueue) {
       loadTickets(selectedQueue);
+      const queue = queues.find(q => q.id === selectedQueue);
+      if (queue) setCurrentSLA(queue.sla_minutes || 30);
+      
+      // Poll for updates every 5 seconds
       const interval = setInterval(() => loadTickets(selectedQueue), 5000);
       return () => clearInterval(interval);
     }
-  }, [selectedQueue]);
+  }, [selectedQueue, queues]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -166,55 +172,12 @@ const QueueManagement = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-6 md:grid-cols-4 mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Waiting</p>
-                  <p className="text-3xl font-bold">{tickets.filter(t => t.status === "waiting").length}</p>
-                </div>
-                <Users className="h-8 w-8 text-primary opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Called</p>
-                  <p className="text-3xl font-bold">{tickets.filter(t => t.status === "called").length}</p>
-                </div>
-                <Clock className="h-8 w-8 text-orange-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Avg Wait Time</p>
-                  <p className="text-3xl font-bold">
-                    {tickets.length > 0
-                      ? Math.round(tickets.reduce((acc, t) => acc + getWaitTime(t.created_at), 0) / tickets.length)
-                      : 0}
-                    <span className="text-sm">min</span>
-                  </p>
-                </div>
-                <Clock className="h-8 w-8 text-blue-500 opacity-50" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <Button onClick={callNext} className="w-full" size="lg">
-                Call Next Patient
-              </Button>
-            </CardContent>
-          </Card>
+        <QueueStatistics tickets={tickets} slaMinutes={currentSLA} />
+        
+        <div className="mt-6 mb-6">
+          <Button onClick={callNext} size="lg" className="w-full md:w-auto">
+            Call Next Patient
+          </Button>
         </div>
 
         <Card>
@@ -239,41 +202,50 @@ const QueueManagement = () => {
                         <TableHead>Token</TableHead>
                         <TableHead>Patient</TableHead>
                         <TableHead>Priority</TableHead>
-                        <TableHead>Wait Time</TableHead>
+                        <TableHead>Wait Time (SLA: {currentSLA}min)</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {tickets.map((ticket) => (
-                        <TableRow key={ticket.id}>
-                          <TableCell className="font-bold">{ticket.token_number}</TableCell>
-                          <TableCell>
-                            {ticket.patients.mrn} - {ticket.patients.first_name} {ticket.patients.last_name}
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={getPriorityColor(ticket.priority)}>
-                              {ticket.priority.toUpperCase()}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {getWaitTime(ticket.created_at)} min
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={getStatusColor(ticket.status)}>
-                              {ticket.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {ticket.status === "called" && (
-                              <Button size="sm" onClick={() => markServed(ticket.id)}>
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Complete
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {tickets.map((ticket) => {
+                        const waitTime = getWaitTime(ticket.created_at);
+                        const slaBreached = waitTime > currentSLA;
+                        return (
+                          <TableRow key={ticket.id} className={slaBreached ? "bg-red-50 dark:bg-red-950/20" : ""}>
+                            <TableCell className="font-bold">{ticket.token_number}</TableCell>
+                            <TableCell>
+                              {ticket.patients.mrn} - {ticket.patients.first_name} {ticket.patients.last_name}
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={getPriorityColor(ticket.priority)}>
+                                {ticket.priority.toUpperCase()}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {slaBreached && <AlertCircle className="h-4 w-4 text-red-500" />}
+                                <span className={slaBreached ? "text-red-600 font-semibold" : ""}>
+                                  {waitTime} min
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={getStatusColor(ticket.status)}>
+                                {ticket.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {ticket.status === "called" && (
+                                <Button size="sm" onClick={() => markServed(ticket.id)}>
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Complete
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
 

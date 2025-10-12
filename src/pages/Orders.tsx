@@ -24,6 +24,8 @@ import { ArrowLeft, Plus, Edit, Search } from "lucide-react";
 import { format } from "date-fns";
 import { CreateOrderDialog } from "@/components/orders/CreateOrderDialog";
 import { UpdateOrderStatusDialog } from "@/components/orders/UpdateOrderStatusDialog";
+import { CreateInvoiceFromOrderDialog } from "@/components/orders/CreateInvoiceFromOrderDialog";
+import { useRealtimeOrders } from "@/hooks/useRealtimeOrders";
 
 interface Order {
   id: string;
@@ -34,6 +36,7 @@ interface Order {
   order_payload: any;
   created_at: string;
   patient_id: string;
+  linked_invoice_id: string | null;
   patients: {
     first_name: string;
     last_name: string;
@@ -53,20 +56,6 @@ const Orders = () => {
   const [selectedPatient, setSelectedPatient] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
-
-  useEffect(() => {
-    checkAuth();
-    loadOrders();
-  }, []);
-
-  const checkAuth = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-    }
-  };
 
   const loadOrders = async () => {
     setLoading(true);
@@ -105,6 +94,24 @@ const Orders = () => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    checkAuth();
+    loadOrders();
+  }, []);
+
+  // Enable realtime updates for orders
+  useRealtimeOrders({ onOrderUpdate: loadOrders });
+
+  const checkAuth = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+    }
+  };
+
 
   const getOrderTypeColor = (type: string) => {
     const colors: Record<string, string> = {
@@ -231,6 +238,7 @@ const Orders = () => {
                   <TableHead>Details</TableHead>
                   <TableHead>Priority</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Billing</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -274,6 +282,12 @@ const Orders = () => {
                       <Badge className={getStatusColor(order.status)}>
                         {order.status.replace("_", " ")}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <CreateInvoiceFromOrderDialog 
+                        order={order} 
+                        onInvoiceCreated={loadOrders} 
+                      />
                     </TableCell>
                     <TableCell>
                       {format(new Date(order.created_at), "MMM d, yyyy")}

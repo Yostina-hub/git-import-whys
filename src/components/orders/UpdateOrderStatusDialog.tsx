@@ -17,12 +17,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface UpdateOrderStatusDialogProps {
   order: {
     id: string;
     status: string;
     order_type: string;
+    linked_invoice_id: string | null;
   } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -51,6 +54,16 @@ export const UpdateOrderStatusDialog = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!order) return;
+
+    // Billing gate enforcement: prevent completion without billing
+    if (status === "completed" && !order.linked_invoice_id) {
+      toast({
+        variant: "destructive",
+        title: "Billing Required",
+        description: "Cannot complete order without creating an invoice first. Please create an invoice before marking as completed.",
+      });
+      return;
+    }
 
     setLoading(true);
 
@@ -95,6 +108,15 @@ export const UpdateOrderStatusDialog = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!order?.linked_invoice_id && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                This order has not been billed yet. Create an invoice before completing the order.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div>
             <Label htmlFor="status">Status</Label>
             <Select value={status} onValueChange={setStatus}>
