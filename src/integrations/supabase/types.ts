@@ -87,6 +87,106 @@ export type Database = {
           },
         ]
       }
+      assessment_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+          schema: Json
+          stage: Database["public"]["Enums"]["assessment_stage"]
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          schema?: Json
+          stage: Database["public"]["Enums"]["assessment_stage"]
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          schema?: Json
+          stage?: Database["public"]["Enums"]["assessment_stage"]
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      assessments: {
+        Row: {
+          appointment_id: string | null
+          assessment_stage: Database["public"]["Enums"]["assessment_stage"]
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          flags: Json | null
+          id: string
+          patient_id: string
+          responses: Json
+          score: number | null
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          assessment_stage: Database["public"]["Enums"]["assessment_stage"]
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          flags?: Json | null
+          id?: string
+          patient_id: string
+          responses?: Json
+          score?: number | null
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          assessment_stage?: Database["public"]["Enums"]["assessment_stage"]
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          flags?: Json | null
+          id?: string
+          patient_id?: string
+          responses?: Json
+          score?: number | null
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessments_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clinics: {
         Row: {
           address_line1: string | null
@@ -137,6 +237,116 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      consent_forms: {
+        Row: {
+          captured_channel: string | null
+          consent_type: Database["public"]["Enums"]["consent_type"]
+          content_html: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          patient_id: string
+          signature_blob: string | null
+          signed_at: string | null
+          signed_by: string | null
+          updated_at: string
+          version: string
+          witness_id: string | null
+        }
+        Insert: {
+          captured_channel?: string | null
+          consent_type: Database["public"]["Enums"]["consent_type"]
+          content_html?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          patient_id: string
+          signature_blob?: string | null
+          signed_at?: string | null
+          signed_by?: string | null
+          updated_at?: string
+          version?: string
+          witness_id?: string | null
+        }
+        Update: {
+          captured_channel?: string | null
+          consent_type?: Database["public"]["Enums"]["consent_type"]
+          content_html?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          patient_id?: string
+          signature_blob?: string | null
+          signed_at?: string | null
+          signed_by?: string | null
+          updated_at?: string
+          version?: string
+          witness_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consent_forms_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emr_notes: {
+        Row: {
+          appointment_id: string | null
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          note_type: Database["public"]["Enums"]["note_type"]
+          patient_id: string
+          tags: string[] | null
+          updated_at: string
+          visibility: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          note_type: Database["public"]["Enums"]["note_type"]
+          patient_id: string
+          tags?: string[] | null
+          updated_at?: string
+          visibility?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          note_type?: Database["public"]["Enums"]["note_type"]
+          patient_id?: string
+          tags?: string[] | null
+          updated_at?: string
+          visibility?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emr_notes_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emr_notes_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invoices: {
         Row: {
@@ -342,6 +552,83 @@ export type Database = {
           },
         ]
       }
+      post_treatment_assessments: {
+        Row: {
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          follow_up_required: boolean | null
+          id: string
+          next_appointment_id: string | null
+          outcome: string | null
+          patient_id: string
+          responses: Json
+          score: number | null
+          session_id: string
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          follow_up_required?: boolean | null
+          id?: string
+          next_appointment_id?: string | null
+          outcome?: string | null
+          patient_id: string
+          responses?: Json
+          score?: number | null
+          session_id: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          follow_up_required?: boolean | null
+          id?: string
+          next_appointment_id?: string | null
+          outcome?: string | null
+          patient_id?: string
+          responses?: Json
+          score?: number | null
+          session_id?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_treatment_assessments_next_appointment_id_fkey"
+            columns: ["next_appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_treatment_assessments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_treatment_assessments_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_treatment_assessments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -423,6 +710,142 @@ export type Database = {
         }
         Relationships: []
       }
+      treatment_protocols: {
+        Row: {
+          attachments: Json | null
+          created_at: string
+          created_from_assessment_id: string | null
+          goals: string | null
+          id: string
+          is_optional: boolean | null
+          name: string
+          owner_provider_id: string | null
+          patient_id: string
+          plan: Json
+          status: Database["public"]["Enums"]["protocol_status"] | null
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json | null
+          created_at?: string
+          created_from_assessment_id?: string | null
+          goals?: string | null
+          id?: string
+          is_optional?: boolean | null
+          name: string
+          owner_provider_id?: string | null
+          patient_id: string
+          plan?: Json
+          status?: Database["public"]["Enums"]["protocol_status"] | null
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json | null
+          created_at?: string
+          created_from_assessment_id?: string | null
+          goals?: string | null
+          id?: string
+          is_optional?: boolean | null
+          name?: string
+          owner_provider_id?: string | null
+          patient_id?: string
+          plan?: Json
+          status?: Database["public"]["Enums"]["protocol_status"] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_protocols_created_from_assessment_id_fkey"
+            columns: ["created_from_assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_protocols_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_sessions: {
+        Row: {
+          appointment_id: string
+          billing_status: string | null
+          clinician_id: string
+          complications: string | null
+          consumables_used: Json | null
+          created_at: string
+          id: string
+          patient_id: string
+          performed_at: string
+          procedure_notes: string | null
+          protocol_id: string | null
+          services_rendered: Json | null
+          sign_off_at: string | null
+          updated_at: string
+          vitals: Json | null
+        }
+        Insert: {
+          appointment_id: string
+          billing_status?: string | null
+          clinician_id: string
+          complications?: string | null
+          consumables_used?: Json | null
+          created_at?: string
+          id?: string
+          patient_id: string
+          performed_at?: string
+          procedure_notes?: string | null
+          protocol_id?: string | null
+          services_rendered?: Json | null
+          sign_off_at?: string | null
+          updated_at?: string
+          vitals?: Json | null
+        }
+        Update: {
+          appointment_id?: string
+          billing_status?: string | null
+          clinician_id?: string
+          complications?: string | null
+          consumables_used?: Json | null
+          created_at?: string
+          id?: string
+          patient_id?: string
+          performed_at?: string
+          procedure_notes?: string | null
+          protocol_id?: string | null
+          services_rendered?: Json | null
+          sign_off_at?: string | null
+          updated_at?: string
+          vitals?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_sessions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_sessions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_sessions_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -484,6 +907,14 @@ export type Database = {
         | "cancelled"
         | "no_show"
         | "rescheduled"
+      assessment_stage: "S1" | "S2" | "S3" | "SA_online"
+      consent_type:
+        | "general_treatment"
+        | "data_privacy"
+        | "photography"
+        | "telehealth"
+        | "package_treatment"
+        | "research"
       gender_identity:
         | "male"
         | "female"
@@ -497,6 +928,15 @@ export type Database = {
         | "partial"
         | "refunded"
         | "void"
+      note_type:
+        | "subjective"
+        | "objective"
+        | "assessment"
+        | "plan"
+        | "discharge"
+        | "admin"
+        | "follow_up"
+        | "message"
       payment_method:
         | "cash"
         | "card"
@@ -505,6 +945,12 @@ export type Database = {
         | "wallet"
         | "insurance"
         | "online"
+      protocol_status:
+        | "draft"
+        | "active"
+        | "on_hold"
+        | "completed"
+        | "cancelled"
       sex_at_birth: "male" | "female" | "intersex" | "unknown"
     }
     CompositeTypes: {
@@ -658,6 +1104,15 @@ export const Constants = {
         "no_show",
         "rescheduled",
       ],
+      assessment_stage: ["S1", "S2", "S3", "SA_online"],
+      consent_type: [
+        "general_treatment",
+        "data_privacy",
+        "photography",
+        "telehealth",
+        "package_treatment",
+        "research",
+      ],
       gender_identity: [
         "male",
         "female",
@@ -673,6 +1128,16 @@ export const Constants = {
         "refunded",
         "void",
       ],
+      note_type: [
+        "subjective",
+        "objective",
+        "assessment",
+        "plan",
+        "discharge",
+        "admin",
+        "follow_up",
+        "message",
+      ],
       payment_method: [
         "cash",
         "card",
@@ -682,6 +1147,7 @@ export const Constants = {
         "insurance",
         "online",
       ],
+      protocol_status: ["draft", "active", "on_hold", "completed", "cancelled"],
       sex_at_birth: ["male", "female", "intersex", "unknown"],
     },
   },
