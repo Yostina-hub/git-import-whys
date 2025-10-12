@@ -42,7 +42,97 @@ export function AIVoiceAssistant({ open, onOpenChange }: AIVoiceAssistantProps) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[600px]">
+      <SheetContent side="bottom" className="h-[500px]">
+        <SheetHeader className="border-b pb-3">
+          <SheetTitle className="flex items-center gap-2 text-xl">
+            <Sparkles className="h-5 w-5 text-primary" />
+            AI Voice Assistant
+          </SheetTitle>
+        </SheetHeader>
+
+        <div className="py-6 space-y-6">
+          {/* Status */}
+          <div className="text-center space-y-2">
+            <div className="flex justify-center">
+              <div className={`h-20 w-20 rounded-full flex items-center justify-center ${
+                isListening ? 'bg-primary/20 animate-pulse' : 'bg-muted'
+              }`}>
+                <Mic className={`h-10 w-10 ${isListening ? 'text-primary' : 'text-muted-foreground'}`} />
+              </div>
+            </div>
+            <div>
+              <Badge variant={isListening ? "default" : "secondary"} className="text-base px-3 py-1">
+                {isListening ? "Listening..." : "Ready"}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Commands */}
+          <div className="space-y-2">
+            <h3 className="font-semibold text-center text-sm">Quick Commands:</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {SAMPLE_COMMANDS.map((cmd) => (
+                <Button
+                  key={cmd.action}
+                  variant="outline"
+                  onClick={() => handleCommand(cmd.label)}
+                  className="h-auto py-3 text-sm"
+                >
+                  {cmd.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Example Commands */}
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">
+              Try saying: <span className="text-primary font-medium">"Show patient John Smith"</span> or{" "}
+              <span className="text-primary font-medium">"Create appointment"</span>
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col items-center gap-2">
+            <Button
+              size="lg"
+              onClick={toggleListening}
+              className="gap-2 min-w-[200px] bg-slate-700 hover:bg-slate-800 text-white"
+              variant={isListening ? "destructive" : "default"}
+            >
+              {isListening ? "Stop Listening" : "Click to speak"}
+            </Button>
+            <Button 
+              variant="link" 
+              className="text-primary font-medium text-sm"
+            >
+              View All
+            </Button>
+          </div>
+        </div>
+
+        {/* Floating Status Button */}
+        <div className="absolute bottom-6 right-6">
+          <div className="relative">
+            <Button
+              size="icon"
+              onClick={() => setIsMuted(!isMuted)}
+              className={`h-16 w-16 rounded-full ${
+                isMuted 
+                  ? 'bg-red-400 hover:bg-red-500' 
+                  : 'bg-primary hover:bg-primary/90'
+              }`}
+            >
+              {isMuted ? <MicOff className="h-7 w-7" /> : <Mic className="h-7 w-7" />}
+            </Button>
+            {isListening && (
+              <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
+                <p className="text-xs font-medium text-green-600">completed</p>
+                <p className="text-xs text-muted-foreground">10 min ago</p>
+              </div>
+            )}
+          </div>
+        </div>
         <SheetHeader className="border-b pb-4">
           <SheetTitle className="flex items-center gap-2 text-2xl">
             <Sparkles className="h-6 w-6 text-primary" />
