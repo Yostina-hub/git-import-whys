@@ -61,6 +61,39 @@ export function AddToQueueDialog({ patientId, patientName, onSuccess }: AddToQue
     setLoading(true);
 
     try {
+      // Check payment status before adding to triage or doctor queue
+      const selectedQueueData = queues.find(q => q.id === selectedQueue);
+      if (selectedQueueData && (selectedQueueData.queue_type === 'triage' || selectedQueueData.queue_type === 'doctor')) {
+        const { data: invoices, error: invoiceError } = await supabase
+          .from("invoices")
+          .select("status")
+          .eq("patient_id", patientId)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (invoiceError) throw invoiceError;
+
+        if (!invoices || invoices.length === 0) {
+          toast({
+            variant: "destructive",
+            title: "Payment Required",
+            description: "Patient must have a paid invoice before proceeding to triage or doctor queue.",
+          });
+          setLoading(false);
+          return;
+        }
+
+        if (invoices[0].status !== 'paid') {
+          toast({
+            variant: "destructive",
+            title: "Payment Not Complete",
+            description: `Patient invoice status is "${invoices[0].status}". Only patients with paid invoices can proceed to triage or doctor queue.`,
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
       // Generate token number
       const { data: tokenData } = await supabase.rpc("generate_ticket_token", {
         queue_prefix: "Q"
