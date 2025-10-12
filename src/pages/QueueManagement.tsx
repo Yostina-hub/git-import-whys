@@ -12,6 +12,8 @@ import { QueueStatistics } from "@/components/queue/QueueStatistics";
 import { QueueActions } from "@/components/queue/QueueActions";
 import { QueueFilters } from "@/components/queue/QueueFilters";
 import { QueueDisplaySettings } from "@/components/queue/QueueDisplaySettings";
+import { QueueAnalytics } from "@/components/queue/QueueAnalytics";
+import { RoutingRules } from "@/components/queue/RoutingRules";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
@@ -220,6 +222,8 @@ const QueueManagement = () => {
         <Tabs defaultValue="monitor" className="space-y-4">
           <TabsList>
             <TabsTrigger value="monitor">Queue Monitor</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="routing">Routing Rules</TabsTrigger>
             <TabsTrigger value="display">Display Settings</TabsTrigger>
           </TabsList>
 
@@ -317,6 +321,14 @@ const QueueManagement = () => {
                 </Tabs>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-4">
+            <QueueAnalytics />
+          </TabsContent>
+
+          <TabsContent value="routing" className="space-y-4">
+            <RoutingRules />
           </TabsContent>
 
           <TabsContent value="display" className="space-y-4">
