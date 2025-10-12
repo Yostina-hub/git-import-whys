@@ -573,6 +573,7 @@ const Patients = () => {
                     <TableHead className="font-semibold">Gender</TableHead>
                     <TableHead className="font-semibold">DOB</TableHead>
                     <TableHead className="font-semibold">Phone</TableHead>
+                    <TableHead className="font-semibold">Reg. Fee</TableHead>
                     <TableHead className="font-semibold">Payment Status</TableHead>
                     <TableHead className="text-right font-semibold">Actions</TableHead>
                   </TableRow>
@@ -593,6 +594,11 @@ const Patients = () => {
                         {new Date(patient.date_of_birth).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="font-medium">{patient.phone_mobile}</TableCell>
+                      <TableCell>
+                        <span className="font-semibold text-primary">
+                          ${registrationService?.unit_price.toFixed(2) || "0.00"}
+                        </span>
+                      </TableCell>
                       <TableCell>
                         {getStatusBadge(patient.registration_invoice_status)}
                       </TableCell>
