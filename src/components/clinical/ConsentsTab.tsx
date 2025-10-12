@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -135,6 +135,9 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        // Required for iOS Safari to start playback
+        (videoRef.current as HTMLVideoElement).muted = true;
+        await videoRef.current.play().catch(() => {});
         setIsCameraOpen(true);
       }
     } catch (error) {
@@ -158,6 +161,14 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
         stopCamera();
       }
     }
+  };
+
+  const handlePhotoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setPhotoData(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
   const stopCamera = () => {
@@ -310,6 +321,9 @@ By signing below, I acknowledge that I have read and understood this consent.`,
             <DialogContent className="max-w-2xl max-h-[90vh]">
               <DialogHeader>
                 <DialogTitle>Consent Form</DialogTitle>
+                <DialogDescription>
+                  Review the consent details below, capture a photo, optionally record voice consent, and sign to proceed.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 {!patientId && (
@@ -374,15 +388,26 @@ By signing below, I acknowledge that I have read and understood this consent.`,
                 <div className="space-y-2">
                   <Label>Photo Verification *</Label>
                   {!photoData ? (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {!isCameraOpen ? (
-                        <Button type="button" variant="outline" className="w-full" onClick={startCamera}>
-                          <Camera className="h-4 w-4 mr-2" />
-                          Take Photo
-                        </Button>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <Button type="button" variant="outline" onClick={startCamera}>
+                            <Camera className="h-4 w-4 mr-2" />
+                            Take Photo
+                          </Button>
+                          <div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              capture="user"
+                              onChange={handlePhotoFile}
+                              className="block w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-md file:border file:bg-background file:text-foreground"
+                            />
+                          </div>
+                        </div>
                       ) : (
                         <div className="space-y-2">
-                          <video ref={videoRef} autoPlay className="w-full rounded-md border" />
+                          <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-md border" />
                           <canvas ref={canvasRef} className="hidden" />
                           <div className="flex gap-2">
                             <Button type="button" onClick={capturePhoto} className="flex-1">
@@ -443,13 +468,12 @@ By signing below, I acknowledge that I have read and understood this consent.`,
                       Clear
                     </Button>
                   </div>
-                  <div className="border-2 border-input rounded-md bg-white touch-none">
+                  <div className="border-2 border-input rounded-md bg-white">
                     <SignatureCanvas
                       ref={signaturePadRef}
                       canvasProps={{
-                        width: 600,
-                        height: 160,
-                        className: "w-full"
+                        className: "w-full h-40 cursor-crosshair",
+                        style: { touchAction: 'none' }
                       }}
                       backgroundColor="white"
                     />
