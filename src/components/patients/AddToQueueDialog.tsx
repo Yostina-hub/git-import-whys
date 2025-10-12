@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ListPlus } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 interface AddToQueueDialogProps {
   patientId: string;
@@ -44,7 +46,11 @@ export function AddToQueueDialog({ patientId, patientName, onSuccess }: AddToQue
       });
     } else {
       setQueues(data || []);
-      if (data && data.length > 0) {
+      // Default to Triage queue for initial patient flow
+      const triageQueue = data?.find(q => q.queue_type === 'triage');
+      if (triageQueue) {
+        setSelectedQueue(triageQueue.id);
+      } else if (data && data.length > 0) {
         setSelectedQueue(data[0].id);
       }
     }
@@ -107,6 +113,14 @@ export function AddToQueueDialog({ patientId, patientName, onSuccess }: AddToQue
         <DialogHeader>
           <DialogTitle>Add Patient to Queue</DialogTitle>
         </DialogHeader>
+        
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            Patients should start in <strong>Triage Queue</strong> for initial assessment before being routed to other departments.
+          </AlertDescription>
+        </Alert>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Patient</Label>
@@ -123,6 +137,7 @@ export function AddToQueueDialog({ patientId, patientName, onSuccess }: AddToQue
                 {queues.map((queue) => (
                   <SelectItem key={queue.id} value={queue.id}>
                     {queue.name} ({queue.queue_type})
+                    {queue.queue_type === 'triage' && ' - Recommended First'}
                   </SelectItem>
                 ))}
               </SelectContent>
