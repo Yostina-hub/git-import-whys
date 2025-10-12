@@ -76,14 +76,31 @@ export const usePatients = (): UsePatientsReturn => {
       return;
     }
 
-    // Simple mapping without extra queries - lazy load invoice/queue data only when needed
-    const patientsWithStatus = data.map(patient => ({
-      ...patient,
-      registration_invoice_status: "pending",
-      registration_invoice_id: null,
-      queue_status: null,
-      queue_token: null,
-    }));
+    // Fetch invoice status for all patients in parallel
+    const patientIds = data.map(p => p.id);
+    const { data: invoices } = await supabase
+      .from("invoices")
+      .select("patient_id, id, status")
+      .in("patient_id", patientIds);
+
+    // Create a map of patient_id to invoice status
+    const invoiceMap = new Map();
+    invoices?.forEach(inv => {
+      if (!invoiceMap.has(inv.patient_id)) {
+        invoiceMap.set(inv.patient_id, { id: inv.id, status: inv.status });
+      }
+    });
+
+    const patientsWithStatus = data.map(patient => {
+      const invoice = invoiceMap.get(patient.id);
+      return {
+        ...patient,
+        registration_invoice_status: invoice?.status || "pending",
+        registration_invoice_id: invoice?.id || null,
+        queue_status: null,
+        queue_token: null,
+      };
+    });
 
     setPatients(patientsWithStatus);
     setLoading(false);
