@@ -18,6 +18,7 @@ const DoctorQueue = () => {
   const { toast } = useToast();
   const [tickets, setTickets] = useState<any[]>([]);
   const [completedToday, setCompletedToday] = useState<any[]>([]);
+  const [previousWork, setPreviousWork] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [showPatientDialog, setShowPatientDialog] = useState(false);
@@ -26,6 +27,7 @@ const DoctorQueue = () => {
     checkAuth();
     loadDoctorQueue();
     loadCompletedToday();
+    loadPreviousWork();
   }, []);
 
   useEffect(() => {
@@ -106,6 +108,29 @@ const DoctorQueue = () => {
       console.error("Error loading completed consultations:", error);
     } else {
       setCompletedToday(data || []);
+    }
+  };
+
+  const loadPreviousWork = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const { data, error } = await supabase
+      .from("tickets")
+      .select("*, patients(id, first_name, last_name, mrn, date_of_birth)")
+      .eq("status", "served")
+      .eq("served_by", user.id)
+      .lt("served_at", today.toISOString())
+      .order("served_at", { ascending: false })
+      .limit(100);
+
+    if (error) {
+      console.error("Error loading previous work:", error);
+    } else {
+      setPreviousWork(data || []);
     }
   };
 
@@ -214,9 +239,10 @@ const DoctorQueue = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="queue" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="queue">Current Queue</TabsTrigger>
             <TabsTrigger value="completed">Today's Work ({completedToday.length})</TabsTrigger>
+            <TabsTrigger value="previous">Previous Work ({previousWork.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="queue">
@@ -366,6 +392,67 @@ const DoctorQueue = () => {
                 {completedToday.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
                     No consultations completed today yet
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="previous">
+            <Card>
+              <CardHeader>
+                <CardTitle>Previous Consultations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Token</TableHead>
+                      <TableHead>Patient</TableHead>
+                      <TableHead>MRN</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {previousWork.map((ticket) => (
+                      <TableRow key={ticket.id}>
+                        <TableCell>
+                          {new Date(ticket.served_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(ticket.served_at).toLocaleTimeString()}
+                        </TableCell>
+                        <TableCell className="font-bold">{ticket.token_number}</TableCell>
+                        <TableCell>
+                          {ticket.patients.first_name} {ticket.patients.last_name}
+                        </TableCell>
+                        <TableCell>{ticket.patients.mrn}</TableCell>
+                        <TableCell>
+                          <Badge className={getPriorityColor(ticket.priority)}>
+                            {ticket.priority.toUpperCase()}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => navigate(`/clinical?patient=${ticket.patients.id}`)}
+                          >
+                            <FileText className="h-4 w-4 mr-1" />
+                            View Records
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                {previousWork.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No previous consultations found
                   </div>
                 )}
               </CardContent>
