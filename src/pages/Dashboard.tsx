@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Calendar, DollarSign, ClipboardList, LogOut, FileText, List, Stethoscope, Mail, Shield } from "lucide-react";
+import { Users, Calendar, DollarSign, ClipboardList, LogOut, FileText, List, Stethoscope, Mail, Shield, UserCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
@@ -90,6 +90,10 @@ const Dashboard = () => {
           <h1 className="text-2xl font-bold">SONIK EMR Dashboard</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{user?.email}</span>
+            <Button variant="outline" size="sm" onClick={() => navigate("/profile")}>
+              <UserCircle className="h-4 w-4 mr-2" />
+              Profile
+            </Button>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
               Logout
