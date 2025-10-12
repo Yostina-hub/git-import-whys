@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, CheckCircle, Clock } from "lucide-react";
+import SignatureCanvas from "react-signature-canvas";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ConsentsTabProps {
   patientId: string | null;
@@ -26,6 +28,7 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
     consent_type: "general_treatment" as const,
     signed_by: "patient",
   });
+  const signaturePadRef = useRef<SignatureCanvas>(null);
 
   useEffect(() => {
     if (autoOpen) {
@@ -54,12 +57,25 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!signaturePadRef.current || signaturePadRef.current.isEmpty()) {
+      toast({
+        variant: "destructive",
+        title: "Signature required",
+        description: "Please provide a signature to consent.",
+      });
+      return;
+    }
+
     setLoading(true);
+
+    const signatureData = signaturePadRef.current.toDataURL();
 
     const { error } = await supabase.from("consent_forms").insert([
       {
         ...formData,
         signed_at: new Date().toISOString(),
+        signature_blob: signatureData,
       },
     ]);
 
@@ -76,6 +92,7 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
       });
       setIsDialogOpen(false);
       loadData();
+      signaturePadRef.current?.clear();
       setFormData({
         patient_id: patientId || "",
         consent_type: "general_treatment",
@@ -83,6 +100,97 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
       });
     }
     setLoading(false);
+  };
+
+  const clearSignature = () => {
+    signaturePadRef.current?.clear();
+  };
+
+  const getConsentContent = (type: string) => {
+    const contents: Record<string, { title: string; content: string }> = {
+      general_treatment: {
+        title: "General Treatment Consent",
+        content: `I hereby consent to receive medical treatment and procedures as deemed necessary by the healthcare provider. I understand that:
+
+• The healthcare provider has explained my condition and the proposed treatment
+• I have been informed of the risks, benefits, and alternatives
+• I have had the opportunity to ask questions and receive answers
+• I understand that medicine is not an exact science and that no guarantees have been made
+• I consent to the administration of medications and procedures as necessary
+• I understand that I may withdraw this consent at any time
+
+By signing below, I acknowledge that I have read and understood this consent form and agree to the treatment.`,
+      },
+      data_privacy: {
+        title: "Data Privacy Consent",
+        content: `I consent to the collection, storage, and processing of my personal health information in accordance with applicable data protection laws. I understand that:
+
+• My data will be kept confidential and secure
+• My information may be shared with other healthcare providers involved in my care
+• My data will be used for treatment, billing, and healthcare operations
+• I have the right to access and request corrections to my data
+• I can withdraw this consent at any time in writing
+
+By signing below, I acknowledge that I have read and understood this privacy consent.`,
+      },
+      photography: {
+        title: "Photography and Imaging Consent",
+        content: `I consent to medical photography and imaging for:
+
+• Documentation of my medical condition and treatment
+• Medical education and training purposes
+• Research and quality improvement (with identifying information removed)
+
+I understand that:
+• All images will be stored securely and confidentially
+• Images will only be used for the purposes stated above
+• I can withdraw this consent at any time
+• My identity will be protected in any educational or research use
+
+By signing below, I acknowledge that I have read and understood this consent.`,
+      },
+      telehealth: {
+        title: "Telehealth Services Consent",
+        content: `I consent to receive healthcare services through telehealth (virtual consultations). I understand that:
+
+• Telehealth involves the use of electronic communications for healthcare delivery
+• The same standards of confidentiality apply as in-person visits
+• Technical difficulties may occur during sessions
+• Not all medical conditions can be adequately assessed via telehealth
+• I may need to attend in-person if required by my healthcare provider
+• I am responsible for providing a private, quiet space for consultations
+
+By signing below, I acknowledge that I have read and understood this consent.`,
+      },
+      package_treatment: {
+        title: "Treatment Package Consent",
+        content: `I consent to participate in the treatment package program. I understand that:
+
+• The package includes specific services as outlined in my treatment plan
+• Payment is required upfront or according to the agreed payment schedule
+• Services must be used within the validity period
+• Unused services may not be refunded unless specified in the package terms
+• I am committed to attending scheduled appointments
+• The treatment plan may be adjusted based on my clinical progress
+
+By signing below, I acknowledge that I have read and understood this consent.`,
+      },
+      research: {
+        title: "Research Participation Consent",
+        content: `I consent to participate in the research study. I understand that:
+
+• My participation is voluntary
+• I can withdraw from the study at any time without affecting my care
+• My data will be anonymized for research purposes
+• The study has been approved by an ethics committee
+• There may be risks and benefits associated with participation
+• I will be informed of any significant new findings
+• My personal information will be kept confidential
+
+By signing below, I acknowledge that I have read and understood this consent.`,
+      },
+    };
+    return contents[type] || contents.general_treatment;
   };
 
   return (
@@ -97,9 +205,9 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
                 New Consent
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl max-h-[90vh]">
               <DialogHeader>
-                <DialogTitle>Record Consent</DialogTitle>
+                <DialogTitle>Consent Form</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 {!patientId && (
@@ -150,8 +258,40 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
                   </Select>
                 </div>
 
+                <div className="space-y-2">
+                  <Label className="text-lg font-semibold">
+                    {getConsentContent(formData.consent_type).title}
+                  </Label>
+                  <ScrollArea className="h-64 rounded-md border p-4 bg-muted/30">
+                    <div className="whitespace-pre-wrap text-sm">
+                      {getConsentContent(formData.consent_type).content}
+                    </div>
+                  </ScrollArea>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Signature *</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={clearSignature}>
+                      Clear
+                    </Button>
+                  </div>
+                  <div className="border-2 border-muted rounded-md bg-background">
+                    <SignatureCanvas
+                      ref={signaturePadRef}
+                      canvasProps={{
+                        className: "w-full h-40 touch-none",
+                      }}
+                      backgroundColor="transparent"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Please sign above using your mouse or touch screen
+                  </p>
+                </div>
+
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Recording..." : "Record Consent"}
+                  {loading ? "Recording..." : "I Agree and Submit"}
                 </Button>
               </form>
             </DialogContent>
