@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { Edit, UserPlus } from "lucide-react";
 import { ManageRolesDialog } from "./ManageRolesDialog";
 import { ManageClinicAccessDialog } from "./ManageClinicAccessDialog";
+import { ClinicAccessBadge } from "./ClinicAccessBadge";
 
 interface User {
   id: string;
@@ -129,7 +130,7 @@ export const UserManagementTab = () => {
                   {format(new Date(user.created_at), "MMM d, yyyy")}
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary">—</Badge>
+                  <ClinicAccessBadge userId={user.id} />
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex gap-2 justify-end">
