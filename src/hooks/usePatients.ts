@@ -48,16 +48,16 @@ export const usePatients = (): UsePatientsReturn => {
     let query = supabase
       .from("patients")
       .select("*", { count: "exact" })
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (search) {
       query = query.or(`mrn.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%,phone_mobile.ilike.%${search}%`);
     }
 
-    const { count } = await query;
-    setTotalCount(count || 0);
+    const { data, error, count } = await query;
 
-    const { data, error } = await query.range(from, to);
+    setTotalCount(count || 0);
 
     if (error) {
       toast({
@@ -76,51 +76,14 @@ export const usePatients = (): UsePatientsReturn => {
       return;
     }
 
-    // Batch fetch related data
-    const patientIds = data.map(p => p.id);
-
-    const [invoicesResult, ticketsResult] = await Promise.all([
-      supabase
-        .from("invoices")
-        .select("id, status, patient_id, created_at")
-        .in("patient_id", patientIds)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("tickets")
-        .select("status, token_number, patient_id, created_at")
-        .in("patient_id", patientIds)
-        .in("status", ["waiting", "called"])
-        .order("created_at", { ascending: false })
-    ]);
-
-    // Create lookup maps
-    const invoiceMap = new Map();
-    invoicesResult.data?.forEach(inv => {
-      if (!invoiceMap.has(inv.patient_id)) {
-        invoiceMap.set(inv.patient_id, inv);
-      }
-    });
-
-    const ticketMap = new Map();
-    ticketsResult.data?.forEach(ticket => {
-      if (!ticketMap.has(ticket.patient_id)) {
-        ticketMap.set(ticket.patient_id, ticket);
-      }
-    });
-
-    // Map patients with their related data
-    const patientsWithStatus = data.map(patient => {
-      const invoice = invoiceMap.get(patient.id);
-      const ticket = ticketMap.get(patient.id);
-
-      return {
-        ...patient,
-        registration_invoice_status: invoice?.status || "pending",
-        registration_invoice_id: invoice?.id || null,
-        queue_status: ticket?.status || null,
-        queue_token: ticket?.token_number || null,
-      };
-    });
+    // Simple mapping without extra queries - lazy load invoice/queue data only when needed
+    const patientsWithStatus = data.map(patient => ({
+      ...patient,
+      registration_invoice_status: "pending",
+      registration_invoice_id: null,
+      queue_status: null,
+      queue_token: null,
+    }));
 
     setPatients(patientsWithStatus);
     setLoading(false);
