@@ -42,120 +42,120 @@ export function AIVoiceAssistant({ open, onOpenChange }: AIVoiceAssistantProps) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[350px] p-0 flex flex-col bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-slate-900 border-l-0">
-        {/* Modern Header */}
-        <div className="px-4 py-3 border-b border-border/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl">
+      <SheetContent side="right" className="w-[380px] p-0 flex flex-col bg-gradient-to-br from-white to-slate-50/80 dark:from-slate-950 dark:to-slate-900/80 border-l-0 shadow-2xl">
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-border/40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <Sparkles className="h-4 w-4 text-white" />
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/25 ring-2 ring-blue-400/20">
+                <Sparkles className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h3 className="font-semibold text-sm">AI Voice Assistant</h3>
-                <p className="text-xs text-muted-foreground">Ready to help</p>
+                <h3 className="font-semibold text-sm tracking-tight">AI Voice Assistant</h3>
+                <p className="text-xs text-muted-foreground">Powered by SONIK AI</p>
               </div>
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onOpenChange(false)}
-              className="h-8 w-8 rounded-full hover:bg-muted/50"
+              className="h-8 w-8 rounded-lg hover:bg-muted/60 transition-colors"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-          {/* Modern Status Indicator */}
-          <div className="flex flex-col items-center gap-3">
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-5 py-8 space-y-8">
+          {/* Status Indicator */}
+          <div className="flex flex-col items-center gap-4">
             <div className="relative">
-              <div className={`h-24 w-24 rounded-full flex items-center justify-center transition-all duration-300 ${
+              <div className={`h-28 w-28 rounded-full flex items-center justify-center transition-all duration-500 ${
                 isListening 
-                  ? 'bg-gradient-to-br from-blue-500 to-cyan-500 shadow-2xl shadow-blue-500/40 scale-105' 
-                  : 'bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800'
+                  ? 'bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-400 shadow-2xl shadow-blue-500/50 scale-105' 
+                  : 'bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 shadow-lg'
               }`}>
-                <Mic className={`h-10 w-10 transition-all duration-300 ${
-                  isListening ? 'text-white animate-pulse' : 'text-slate-600 dark:text-slate-300'
+                <Mic className={`h-12 w-12 transition-all duration-300 ${
+                  isListening ? 'text-white' : 'text-slate-500 dark:text-slate-400'
                 }`} />
               </div>
               {isListening && (
-                <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping" />
+                <>
+                  <div className="absolute inset-0 rounded-full bg-blue-400/30 animate-ping" />
+                  <div className="absolute inset-0 rounded-full bg-blue-400/20 animate-pulse" />
+                </>
               )}
             </div>
-            <Badge 
-              variant={isListening ? "default" : "secondary"} 
-              className={`px-4 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
-                isListening 
-                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/30' 
-                  : ''
-              }`}
-            >
-              {isListening ? "🎤 Listening..." : "Ready to assist"}
-            </Badge>
+            <div className="text-center">
+              <Badge 
+                variant={isListening ? "default" : "secondary"} 
+                className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
+                  isListening 
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 shadow-lg shadow-blue-500/40 text-white' 
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                }`}
+              >
+                {isListening ? "🎤 Listening..." : "Ready"}
+              </Badge>
+              {isListening && (
+                <p className="text-xs text-muted-foreground mt-2 animate-fade-in">
+                  Speak now...
+                </p>
+              )}
+            </div>
           </div>
 
-          {/* Modern Quick Commands */}
+          {/* Quick Commands */}
           <div className="space-y-3">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
+            <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1">
               Quick Commands
             </h4>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               {SAMPLE_COMMANDS.map((cmd) => (
                 <button
                   key={cmd.action}
                   onClick={() => handleCommand(cmd.label)}
-                  className="group relative overflow-hidden rounded-xl bg-white dark:bg-slate-800 border border-border/50 p-3 text-left transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:border-blue-500/50 active:scale-95"
+                  className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 p-3.5 text-left transition-all duration-300 hover:shadow-xl hover:scale-[1.03] hover:border-blue-400/60 hover:-translate-y-0.5 active:scale-[0.98]"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                  <p className="text-xs font-medium relative z-10">{cmd.label}</p>
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 relative z-10 leading-tight">
+                    {cmd.label}
+                  </p>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Example Hints */}
-          <div className="rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/30 dark:border-blue-800/30 p-3">
-            <p className="text-xs text-center text-muted-foreground leading-relaxed">
-              Try: <span className="text-blue-600 dark:text-blue-400 font-medium">"Show patient John Smith"</span>
+          <div className="rounded-2xl bg-gradient-to-br from-blue-50/80 to-cyan-50/80 dark:from-blue-950/30 dark:to-cyan-950/30 border border-blue-200/40 dark:border-blue-800/40 p-4 backdrop-blur-sm">
+            <p className="text-xs text-center text-slate-600 dark:text-slate-300 leading-relaxed">
+              <span className="font-medium text-slate-700 dark:text-slate-200">Try saying:</span>
+              <br />
+              <span className="text-blue-600 dark:text-blue-400 font-semibold">"Show patient John Smith"</span>
+              <br />or <span className="text-blue-600 dark:text-blue-400 font-semibold">"Create appointment"</span>
             </p>
           </div>
         </div>
 
-        {/* Modern Action Area */}
-        <div className="p-4 border-t border-border/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl space-y-3">
+        {/* Action Area */}
+        <div className="p-5 border-t border-border/40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl space-y-3">
           <Button
             onClick={toggleListening}
-            className={`w-full h-11 rounded-xl font-medium transition-all duration-200 shadow-lg ${
+            className={`w-full h-12 rounded-2xl font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98] ${
               isListening
-                ? 'bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 shadow-red-500/30'
-                : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-blue-500/30'
+                ? 'bg-gradient-to-r from-red-500 via-red-600 to-pink-500 hover:from-red-600 hover:via-red-700 hover:to-pink-600 shadow-red-500/40 text-white'
+                : 'bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-700 hover:via-blue-600 hover:to-cyan-600 shadow-blue-500/40 text-white'
             }`}
           >
             {isListening ? "Stop Listening" : "Click to Speak"}
           </Button>
           
-          <Button 
-            variant="link" 
-            className="w-full text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+          <button 
+            className="w-full text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors py-1"
           >
             View All Commands →
-          </Button>
-        </div>
-
-        {/* Floating Mute Button */}
-        <div className="absolute bottom-20 right-4">
-          <Button
-            size="icon"
-            onClick={() => setIsMuted(!isMuted)}
-            className={`h-12 w-12 rounded-full shadow-xl transition-all duration-200 hover:scale-110 active:scale-95 ${
-              isMuted 
-                ? 'bg-gradient-to-br from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 shadow-red-500/40' 
-                : 'bg-gradient-to-br from-slate-700 to-slate-900 hover:from-slate-800 hover:to-black shadow-slate-900/40'
-            }`}
-          >
-            {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-          </Button>
+          </button>
         </div>
         <SheetHeader className="border-b pb-4">
           <SheetTitle className="flex items-center gap-2 text-2xl">
