@@ -10,8 +10,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, ArrowLeft, X } from "lucide-react";
+import { Plus, Search, ArrowLeft, Eye, Receipt, UserCheck, History, Calendar, RotateCcw } from "lucide-react";
 import { DocumentsTab } from "@/components/documents/DocumentsTab";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 interface Patient {
   id: string;
@@ -41,7 +43,6 @@ const Patients = () => {
     last_name: "",
     date_of_birth: "",
     sex_at_birth: "male" as const,
-    gender_identity: "prefer_not_to_say" as const,
     phone_mobile: "",
     phone_alt: "",
     email: "",
@@ -52,6 +53,8 @@ const Patients = () => {
     emergency_contact_name: "",
     emergency_contact_phone: "",
   });
+
+  const REGISTRATION_FEE = 50.00; // Registration fee amount
 
   useEffect(() => {
     checkAuth();
@@ -88,28 +91,62 @@ const Patients = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Generate MRN
-    const { data: mrnData } = await supabase.rpc("generate_mrn");
-    const mrn = mrnData || `MRN${Date.now()}`;
+    try {
+      // Generate MRN
+      const { data: mrnData } = await supabase.rpc("generate_mrn");
+      const mrn = mrnData || `MRN${Date.now()}`;
 
-    const { error } = await supabase.from("patients").insert([
-      {
-        ...formData,
-        mrn,
-      },
-    ]);
+      // Get current user for created_by
+      const { data: { user } } = await supabase.auth.getUser();
 
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error creating patient",
-        description: error.message,
-      });
-    } else {
-      toast({
-        title: "Patient registered",
-        description: `MRN: ${mrn}`,
-      });
+      // Insert patient
+      const { data: patientData, error: patientError } = await supabase
+        .from("patients")
+        .insert([{ ...formData, mrn }])
+        .select()
+        .single();
+
+      if (patientError) throw patientError;
+
+      // Create registration invoice
+      const invoiceData = {
+        patient_id: patientData.id,
+        status: "issued" as const,
+        subtotal: REGISTRATION_FEE,
+        tax_amount: 0,
+        total_amount: REGISTRATION_FEE,
+        balance_due: REGISTRATION_FEE,
+        issued_at: new Date().toISOString(),
+        created_by: user?.id,
+        lines: [
+          {
+            description: "Patient Registration Fee",
+            quantity: 1,
+            unit_price: REGISTRATION_FEE,
+            total: REGISTRATION_FEE,
+            item_type: "service",
+          },
+        ],
+      };
+
+      const { error: invoiceError } = await supabase
+        .from("invoices")
+        .insert([invoiceData]);
+
+      if (invoiceError) {
+        console.error("Error creating invoice:", invoiceError);
+        toast({
+          title: "Patient registered with warning",
+          description: `MRN: ${mrn}. Invoice creation failed - please create manually.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Patient registered successfully",
+          description: `MRN: ${mrn}. Registration fee invoice created.`,
+        });
+      }
+
       setIsDialogOpen(false);
       loadPatients();
       // Reset form
@@ -119,7 +156,6 @@ const Patients = () => {
         last_name: "",
         date_of_birth: "",
         sex_at_birth: "male",
-        gender_identity: "prefer_not_to_say",
         phone_mobile: "",
         phone_alt: "",
         email: "",
@@ -130,8 +166,48 @@ const Patients = () => {
         emergency_contact_name: "",
         emergency_contact_phone: "",
       });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error creating patient",
+        description: error.message,
+      });
     }
     setLoading(false);
+  };
+
+  const handleViewPatient = (patient: Patient) => {
+    setSelectedPatient(patient);
+  };
+
+  const handleViewInvoices = (patientId: string, patientName: string) => {
+    navigate(`/billing?patient=${patientId}`);
+    toast({
+      title: "Opening Billing",
+      description: `Viewing invoices for ${patientName}`,
+    });
+  };
+
+  const handleViewAppointments = (patientId: string, patientName: string) => {
+    navigate(`/appointments?patient=${patientId}`);
+    toast({
+      title: "Opening Appointments",
+      description: `Viewing appointments for ${patientName}`,
+    });
+  };
+
+  const handleAssignProvider = (patientId: string) => {
+    toast({
+      title: "Assign Provider",
+      description: "Provider assignment feature - coming soon",
+    });
+  };
+
+  const handleRecheck = (patientId: string) => {
+    toast({
+      title: "Schedule Recheck",
+      description: "Recheck scheduling feature - coming soon",
+    });
   };
 
   const filteredPatients = patients.filter((patient) => {
@@ -273,7 +349,7 @@ const Patients = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="sex_at_birth">Sex at Birth *</Label>
+                        <Label htmlFor="sex_at_birth">Gender *</Label>
                         <Select value={formData.sex_at_birth} onValueChange={(value) => setFormData({ ...formData, sex_at_birth: value as any })}>
                           <SelectTrigger>
                             <SelectValue />
@@ -281,8 +357,6 @@ const Patients = () => {
                           <SelectContent>
                             <SelectItem value="male">Male</SelectItem>
                             <SelectItem value="female">Female</SelectItem>
-                            <SelectItem value="intersex">Intersex</SelectItem>
-                            <SelectItem value="unknown">Unknown</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -358,34 +432,96 @@ const Patients = () => {
               />
             </div>
 
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>MRN</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>DOB</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Email</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPatients.map((patient) => (
-                  <TableRow 
-                    key={patient.id} 
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => setSelectedPatient(patient)}
-                  >
-                    <TableCell className="font-medium">{patient.mrn}</TableCell>
-                    <TableCell>
-                      {patient.first_name} {patient.middle_name} {patient.last_name}
-                    </TableCell>
-                    <TableCell>{new Date(patient.date_of_birth).toLocaleDateString()}</TableCell>
-                    <TableCell>{patient.phone_mobile}</TableCell>
-                    <TableCell>{patient.email || "-"}</TableCell>
+            <div className="rounded-lg border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold">MRN</TableHead>
+                    <TableHead className="font-semibold">Name</TableHead>
+                    <TableHead className="font-semibold">Gender</TableHead>
+                    <TableHead className="font-semibold">DOB</TableHead>
+                    <TableHead className="font-semibold">Phone</TableHead>
+                    <TableHead className="font-semibold">Reg. Fee</TableHead>
+                    <TableHead className="text-right font-semibold">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredPatients.map((patient) => (
+                    <TableRow key={patient.id} className="hover:bg-muted/30 transition-colors">
+                      <TableCell className="font-mono font-medium text-primary">{patient.mrn}</TableCell>
+                      <TableCell className="font-medium">
+                        {patient.first_name} {patient.middle_name} {patient.last_name}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="capitalize">
+                          {patient.sex_at_birth}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(patient.date_of_birth).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="font-medium">{patient.phone_mobile}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">${REGISTRATION_FEE.toFixed(2)}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8">
+                              Actions
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48 bg-popover">
+                            <DropdownMenuItem 
+                              onClick={() => handleViewPatient(patient)}
+                              className="cursor-pointer"
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleViewInvoices(patient.id, `${patient.first_name} ${patient.last_name}`)}
+                              className="cursor-pointer"
+                            >
+                              <Receipt className="h-4 w-4 mr-2" />
+                              Invoices & Billing
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleViewAppointments(patient.id, `${patient.first_name} ${patient.last_name}`)}
+                              className="cursor-pointer"
+                            >
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Appointments
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleAssignProvider(patient.id)}
+                              className="cursor-pointer"
+                            >
+                              <UserCheck className="h-4 w-4 mr-2" />
+                              Assign Provider
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleRecheck(patient.id)}
+                              className="cursor-pointer"
+                            >
+                              <RotateCcw className="h-4 w-4 mr-2" />
+                              Schedule Recheck
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleViewPatient(patient)}
+                              className="cursor-pointer"
+                            >
+                              <History className="h-4 w-4 mr-2" />
+                              Patient History
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
 
             {filteredPatients.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
