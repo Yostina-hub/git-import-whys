@@ -81,7 +81,7 @@ const QueueManagement = () => {
     console.log("Loading tickets for queue:", queueId);
     const { data, error } = await supabase
       .from("tickets")
-      .select("*, patients(first_name, last_name, mrn), profiles(first_name, last_name)")
+      .select("*, patients(first_name, last_name, mrn)")
       .eq("queue_id", queueId)
       .in("status", ["waiting", "called"])
       .order("priority", { ascending: false })
@@ -89,6 +89,11 @@ const QueueManagement = () => {
 
     if (error) {
       console.error("Error loading tickets:", error);
+      toast({
+        variant: "destructive",
+        title: "Error loading tickets",
+        description: error.message,
+      });
     } else {
       console.log("Loaded tickets:", data);
       setTickets(data || []);
