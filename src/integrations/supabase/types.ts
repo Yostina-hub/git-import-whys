@@ -53,6 +53,60 @@ export type Database = {
         }
         Relationships: []
       }
+      allergies: {
+        Row: {
+          allergen: string
+          created_at: string
+          id: string
+          notes: string | null
+          onset_date: string | null
+          patient_id: string
+          reaction: string
+          severity: string
+          updated_at: string
+          verified_by: string | null
+        }
+        Insert: {
+          allergen: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          onset_date?: string | null
+          patient_id: string
+          reaction: string
+          severity: string
+          updated_at?: string
+          verified_by?: string | null
+        }
+        Update: {
+          allergen?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          onset_date?: string | null
+          patient_id?: string
+          reaction?: string
+          severity?: string
+          updated_at?: string
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allergies_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allergies_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           clinic_id: string
@@ -508,6 +562,69 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medications: {
+        Row: {
+          created_at: string
+          dosage: string
+          end_date: string | null
+          frequency: string
+          id: string
+          medication_name: string
+          notes: string | null
+          patient_id: string
+          prescribed_by: string | null
+          route: string | null
+          start_date: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dosage: string
+          end_date?: string | null
+          frequency: string
+          id?: string
+          medication_name: string
+          notes?: string | null
+          patient_id: string
+          prescribed_by?: string | null
+          route?: string | null
+          start_date: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dosage?: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          medication_name?: string
+          notes?: string | null
+          patient_id?: string
+          prescribed_by?: string | null
+          route?: string | null
+          start_date?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medications_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medications_prescribed_by_fkey"
+            columns: ["prescribed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1294,6 +1411,97 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vital_signs: {
+        Row: {
+          blood_pressure_diastolic: number | null
+          blood_pressure_systolic: number | null
+          bmi: number | null
+          created_at: string
+          heart_rate: number | null
+          height: number | null
+          height_unit: string | null
+          id: string
+          notes: string | null
+          oxygen_saturation: number | null
+          patient_id: string
+          recorded_at: string
+          recorded_by: string
+          respiratory_rate: number | null
+          session_id: string | null
+          temperature: number | null
+          temperature_unit: string | null
+          updated_at: string
+          weight: number | null
+          weight_unit: string | null
+        }
+        Insert: {
+          blood_pressure_diastolic?: number | null
+          blood_pressure_systolic?: number | null
+          bmi?: number | null
+          created_at?: string
+          heart_rate?: number | null
+          height?: number | null
+          height_unit?: string | null
+          id?: string
+          notes?: string | null
+          oxygen_saturation?: number | null
+          patient_id: string
+          recorded_at?: string
+          recorded_by: string
+          respiratory_rate?: number | null
+          session_id?: string | null
+          temperature?: number | null
+          temperature_unit?: string | null
+          updated_at?: string
+          weight?: number | null
+          weight_unit?: string | null
+        }
+        Update: {
+          blood_pressure_diastolic?: number | null
+          blood_pressure_systolic?: number | null
+          bmi?: number | null
+          created_at?: string
+          heart_rate?: number | null
+          height?: number | null
+          height_unit?: string | null
+          id?: string
+          notes?: string | null
+          oxygen_saturation?: number | null
+          patient_id?: string
+          recorded_at?: string
+          recorded_by?: string
+          respiratory_rate?: number | null
+          session_id?: string | null
+          temperature?: number | null
+          temperature_unit?: string | null
+          updated_at?: string
+          weight?: number | null
+          weight_unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vital_signs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vital_signs_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vital_signs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_sessions"
             referencedColumns: ["id"]
           },
         ]
