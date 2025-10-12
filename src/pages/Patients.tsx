@@ -267,10 +267,51 @@ const Patients = () => {
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Patient registered successfully",
-          description: `MRN: ${mrn}. Registration fee invoice created and sent to billing.`,
-        });
+        // Auto-add patient to Triage queue after successful invoice creation
+        const { data: triageQueue } = await supabase
+          .from("queues")
+          .select("id")
+          .eq("queue_type", "triage")
+          .eq("is_active", true)
+          .single();
+
+        if (triageQueue) {
+          // Generate token number
+          const { data: tokenData } = await supabase.rpc("generate_ticket_token", {
+            queue_prefix: "Q"
+          });
+          const tokenNumber = tokenData || `Q${Date.now()}`;
+
+          // Create ticket in Triage queue
+          const { error: ticketError } = await supabase
+            .from("tickets")
+            .insert([{
+              queue_id: triageQueue.id,
+              patient_id: patientData.id,
+              token_number: tokenNumber,
+              status: "waiting",
+              priority: "routine",
+              notes: "Auto-added after registration",
+            }]);
+
+          if (ticketError) {
+            console.error("Error adding to queue:", ticketError);
+            toast({
+              title: "Patient registered successfully",
+              description: `MRN: ${mrn}. Invoice created. Please manually add to Triage queue.`,
+            });
+          } else {
+            toast({
+              title: "Patient registered and queued",
+              description: `MRN: ${mrn}. Token: ${tokenNumber}. Added to Triage queue automatically.`,
+            });
+          }
+        } else {
+          toast({
+            title: "Patient registered successfully",
+            description: `MRN: ${mrn}. Registration fee invoice created. No Triage queue found.`,
+          });
+        }
       }
 
       setIsDialogOpen(false);
