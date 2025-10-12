@@ -63,45 +63,46 @@ const TriageQueue = () => {
   };
 
   const loadTriageQueue = async () => {
-    console.log("Loading triage queue...");
-    
-    // Get triage queue ID
-    const { data: queueData, error: queueError } = await supabase
-      .from("queues")
-      .select("id")
-      .eq("queue_type", "triage")
-      .eq("is_active", true)
-      .single();
+    try {
+      // Get triage queue ID
+      const { data: queueData, error: queueError } = await supabase
+        .from("queues")
+        .select("id")
+        .eq("queue_type", "triage")
+        .eq("is_active", true)
+        .single();
 
-    if (queueError || !queueData) {
-      console.error("Error finding triage queue:", queueError);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Triage queue not found. Please contact administrator.",
-      });
-      return;
-    }
+      if (queueError || !queueData) {
+        console.error("Error finding triage queue:", queueError);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Triage queue not found. Please contact administrator.",
+        });
+        return;
+      }
 
-    // Load tickets for triage queue
-    const { data, error } = await supabase
-      .from("tickets")
-      .select("*, patients(id, first_name, last_name, mrn, date_of_birth)")
-      .eq("queue_id", queueData.id)
-      .in("status", ["waiting", "called"])
-      .order("priority", { ascending: false })
-      .order("created_at", { ascending: true });
+      // Load tickets for triage queue
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("*, patients(id, first_name, last_name, mrn, date_of_birth)")
+        .eq("queue_id", queueData.id)
+        .in("status", ["waiting", "called"])
+        .order("priority", { ascending: false })
+        .order("created_at", { ascending: true });
 
-    if (error) {
-      console.error("Error loading tickets:", error);
-      toast({
-        variant: "destructive",
-        title: "Error loading queue",
-        description: error.message,
-      });
-    } else {
-      console.log("Loaded triage queue tickets:", data);
-      setTickets(data || []);
+      if (error) {
+        console.error("Error loading tickets:", error);
+        toast({
+          variant: "destructive",
+          title: "Error loading queue",
+          description: error.message,
+        });
+      } else {
+        setTickets(data || []);
+      }
+    } catch (err) {
+      console.error("Error in loadTriageQueue:", err);
     }
   };
 
