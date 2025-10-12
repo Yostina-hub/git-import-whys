@@ -25,6 +25,8 @@ import { format } from "date-fns";
 import { CreateOrderDialog } from "@/components/orders/CreateOrderDialog";
 import { UpdateOrderStatusDialog } from "@/components/orders/UpdateOrderStatusDialog";
 import { CreateInvoiceFromOrderDialog } from "@/components/orders/CreateInvoiceFromOrderDialog";
+import { OrdersWorklist } from "@/components/orders/OrdersWorklist";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRealtimeOrders } from "@/hooks/useRealtimeOrders";
 
 interface Order {
@@ -179,138 +181,151 @@ const Orders = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="flex gap-4 mb-6">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by patient name or MRN..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="All Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="lab">Lab Tests</SelectItem>
-              <SelectItem value="imaging">Imaging</SelectItem>
-              <SelectItem value="referral">Referrals</SelectItem>
-              <SelectItem value="prescription">Prescriptions</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Tabs defaultValue="list" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="list">Orders List</TabsTrigger>
+            <TabsTrigger value="worklist">Worklist</TabsTrigger>
+          </TabsList>
 
-        {loading && (
-          <div className="text-center py-8 text-muted-foreground">
-            Loading orders...
-          </div>
-        )}
+          <TabsContent value="list" className="space-y-4">
+            <div className="flex gap-4 mb-6">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by patient name or MRN..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="lab">Lab Tests</SelectItem>
+                  <SelectItem value="imaging">Imaging</SelectItem>
+                  <SelectItem value="referral">Referrals</SelectItem>
+                  <SelectItem value="prescription">Prescriptions</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        {!loading && filteredOrders.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            No orders found
-          </div>
-        )}
+            {loading && (
+              <div className="text-center py-8 text-muted-foreground">
+                Loading orders...
+              </div>
+            )}
 
-        {!loading && filteredOrders.length > 0 && (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Details</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Billing</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">
-                          {order.patients?.first_name} {order.patients?.last_name}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          MRN: {order.patients?.mrn}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getOrderTypeColor(order.order_type)}>
-                        {order.order_type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        {order.order_type === "lab" &&
-                          order.order_payload?.testName}
-                        {order.order_type === "imaging" &&
-                          `${order.order_payload?.imagingType || ''} ${order.order_payload?.bodyPart || ''}`}
-                        {order.order_type === "referral" &&
-                          order.order_payload?.specialty}
-                        {order.order_type === "prescription" &&
-                          order.order_payload?.medication}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getPriorityColor(order.priority)}>
-                        {order.priority}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(order.status)}>
-                        {order.status.replace("_", " ")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <CreateInvoiceFromOrderDialog 
-                        order={order} 
-                        onInvoiceCreated={loadOrders} 
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(order.created_at), "MMM d, yyyy")}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedOrder(order);
-                          setUpdateDialogOpen(true);
-                        }}
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Update
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+            {!loading && filteredOrders.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No orders found
+              </div>
+            )}
+
+            {!loading && filteredOrders.length > 0 && (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Patient</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Details</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Billing</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredOrders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">
+                              {order.patients?.first_name} {order.patients?.last_name}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              MRN: {order.patients?.mrn}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getOrderTypeColor(order.order_type)}>
+                            {order.order_type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {order.order_type === "lab" &&
+                              order.order_payload?.testName}
+                            {order.order_type === "imaging" &&
+                              `${order.order_payload?.imagingType || ''} ${order.order_payload?.bodyPart || ''}`}
+                            {order.order_type === "referral" &&
+                              order.order_payload?.specialty}
+                            {order.order_type === "prescription" &&
+                              order.order_payload?.medication}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getPriorityColor(order.priority)}>
+                            {order.priority}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(order.status)}>
+                            {order.status.replace("_", " ")}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <CreateInvoiceFromOrderDialog 
+                            order={order} 
+                            onInvoiceCreated={loadOrders} 
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {format(new Date(order.created_at), "MMM d, yyyy")}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setUpdateDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Update
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="worklist">
+            <OrdersWorklist />
+          </TabsContent>
+        </Tabs>
       </main>
 
       <CreateOrderDialog
