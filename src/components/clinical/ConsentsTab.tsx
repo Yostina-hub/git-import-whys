@@ -276,17 +276,18 @@ By signing below, I acknowledge that I have read and understood this consent.`,
                       Clear
                     </Button>
                   </div>
-                  <div className="border-2 border-muted rounded-md bg-background">
+                  <div className="border-2 border-input rounded-md bg-white">
                     <SignatureCanvas
                       ref={signaturePadRef}
                       canvasProps={{
-                        className: "w-full h-40 touch-none",
+                        className: "w-full h-40 cursor-crosshair",
+                        style: { touchAction: 'none' }
                       }}
-                      backgroundColor="transparent"
+                      backgroundColor="white"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Please sign above using your mouse or touch screen
+                    Sign above using your mouse or finger on touch screen
                   </p>
                 </div>
 
