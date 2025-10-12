@@ -132,15 +132,30 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
+      });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        // Required for iOS Safari to start playback
-        (videoRef.current as HTMLVideoElement).muted = true;
-        await videoRef.current.play().catch(() => {});
-        setIsCameraOpen(true);
+        videoRef.current.muted = true;
+        videoRef.current.playsInline = true;
+        
+        // Wait for metadata to load before playing
+        videoRef.current.onloadedmetadata = async () => {
+          try {
+            await videoRef.current!.play();
+            setIsCameraOpen(true);
+          } catch (playError) {
+            console.error("Play error:", playError);
+          }
+        };
       }
     } catch (error) {
+      console.error("Camera access error:", error);
       toast({
         variant: "destructive",
         title: "Camera Error",
@@ -408,7 +423,14 @@ By signing below, I acknowledge that I have read and understood this consent.`,
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <video ref={videoRef} autoPlay playsInline muted onLoadedMetadata={() => videoRef.current?.play()} className="w-full rounded-md border" />
+                          <video 
+                            ref={videoRef} 
+                            autoPlay 
+                            playsInline 
+                            muted 
+                            className="w-full rounded-md border bg-black"
+                            style={{ maxHeight: '300px' }}
+                          />
                           <canvas ref={canvasRef} className="hidden" />
                           <div className="flex gap-2">
                             <Button type="button" onClick={capturePhoto} className="flex-1">
