@@ -14,9 +14,14 @@ const Index = () => {
             <Stethoscope className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold">SONIK EMR</h1>
           </div>
-          <Button onClick={() => navigate("/auth")}>
-            Login / Sign Up
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/register")}>
+              Register as Patient
+            </Button>
+            <Button onClick={() => navigate("/auth")}>
+              Staff Login
+            </Button>
+          </div>
         </div>
       </header>
 

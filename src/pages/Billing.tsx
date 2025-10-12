@@ -6,9 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, DollarSign } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { CreateInvoiceDialog } from "@/components/billing/CreateInvoiceDialog";
 import { RecordPaymentDialog } from "@/components/billing/RecordPaymentDialog";
+import { RefundsTab } from "@/components/billing/RefundsTab";
 
 const Billing = () => {
   const navigate = useNavigate();
@@ -72,67 +74,80 @@ const Billing = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Invoices</CardTitle>
-              <CreateInvoiceDialog onInvoiceCreated={loadInvoices} />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Invoice #</TableHead>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>Total Amount</TableHead>
-                  <TableHead>Balance Due</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invoices.map((invoice) => (
-                  <TableRow key={invoice.id}>
-                    <TableCell className="font-medium">{invoice.id.slice(0, 8)}</TableCell>
-                    <TableCell>
-                      {invoice.patients?.mrn} - {invoice.patients?.first_name} {invoice.patients?.last_name}
-                    </TableCell>
-                    <TableCell>${Number(invoice.total_amount || 0).toFixed(2)}</TableCell>
-                    <TableCell>${Number(invoice.balance_due || 0).toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(invoice.status)}>
-                        {invoice.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {invoice.issued_at 
-                        ? new Date(invoice.issued_at).toLocaleDateString()
-                        : new Date(invoice.created_at).toLocaleDateString()
-                      }
-                    </TableCell>
-                    <TableCell>
-                      {invoice.balance_due > 0 && invoice.status !== 'void' && (
-                        <RecordPaymentDialog 
-                          invoice={invoice} 
-                          onPaymentRecorded={loadInvoices} 
-                        />
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+        <Tabs defaultValue="invoices" className="w-full">
+          <TabsList>
+            <TabsTrigger value="invoices">Invoices</TabsTrigger>
+            <TabsTrigger value="refunds">Refunds</TabsTrigger>
+          </TabsList>
 
-            {invoices.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No invoices created yet.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          <TabsContent value="invoices">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Invoices</CardTitle>
+                  <CreateInvoiceDialog onInvoiceCreated={loadInvoices} />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Invoice #</TableHead>
+                      <TableHead>Patient</TableHead>
+                      <TableHead>Total Amount</TableHead>
+                      <TableHead>Balance Due</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoices.map((invoice) => (
+                      <TableRow key={invoice.id}>
+                        <TableCell className="font-medium">{invoice.id.slice(0, 8)}</TableCell>
+                        <TableCell>
+                          {invoice.patients?.mrn} - {invoice.patients?.first_name} {invoice.patients?.last_name}
+                        </TableCell>
+                        <TableCell>${Number(invoice.total_amount || 0).toFixed(2)}</TableCell>
+                        <TableCell>${Number(invoice.balance_due || 0).toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(invoice.status)}>
+                            {invoice.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {invoice.issued_at 
+                            ? new Date(invoice.issued_at).toLocaleDateString()
+                            : new Date(invoice.created_at).toLocaleDateString()
+                          }
+                        </TableCell>
+                        <TableCell>
+                          {invoice.balance_due > 0 && invoice.status !== 'void' && (
+                            <RecordPaymentDialog 
+                              invoice={invoice} 
+                              onPaymentRecorded={loadInvoices} 
+                            />
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                {invoices.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No invoices created yet.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="refunds">
+            <RefundsTab />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

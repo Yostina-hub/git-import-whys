@@ -21,6 +21,7 @@ import Packages from "./pages/Packages";
 import Visits from "./pages/Visits";
 import NotFound from "./pages/NotFound";
 import AppLayout from "./layouts/AppLayout";
+import PublicPortal from "./pages/PublicPortal";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/register" element={<PublicPortal />} />
 
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
