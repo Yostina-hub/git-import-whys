@@ -28,6 +28,7 @@ const QueueManagement = () => {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [showOnlySLABreaches, setShowOnlySLABreaches] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
+  const [queueCounts, setQueueCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     checkAuth();
@@ -41,7 +42,10 @@ const QueueManagement = () => {
       if (queue) setCurrentSLA(queue.sla_minutes || 30);
       
       // Poll for updates every 5 seconds
-      const interval = setInterval(() => loadTickets(selectedQueue), 5000);
+      const interval = setInterval(() => {
+        loadTickets(selectedQueue);
+        loadQueueCounts();
+      }, 5000);
       return () => clearInterval(interval);
     }
   }, [selectedQueue, queues]);
@@ -69,6 +73,7 @@ const QueueManagement = () => {
     } else if (data && data.length > 0) {
       setQueues(data);
       setSelectedQueue(data[0].id);
+      loadQueueCounts();
     }
   };
 
@@ -88,6 +93,24 @@ const QueueManagement = () => {
       console.log("Loaded tickets:", data);
       setTickets(data || []);
     }
+  };
+
+  const loadQueueCounts = async () => {
+    const { data, error } = await supabase
+      .from('tickets')
+      .select('queue_id')
+      .eq('status', 'waiting');
+
+    if (error) {
+      console.error('Error loading queue counts:', error);
+      return;
+    }
+
+    const counts: Record<string, number> = {};
+    (data || []).forEach((row: any) => {
+      counts[row.queue_id] = (counts[row.queue_id] || 0) + 1;
+    });
+    setQueueCounts(counts);
   };
 
   const getWaitTime = (createdAt: string) => {
@@ -112,10 +135,22 @@ const QueueManagement = () => {
     console.log("Next ticket to call:", nextTicket);
     
     if (!nextTicket) {
+      const totalWaiting = Object.values(queueCounts).reduce((a, b) => a + b, 0);
+      const message = totalWaiting > 0
+        ? `No waiting tickets in the selected queue. There are ${totalWaiting} waiting in other queues.`
+        : `There are ${tickets.length} total tickets, but none with 'waiting' status.`;
+
       toast({
         title: "No tickets waiting",
-        description: `There are ${tickets.length} total tickets, but none with 'waiting' status.`,
+        description: message,
       });
+
+      // Auto-switch to a queue that has waiting tickets
+      const targetQueueId = Object.keys(queueCounts).find((qid) => (queueCounts[qid] || 0) > 0);
+      if (targetQueueId && targetQueueId !== selectedQueue) {
+        setSelectedQueue(targetQueueId);
+        loadTickets(targetQueueId);
+      }
       return;
     }
 
@@ -245,8 +280,13 @@ const QueueManagement = () => {
                 <Tabs value={selectedQueue || ""} onValueChange={setSelectedQueue}>
                   <TabsList className="grid w-full grid-cols-5">
                   {queues.map((queue) => (
-                    <TabsTrigger key={queue.id} value={queue.id}>
-                      {queue.name}
+                    <TabsTrigger key={queue.id} value={queue.id} className="flex items-center gap-2">
+                      <span>{queue.name}</span>
+                      {queueCounts[queue.id] > 0 && (
+                        <span className="ml-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs">
+                          {queueCounts[queue.id]}
+                        </span>
+                      )}
                     </TabsTrigger>
                   ))}
                   </TabsList>
