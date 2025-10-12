@@ -88,7 +88,7 @@ export function TriageAssessmentDialog({
         .select("id")
         .eq("queue_type", "doctor")
         .eq("is_active", true)
-        .single();
+        .maybeSingle();
 
       if (queueError) throw queueError;
       if (!doctorQueue) throw new Error("No active doctor queue found");
