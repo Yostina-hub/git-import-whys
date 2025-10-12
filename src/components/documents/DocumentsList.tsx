@@ -25,6 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { DocumentPreviewDialog } from "./DocumentPreviewDialog";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 interface Document {
   id: string;
@@ -51,14 +52,34 @@ export const DocumentsList = ({ patientId, refreshTrigger, searchQuery = "", doc
   const [loading, setLoading] = useState(true);
   const [previewDocument, setPreviewDocument] = useState<Document | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
   const { toast } = useToast();
 
   const loadDocuments = async () => {
     setLoading(true);
+    
+    let countQuery = supabase
+      .from("document_attachments")
+      .select("*", { count: "exact", head: true })
+      .eq("patient_id", patientId);
+
+    if (documentType !== "all") {
+      countQuery = countQuery.eq("document_type", documentType);
+    }
+
+    const { count } = await countQuery;
+    setTotalCount(count || 0);
+
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
+
     let query = supabase
       .from("document_attachments")
       .select("*")
-      .eq("patient_id", patientId);
+      .eq("patient_id", patientId)
+      .range(from, to);
 
     if (documentType !== "all") {
       query = query.eq("document_type", documentType);
@@ -80,7 +101,7 @@ export const DocumentsList = ({ patientId, refreshTrigger, searchQuery = "", doc
 
   useEffect(() => {
     loadDocuments();
-  }, [patientId, refreshTrigger, documentType]);
+  }, [patientId, refreshTrigger, documentType, currentPage, pageSize]);
 
   const handleDownload = async (doc: Document) => {
     const { data, error } = await supabase.storage
@@ -275,6 +296,20 @@ export const DocumentsList = ({ patientId, refreshTrigger, searchQuery = "", doc
           ))}
         </TableBody>
       </Table>
+
+      {documents.length > 0 && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={Math.ceil(totalCount / pageSize)}
+          pageSize={pageSize}
+          totalItems={totalCount}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          }}
+        />
+      )}
 
       <DocumentPreviewDialog
         document={previewDocument}

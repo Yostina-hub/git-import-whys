@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit } from "lucide-react";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 interface EMRNotesTabProps {
   patientId: string | null;
@@ -22,6 +23,9 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
   const [loading, setLoading] = useState(false);
   const [editingNote, setEditingNote] = useState<any>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
   const [formData, setFormData] = useState({
     patient_id: patientId || "",
     note_type: "subjective" as const,
@@ -31,7 +35,7 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
   useEffect(() => {
     loadData();
     getCurrentUser();
-  }, [patientId]);
+  }, [patientId, currentPage, pageSize]);
 
   const getCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -41,10 +45,27 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
   const loadData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     
+    // Get total count
+    let countQuery = supabase
+      .from("emr_notes")
+      .select("*", { count: "exact", head: true });
+
+    if (patientId) {
+      countQuery = countQuery.eq("patient_id", patientId);
+    }
+
+    const { count } = await countQuery;
+    setTotalCount(count || 0);
+
+    // Get paginated data
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
+
     let query = supabase
       .from("emr_notes")
       .select("*, patients(first_name, last_name, mrn)")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (patientId) {
       query = query.eq("patient_id", patientId);
@@ -278,6 +299,20 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
           <div className="text-center py-8 text-muted-foreground">
             No EMR notes recorded yet.
           </div>
+        )}
+
+        {notes.length > 0 && (
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={Math.ceil(totalCount / pageSize)}
+            pageSize={pageSize}
+            totalItems={totalCount}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
+          />
         )}
       </CardContent>
     </Card>

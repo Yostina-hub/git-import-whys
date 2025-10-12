@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, AlertTriangle } from "lucide-react";
 import { AddAllergyDialog } from "./AddAllergyDialog";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 interface AllergiesTabProps {
   patientId: string | null;
@@ -17,22 +18,39 @@ export function AllergiesTab({ patientId }: AllergiesTabProps) {
   const [allergies, setAllergies] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     if (patientId) {
       loadAllergies();
     }
-  }, [patientId]);
+  }, [patientId, currentPage, pageSize]);
 
   const loadAllergies = async () => {
     if (!patientId) return;
     
     setLoading(true);
+    
+    // Get total count
+    const { count } = await supabase
+      .from("allergies")
+      .select("*", { count: "exact", head: true })
+      .eq("patient_id", patientId);
+    
+    setTotalCount(count || 0);
+    
+    // Get paginated data
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
+    
     const { data, error } = await supabase
       .from("allergies")
       .select("*, verified_by:profiles!allergies_verified_by_fkey(first_name, last_name)")
       .eq("patient_id", patientId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) {
       toast({
@@ -121,6 +139,20 @@ export function AllergiesTab({ patientId }: AllergiesTabProps) {
               ))}
             </TableBody>
           </Table>
+        )}
+        
+        {!loading && allergies.length > 0 && (
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={Math.ceil(totalCount / pageSize)}
+            pageSize={pageSize}
+            totalItems={totalCount}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
+          />
         )}
       </CardContent>
 
