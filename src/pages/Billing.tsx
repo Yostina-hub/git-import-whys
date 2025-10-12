@@ -12,6 +12,8 @@ import { CreateInvoiceDialog } from "@/components/billing/CreateInvoiceDialog";
 import { RecordPaymentDialog } from "@/components/billing/RecordPaymentDialog";
 import { RefundsTab } from "@/components/billing/RefundsTab";
 import { PaymentGatewaySettings } from "@/components/billing/PaymentGatewaySettings";
+import { DiscountTaxSettings } from "@/components/billing/DiscountTaxSettings";
+import { CreatePackageInvoiceDialog } from "@/components/billing/CreatePackageInvoiceDialog";
 
 const Billing = () => {
   const navigate = useNavigate();
@@ -80,6 +82,7 @@ const Billing = () => {
             <TabsTrigger value="invoices">Invoices</TabsTrigger>
             <TabsTrigger value="refunds">Refunds</TabsTrigger>
             <TabsTrigger value="gateways">Payment Gateways</TabsTrigger>
+            <TabsTrigger value="config">Discounts & Tax</TabsTrigger>
           </TabsList>
 
           <TabsContent value="invoices">
@@ -87,7 +90,10 @@ const Billing = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Invoices</CardTitle>
-                  <CreateInvoiceDialog onInvoiceCreated={loadInvoices} />
+                  <div className="flex gap-2">
+                    <CreateInvoiceDialog onInvoiceCreated={loadInvoices} />
+                    <CreatePackageInvoiceDialog onInvoiceCreated={loadInvoices} />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -152,6 +158,10 @@ const Billing = () => {
 
           <TabsContent value="gateways">
             <PaymentGatewaySettings />
+          </TabsContent>
+
+          <TabsContent value="config">
+            <DiscountTaxSettings />
           </TabsContent>
         </Tabs>
       </main>
