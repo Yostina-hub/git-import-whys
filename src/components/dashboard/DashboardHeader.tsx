@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Bell, UserCircle, Sparkles, Mic } from "lucide-react";
@@ -11,6 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AIClinicalAssistant } from "./AIClinicalAssistant";
+import { AIVoiceAssistant } from "./AIVoiceAssistant";
 
 interface DashboardHeaderProps {
   user: User | null;
@@ -27,6 +30,9 @@ export function DashboardHeader({
   title = "Dashboard",
   subtitle = "Manage your clinic with cutting-edge technology" 
 }: DashboardHeaderProps) {
+  const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
+  const [voiceAssistantOpen, setVoiceAssistantOpen] = useState(false);
+
   const getInitials = (email: string | undefined) => {
     if (!email) return "U";
     return email.substring(0, 2).toUpperCase();
@@ -41,7 +47,7 @@ export function DashboardHeader({
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => setAiAssistantOpen(true)}>
             <Sparkles className="h-4 w-4" />
             AI Assistant
           </Button>
@@ -106,9 +112,14 @@ export function DashboardHeader({
       <Button
         size="lg"
         className="fixed bottom-8 right-8 h-14 w-14 rounded-full shadow-lg z-50"
+        onClick={() => setVoiceAssistantOpen(true)}
       >
         <Mic className="h-6 w-6" />
       </Button>
+
+      {/* AI Dialogs */}
+      <AIClinicalAssistant open={aiAssistantOpen} onOpenChange={setAiAssistantOpen} />
+      <AIVoiceAssistant open={voiceAssistantOpen} onOpenChange={setVoiceAssistantOpen} />
     </div>
   );
 }
