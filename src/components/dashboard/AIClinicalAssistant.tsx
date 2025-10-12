@@ -96,35 +96,35 @@ export function AIClinicalAssistant({ open, onOpenChange }: AIClinicalAssistantP
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-xl p-0 flex flex-col">
         {/* Header */}
-        <SheetHeader className="px-4 py-3 border-b bg-gradient-to-r from-blue-600 to-cyan-500">
+        <SheetHeader className="px-6 py-4 border-b bg-gradient-to-r from-blue-600 to-cyan-500">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <Sparkles className="h-4 w-4 text-white" />
+            <div className="flex items-center gap-3">
+              <div className="h-16 w-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Sparkles className="h-8 w-8 text-white" />
               </div>
               <div>
-                <SheetTitle className="text-white text-base">AI Clinical Assistant</SheetTitle>
-                <p className="text-xs text-white/90">Powered by SONIK Intelligence</p>
+                <SheetTitle className="text-white text-2xl">AI Clinical Assistant</SheetTitle>
+                <p className="text-sm text-white/90">Powered by SONIK Intelligence</p>
               </div>
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onOpenChange(false)}
-              className="text-white hover:bg-white/20 h-8 w-8"
+              className="text-white hover:bg-white/20 h-10 w-10"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </Button>
           </div>
         </SheetHeader>
 
         {/* Notice */}
-        <div className="px-4 pt-3 pb-2">
+        <div className="px-6 pt-4 pb-3">
           <Card className="border-blue-200 bg-blue-50/50">
-            <CardContent className="p-2.5">
-              <div className="flex gap-2">
-                <AlertTriangle className="h-3.5 w-3.5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-blue-700">
+            <CardContent className="p-3">
+              <div className="flex gap-2.5">
+                <AlertTriangle className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-blue-700">
                   AI suggestions are based on evidence-based guidelines. Always verify with clinical judgment.
                 </p>
               </div>
@@ -133,7 +133,7 @@ export function AIClinicalAssistant({ open, onOpenChange }: AIClinicalAssistantP
         </div>
 
         {/* Chat Messages */}
-        <ScrollArea className="flex-1 px-4">
+        <ScrollArea className="flex-1 px-6">
           <div className="space-y-4 py-4">
             {messages.map((message) => (
               <div
@@ -141,7 +141,7 @@ export function AIClinicalAssistant({ open, onOpenChange }: AIClinicalAssistantP
                 className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-lg px-3 py-2 ${
+                  className={`max-w-[85%] rounded-lg px-4 py-3 ${
                     message.role === "user"
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted"
@@ -151,36 +151,41 @@ export function AIClinicalAssistant({ open, onOpenChange }: AIClinicalAssistantP
 
                   {/* Clinical Suggestion Card */}
                   {message.type === "clinical-suggestion" && message.suggestion && (
-                    <Card className="mt-3 border bg-background">
-                      <CardContent className="p-3 space-y-2.5">
-                        <div>
-                          <Badge variant="outline" className="mb-1.5 text-xs">DIAGNOSIS</Badge>
-                          <h4 className="font-semibold text-sm">{message.suggestion.title}</h4>
+                    <Card className="mt-4 border-2 bg-background">
+                      <CardContent className="p-6 space-y-4">
+                        <div className="flex items-start gap-3">
+                          <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <Sparkles className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <Badge variant="outline" className="mb-2 text-sm">DIAGNOSIS</Badge>
+                            <h4 className="font-semibold text-xl">{message.suggestion.title}</h4>
+                          </div>
                         </div>
 
                         {/* Confidence */}
                         <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-medium">Confidence Level</span>
-                            <span className="text-xs font-semibold">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium">Confidence Level</span>
+                            <span className="text-sm font-semibold">
                               {message.suggestion.confidence}% - {getConfidenceLabel(message.suggestion.confidence)}
                             </span>
                           </div>
-                          <Progress value={message.suggestion.confidence} className="h-1.5" />
+                          <Progress value={message.suggestion.confidence} className="h-2" />
                         </div>
 
                         {/* Reasoning */}
                         <div>
-                          <h5 className="text-xs font-semibold mb-1">Reasoning:</h5>
-                          <p className="text-xs text-muted-foreground">{message.suggestion.reasoning}</p>
+                          <h5 className="text-sm font-semibold mb-2">Reasoning:</h5>
+                          <p className="text-sm text-muted-foreground">{message.suggestion.reasoning}</p>
                         </div>
 
                         {/* Evidence */}
                         <div>
-                          <h5 className="text-xs font-semibold mb-1">Evidence:</h5>
-                          <ul className="space-y-0.5">
+                          <h5 className="text-sm font-semibold mb-2">Evidence:</h5>
+                          <ul className="space-y-1">
                             {message.suggestion.evidence.map((item, idx) => (
-                              <li key={idx} className="text-xs text-muted-foreground flex gap-1.5">
+                              <li key={idx} className="text-sm text-muted-foreground flex gap-2">
                                 <span className="text-blue-600">•</span>
                                 <span>{item}</span>
                               </li>
@@ -189,12 +194,12 @@ export function AIClinicalAssistant({ open, onOpenChange }: AIClinicalAssistantP
                         </div>
 
                         {/* Actions */}
-                        <div className="flex gap-2 pt-1">
-                          <Button size="sm" variant="default" className="flex-1 h-7 text-xs">
-                            Accept
+                        <div className="flex gap-3 pt-2">
+                          <Button size="lg" variant="default" className="flex-1 h-12 text-base gap-2">
+                            <span className="text-xl">👍</span> Accept
                           </Button>
-                          <Button size="sm" variant="outline" className="flex-1 h-7 text-xs">
-                            Dismiss
+                          <Button size="lg" variant="outline" className="flex-1 h-12 text-base gap-2">
+                            <span className="text-xl">👎</span> Dismiss
                           </Button>
                         </div>
                       </CardContent>
@@ -207,25 +212,42 @@ export function AIClinicalAssistant({ open, onOpenChange }: AIClinicalAssistantP
         </ScrollArea>
 
         {/* Input Area */}
-        <div className="border-t p-3 bg-background">
-          <div className="flex gap-2">
-            <Button variant="outline" size="icon" className="flex-shrink-0">
-              <Mic className="h-4 w-4" />
-            </Button>
+        <div className="border-t p-4 bg-background">
+          <div className="flex gap-3 items-center mb-4">
             <Input
               placeholder="Type your message or patient info..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSend()}
-              className="flex-1"
+              className="flex-1 h-12 text-base"
             />
-            <Button onClick={handleSend} size="icon" className="flex-shrink-0">
-              <Send className="h-4 w-4" />
+            <Button onClick={handleSend} size="icon" className="h-12 w-12 flex-shrink-0">
+              <Send className="h-5 w-5" />
             </Button>
           </div>
-          <p className="text-xs text-center text-muted-foreground mt-2">
-            AI responses are for informational purposes only
-          </p>
+          
+          {/* Footer Stats */}
+          <div className="flex items-center justify-between px-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-green-600">2</p>
+              <p className="text-sm text-muted-foreground">Active Suggestions</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-blue-600">78%</p>
+              <p className="text-sm text-muted-foreground">Avg. Confidence</p>
+            </div>
+          </div>
+          
+          {/* Floating Mic Button */}
+          <div className="absolute bottom-8 right-8">
+            <Button
+              variant="default"
+              size="icon"
+              className="h-16 w-16 rounded-full bg-blue-600 hover:bg-blue-700"
+            >
+              <Mic className="h-7 w-7" />
+            </Button>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
