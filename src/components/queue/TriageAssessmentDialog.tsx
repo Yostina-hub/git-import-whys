@@ -61,9 +61,21 @@ export function TriageAssessmentDialog({
 
       if (noteError) throw noteError;
 
+      // Mark the ticket as served to complete triage
+      const { error: ticketError } = await supabase
+        .from("tickets")
+        .update({ 
+          status: "served", 
+          served_at: new Date().toISOString(),
+          served_by: user.id 
+        })
+        .eq("id", ticketId);
+
+      if (ticketError) throw ticketError;
+
       toast({
         title: "Triage assessment complete",
-        description: `${patientName} assessed and ready for next department`,
+        description: `${patientName} assessed and data saved to EMR. Patient removed from triage queue.`,
       });
 
       setChiefComplaint("");
