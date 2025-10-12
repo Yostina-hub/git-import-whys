@@ -10,9 +10,9 @@ export const StatsCards = ({ stats }: { stats: any }) => {
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.totalPatients}</div>
+          <div className="text-2xl font-bold">{stats.totalPatients || 0}</div>
           <p className="text-xs text-muted-foreground">
-            +{stats.newPatientsThisMonth} this month
+            +{stats.newPatientsThisMonth || 0} this month
           </p>
         </CardContent>
       </Card>
@@ -23,9 +23,9 @@ export const StatsCards = ({ stats }: { stats: any }) => {
           <Calendar className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.appointmentsToday}</div>
+          <div className="text-2xl font-bold">{stats.appointmentsToday || 0}</div>
           <p className="text-xs text-muted-foreground">
-            {stats.appointmentsThisWeek} this week
+            {stats.appointmentsThisWeek || 0} this week
           </p>
         </CardContent>
       </Card>
@@ -36,9 +36,9 @@ export const StatsCards = ({ stats }: { stats: any }) => {
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">${stats.revenue30d.toFixed(2)}</div>
+          <div className="text-2xl font-bold">${(stats.revenue30d || 0).toFixed(2)}</div>
           <p className="text-xs text-muted-foreground">
-            +{stats.revenueGrowth}% from last month
+            +{stats.revenueGrowth || 0}% from last month
           </p>
         </CardContent>
       </Card>
@@ -49,9 +49,9 @@ export const StatsCards = ({ stats }: { stats: any }) => {
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">${stats.outstanding.toFixed(2)}</div>
+          <div className="text-2xl font-bold">${(stats.outstanding || 0).toFixed(2)}</div>
           <p className="text-xs text-muted-foreground">
-            {stats.outstandingInvoices} invoices
+            {stats.outstandingInvoices || 0} invoices
           </p>
         </CardContent>
       </Card>
