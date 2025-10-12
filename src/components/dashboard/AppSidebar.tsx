@@ -10,10 +10,10 @@ import {
   Mail,
   Shield,
   LayoutDashboard,
-  Settings,
   Activity,
   Package,
   ShoppingCart,
+  ClipboardCheck,
 } from "lucide-react";
 import {
   Sidebar,
@@ -34,6 +34,7 @@ interface AppSidebarProps {
 const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Patients", url: "/patients", icon: Users },
+  { title: "Visits", url: "/visits", icon: ClipboardCheck },
   { title: "Appointments", url: "/appointments", icon: Calendar },
   { title: "Queue", url: "/queue", icon: List },
 ];
