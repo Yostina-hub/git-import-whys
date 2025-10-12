@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, CheckCircle, Clock } from "lucide-react";
+import { Plus, CheckCircle, Clock, Camera, Mic, StopCircle } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -29,6 +29,15 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
     signed_by: "patient",
   });
   const signaturePadRef = useRef<SignatureCanvas>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  
+  const [photoData, setPhotoData] = useState<string | null>(null);
+  const [voiceData, setVoiceData] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   useEffect(() => {
     if (autoOpen) {
@@ -67,6 +76,15 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
       return;
     }
 
+    if (!photoData) {
+      toast({
+        variant: "destructive",
+        title: "Photo required",
+        description: "Please take a photo to verify identity.",
+      });
+      return;
+    }
+
     setLoading(true);
 
     const signatureData = signaturePadRef.current.toDataURL();
@@ -76,6 +94,10 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
         ...formData,
         signed_at: new Date().toISOString(),
         signature_blob: signatureData,
+        content_html: JSON.stringify({
+          photo: photoData,
+          voice: voiceData
+        })
       },
     ]);
 
@@ -93,6 +115,8 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
       setIsDialogOpen(false);
       loadData();
       signaturePadRef.current?.clear();
+      setPhotoData(null);
+      setVoiceData(null);
       setFormData({
         patient_id: patientId || "",
         consent_type: "general_treatment",
@@ -104,6 +128,84 @@ const ConsentsTab = ({ patientId, autoOpen = false, onAutoOpenChange }: Consents
 
   const clearSignature = () => {
     signaturePadRef.current?.clear();
+  };
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setIsCameraOpen(true);
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Camera Error",
+        description: "Could not access camera. Please check permissions.",
+      });
+    }
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      if (context) {
+        canvasRef.current.width = videoRef.current.videoWidth;
+        canvasRef.current.height = videoRef.current.videoHeight;
+        context.drawImage(videoRef.current, 0, 0);
+        const photo = canvasRef.current.toDataURL('image/jpeg');
+        setPhotoData(photo);
+        stopCamera();
+      }
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+      setIsCameraOpen(false);
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setVoiceData(reader.result as string);
+        };
+        reader.readAsDataURL(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Microphone Error",
+        description: "Could not access microphone. Please check permissions.",
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
   };
 
   const getConsentContent = (type: string) => {
@@ -267,6 +369,71 @@ By signing below, I acknowledge that I have read and understood this consent.`,
                       {getConsentContent(formData.consent_type).content}
                     </div>
                   </ScrollArea>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Photo Verification *</Label>
+                  {!photoData ? (
+                    <div className="space-y-2">
+                      {!isCameraOpen ? (
+                        <Button type="button" variant="outline" className="w-full" onClick={startCamera}>
+                          <Camera className="h-4 w-4 mr-2" />
+                          Take Photo
+                        </Button>
+                      ) : (
+                        <div className="space-y-2">
+                          <video ref={videoRef} autoPlay className="w-full rounded-md border" />
+                          <canvas ref={canvasRef} className="hidden" />
+                          <div className="flex gap-2">
+                            <Button type="button" onClick={capturePhoto} className="flex-1">
+                              Capture
+                            </Button>
+                            <Button type="button" variant="outline" onClick={stopCamera}>
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <img src={photoData} alt="Captured" className="w-full rounded-md border" />
+                      <Button type="button" variant="outline" size="sm" onClick={() => setPhotoData(null)}>
+                        Retake Photo
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Voice Consent (Optional)</Label>
+                  {!voiceData ? (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={isRecording ? stopRecording : startRecording}
+                    >
+                      {isRecording ? (
+                        <>
+                          <StopCircle className="h-4 w-4 mr-2 animate-pulse text-red-500" />
+                          Stop Recording
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="h-4 w-4 mr-2" />
+                          Record Voice Consent
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <div className="space-y-2">
+                      <audio src={voiceData} controls className="w-full" />
+                      <Button type="button" variant="outline" size="sm" onClick={() => setVoiceData(null)}>
+                        Re-record
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
