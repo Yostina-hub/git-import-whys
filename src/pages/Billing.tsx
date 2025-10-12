@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,9 +17,15 @@ import { CreatePackageInvoiceDialog } from "@/components/billing/CreatePackageIn
 
 const Billing = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [patientInfo, setPatientInfo] = useState<any>(null);
+  
+  // Get patient ID from URL if viewing specific patient
+  const patientId = searchParams.get("patient");
+  const isPatientView = !!patientId;
 
   useEffect(() => {
     checkAuth();
@@ -35,10 +41,27 @@ const Billing = () => {
 
   const loadInvoices = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    
+    let query = supabase
       .from("invoices")
       .select("*, patients(first_name, last_name, mrn)")
       .order("created_at", { ascending: false });
+
+    // Filter by patient if viewing specific patient
+    if (patientId) {
+      query = query.eq("patient_id", patientId);
+      
+      // Load patient info
+      const { data: patient } = await supabase
+        .from("patients")
+        .select("first_name, last_name, mrn")
+        .eq("id", patientId)
+        .single();
+      
+      setPatientInfo(patient);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       toast({
@@ -68,15 +91,95 @@ const Billing = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-2">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(isPatientView ? "/patients" : "/dashboard")} 
+            className="mb-2"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            {isPatientView ? "Back to Patients" : "Back to Dashboard"}
           </Button>
-          <h1 className="text-2xl font-bold">Billing & Invoicing</h1>
+          <h1 className="text-2xl font-bold">
+            {isPatientView && patientInfo 
+              ? `Invoices - ${patientInfo.first_name} ${patientInfo.last_name} (${patientInfo.mrn})`
+              : "Billing & Invoicing"
+            }
+          </h1>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {isPatientView ? (
+          // Patient-specific view - only show invoices
+          <Card>
+            <CardHeader>
+              <CardTitle>Patient Invoices</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Invoice #</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Balance Due</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoices.map((invoice) => {
+                    const lines = Array.isArray(invoice.lines) ? invoice.lines : [];
+                    const description = lines.length > 0 
+                      ? lines[0].description || "Invoice"
+                      : "Invoice";
+                    
+                    return (
+                    <TableRow key={invoice.id}>
+                      <TableCell className="font-medium">{invoice.id.slice(0, 8)}</TableCell>
+                      <TableCell className="text-muted-foreground">{description}</TableCell>
+                      <TableCell className="font-semibold">
+                        ${Number(invoice.total_amount || 0).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="font-semibold text-destructive">
+                        ${Number(invoice.balance_due || 0).toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(invoice.status)}>
+                          {invoice.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {invoice.issued_at 
+                          ? new Date(invoice.issued_at).toLocaleDateString()
+                          : new Date(invoice.created_at).toLocaleDateString()
+                        }
+                      </TableCell>
+                      <TableCell>
+                        {invoice.balance_due > 0 && invoice.status !== 'void' && (
+                          <RecordPaymentDialog 
+                            invoice={invoice} 
+                            onPaymentRecorded={loadInvoices} 
+                          />
+                        )}
+                      </TableCell>
+                    </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+
+              {invoices.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No invoices found for this patient.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          // Full billing view with all tabs
         <Tabs defaultValue="invoices" className="w-full">
           <TabsList>
             <TabsTrigger value="invoices">Invoices</TabsTrigger>
@@ -177,6 +280,7 @@ const Billing = () => {
             <DiscountTaxSettings />
           </TabsContent>
         </Tabs>
+        )}
       </main>
     </div>
   );
