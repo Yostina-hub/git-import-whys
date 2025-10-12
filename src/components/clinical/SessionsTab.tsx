@@ -22,8 +22,7 @@ const SessionsTab = ({ patientId }: SessionsTabProps) => {
       .from("treatment_sessions")
       .select(`
         *,
-        patients(first_name, last_name, mrn),
-        clinician:profiles!treatment_sessions_clinician_id_fkey(first_name, last_name)
+        patients(first_name, last_name, mrn)
       `)
       .order("performed_at", { ascending: false });
 
@@ -65,7 +64,7 @@ const SessionsTab = ({ patientId }: SessionsTabProps) => {
                   {session.patients?.mrn} - {session.patients?.first_name} {session.patients?.last_name}
                 </TableCell>
                 <TableCell>
-                  {session.clinician?.first_name} {session.clinician?.last_name}
+                  {session.clinician_id ? `ID ${String(session.clinician_id).slice(0, 8)}…` : "-"}
                 </TableCell>
                 <TableCell className="max-w-xs truncate">{session.procedure_notes || "-"}</TableCell>
                 <TableCell>

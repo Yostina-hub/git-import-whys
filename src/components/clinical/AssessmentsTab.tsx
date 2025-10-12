@@ -38,7 +38,7 @@ const AssessmentsTab = ({ patientId }: AssessmentsTabProps) => {
     const [assessRes, templatesRes, patientsRes] = await Promise.all([
       supabase
         .from("assessments")
-        .select("*, patients(first_name, last_name, mrn), profiles(first_name, last_name), assessment_templates(name)")
+        .select("*, patients(first_name, last_name, mrn), assessment_templates(name)")
         .order("created_at", { ascending: false })
         .then(res => patientId ? { ...res, data: res.data?.filter(a => a.patient_id === patientId) } : res),
       supabase.from("assessment_templates").select("*").eq("is_active", true),
@@ -247,7 +247,7 @@ const AssessmentsTab = ({ patientId }: AssessmentsTabProps) => {
                 <TableCell>{assessment.assessment_stage}</TableCell>
                 <TableCell>{assessment.score || "-"}</TableCell>
                 <TableCell>
-                  {assessment.profiles?.first_name} {assessment.profiles?.last_name}
+                  {assessment.completed_by ? `ID ${String(assessment.completed_by).slice(0, 8)}…` : "-"}
                 </TableCell>
               </TableRow>
             ))}
