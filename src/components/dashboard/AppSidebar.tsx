@@ -39,6 +39,7 @@ const mainNavItems = [
   { title: "Visits", url: "/visits", icon: ClipboardCheck },
   { title: "Appointments", url: "/appointments", icon: Calendar },
   { title: "Queue", url: "/queue", icon: List },
+  { title: "Triage Queue", url: "/triage-queue", icon: Stethoscope },
   { title: "Doctor Queue", url: "/doctor-queue", icon: Stethoscope },
 ];
 
