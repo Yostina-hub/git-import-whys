@@ -15,6 +15,7 @@ import { QueueDisplaySettings } from "@/components/queue/QueueDisplaySettings";
 import { QueueAnalytics } from "@/components/queue/QueueAnalytics";
 import { RoutingRules } from "@/components/queue/RoutingRules";
 import { TriageAssessmentDialog } from "@/components/queue/TriageAssessmentDialog";
+import { PostConsultationDialog } from "@/components/queue/PostConsultationDialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
@@ -35,6 +36,12 @@ const QueueManagement = () => {
     id: string;
     name: string;
     ticketId: string;
+  } | null>(null);
+  const [showPostConsultationDialog, setShowPostConsultationDialog] = useState(false);
+  const [completedTicket, setCompletedTicket] = useState<{
+    patient_id: string;
+    patient_name: string;
+    id: string;
   } | null>(null);
 
   useEffect(() => {
@@ -190,6 +197,9 @@ const QueueManagement = () => {
   const markServed = async (ticketId: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     
+    // Find the ticket being marked as served
+    const ticket = tickets.find(t => t.id === ticketId);
+    
     const { error } = await supabase
       .from("tickets")
       .update({ 
@@ -211,6 +221,16 @@ const QueueManagement = () => {
         description: "Patient marked as served",
       });
       if (selectedQueue) loadTickets(selectedQueue);
+      
+      // Show post-consultation workflow dialog
+      if (ticket) {
+        setCompletedTicket({
+          patient_id: ticket.patient_id,
+          patient_name: `${ticket.patients.first_name} ${ticket.patients.last_name}`,
+          id: ticket.id
+        });
+        setShowPostConsultationDialog(true);
+      }
     }
   };
 
@@ -430,6 +450,17 @@ const QueueManagement = () => {
               loadQueueCounts();
             }
           }}
+        />
+      )}
+
+      {/* Post-Consultation Workflow Dialog */}
+      {completedTicket && (
+        <PostConsultationDialog
+          open={showPostConsultationDialog}
+          onOpenChange={setShowPostConsultationDialog}
+          patientId={completedTicket.patient_id}
+          patientName={completedTicket.patient_name}
+          ticketId={completedTicket.id}
         />
       )}
     </div>
