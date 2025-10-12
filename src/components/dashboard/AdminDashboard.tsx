@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Calendar, DollarSign, Building2, FileText, Settings, TrendingUp, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { StatsGrid } from "./StatsGrid";
+import { RecentActivity } from "./RecentActivity";
 
 export function AdminDashboard() {
   const navigate = useNavigate();
@@ -58,29 +60,25 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-          <p className="text-muted-foreground">System-wide overview and management</p>
-        </div>
-        <Badge variant="outline" className="gap-2">
-          <Building2 className="h-4 w-4" />
-          All Clinics
-        </Badge>
-      </div>
+      {/* Stats Grid */}
+      <StatsGrid
+        stats={{
+          totalPatients: stats.totalPatients,
+          todayAppointments: stats.todayAppointments,
+          pendingAppointments: 6,
+          activeTreatments: 156,
+          avgWaitTime: 12,
+          patientsChange: 12,
+          treatmentsChange: 8,
+          waitTimeChange: -3,
+        }}
+      />
 
-      {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-primary">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Patients</CardTitle>
-            <Users className="h-5 w-5 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.totalPatients}</div>
-            <p className="text-xs text-muted-foreground mt-1">Across all clinics</p>
-          </CardContent>
-        </Card>
+      {/* Recent Activity */}
+      <RecentActivity />
+
+      {/* Quick Actions Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 
         <Card className="border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">

@@ -1,8 +1,8 @@
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { Bell, LogOut, UserCircle, Search } from "lucide-react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Input } from "@/components/ui/input";
+import { Bell, UserCircle, Sparkles, Mic } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,33 +16,74 @@ interface DashboardHeaderProps {
   user: User | null;
   onLogout: () => void;
   onProfileClick: () => void;
+  title?: string;
+  subtitle?: string;
 }
 
-export function DashboardHeader({ user, onLogout, onProfileClick }: DashboardHeaderProps) {
+export function DashboardHeader({ 
+  user, 
+  onLogout, 
+  onProfileClick,
+  title = "Dashboard",
+  subtitle = "Manage your clinic with cutting-edge technology" 
+}: DashboardHeaderProps) {
+  const getInitials = (email: string | undefined) => {
+    if (!email) return "U";
+    return email.substring(0, 2).toUpperCase();
+  };
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-16 items-center gap-4 px-6">
-        <div className="flex-1 flex items-center gap-4">
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search patients, appointments..."
-              className="pl-10 bg-muted/50"
-            />
-          </div>
+    <div className="space-y-6">
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight">{title}</h1>
+          <p className="text-muted-foreground mt-1">{subtitle}</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full" />
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="gap-2">
+            <Sparkles className="h-4 w-4" />
+            AI Assistant
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2">
-                <UserCircle className="h-5 w-5" />
-                <span className="hidden md:inline-block">{user?.email}</span>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                >
+                  2
+                </Badge>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80 bg-popover">
+              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer">
+                <div className="flex flex-col gap-1">
+                  <p className="font-medium">New appointment booked</p>
+                  <p className="text-xs text-muted-foreground">Sarah Johnson - 10 minutes ago</p>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                <div className="flex flex-col gap-1">
+                  <p className="font-medium">Patient checked in</p>
+                  <p className="text-xs text-muted-foreground">Michael Brown - 25 minutes ago</p>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {getInitials(user?.email)}
+                  </AvatarFallback>
+                </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-popover">
@@ -54,13 +95,20 @@ export function DashboardHeader({ user, onLogout, onProfileClick }: DashboardHea
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onLogout} className="cursor-pointer text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Voice Assistant Floating Button */}
+      <Button
+        size="lg"
+        className="fixed bottom-8 right-8 h-14 w-14 rounded-full shadow-lg z-50"
+      >
+        <Mic className="h-6 w-6" />
+      </Button>
+    </div>
   );
 }
