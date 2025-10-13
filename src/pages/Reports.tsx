@@ -2,14 +2,15 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { StatsCards } from "@/components/reports/StatsCards";
-import { RevenueChart } from "@/components/reports/RevenueChart";
-import { AppointmentChart } from "@/components/reports/AppointmentChart";
-import { PatientDemographics } from "@/components/reports/PatientDemographics";
+import { ArrowLeft, Download, RefreshCw } from "lucide-react";
+import { AdvancedStatsGrid } from "@/components/reports/AdvancedStatsGrid";
+import { EnhancedRevenueChart } from "@/components/reports/EnhancedRevenueChart";
+import { EnhancedAppointmentChart } from "@/components/reports/EnhancedAppointmentChart";
+import { EnhancedDemographicsChart } from "@/components/reports/EnhancedDemographicsChart";
+import { PaymentReportsCard } from "@/components/reports/PaymentReportsCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, subDays, startOfWeek, startOfMonth, subMonths, startOfYear } from "date-fns";
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -26,6 +27,8 @@ const Reports = () => {
   const [revenueData, setRevenueData] = useState<Array<{ date: string; revenue: number; outstanding: number }>>([]);
   const [appointmentData, setAppointmentData] = useState<Array<{ date: string; booked: number; completed: number; cancelled: number }>>([]);
   const [demographicsData, setDemographicsData] = useState<Array<{ name: string; value: number }>>([]);
+  const [paymentData, setPaymentData] = useState<Array<{ date: string; amount: number; count: number }>>([]);
+  const [paymentPeriod, setPaymentPeriod] = useState<'daily' | 'weekly' | 'monthly' | '3month' | 'yearly'>('monthly');
 
   useEffect(() => {
     checkAuth();
@@ -33,7 +36,12 @@ const Reports = () => {
     loadRevenueData();
     loadAppointmentData();
     loadDemographicsData();
+    loadPaymentData();
   }, []);
+
+  useEffect(() => {
+    loadPaymentData();
+  }, [paymentPeriod]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -147,48 +155,176 @@ const Reports = () => {
     }
   };
 
+  const loadPaymentData = async () => {
+    try {
+      let startDate: Date;
+      const today = new Date();
+
+      switch (paymentPeriod) {
+        case 'daily':
+          startDate = subDays(today, 7);
+          break;
+        case 'weekly':
+          startDate = subDays(today, 28);
+          break;
+        case 'monthly':
+          startDate = subMonths(today, 6);
+          break;
+        case '3month':
+          startDate = subMonths(today, 12);
+          break;
+        case 'yearly':
+          startDate = subMonths(today, 24);
+          break;
+        default:
+          startDate = subMonths(today, 6);
+      }
+
+      const { data, error } = await supabase
+        .from("payments")
+        .select("amount, received_at")
+        .gte("received_at", startDate.toISOString())
+        .order("received_at", { ascending: true });
+
+      if (error) throw error;
+
+      // Group payments by period
+      const grouped = (data || []).reduce((acc: any, payment: any) => {
+        let key: string;
+        const date = new Date(payment.received_at);
+
+        switch (paymentPeriod) {
+          case 'daily':
+            key = format(date, 'MMM dd');
+            break;
+          case 'weekly':
+            key = format(startOfWeek(date), 'MMM dd');
+            break;
+          case 'monthly':
+            key = format(startOfMonth(date), 'MMM yyyy');
+            break;
+          case '3month':
+          case 'yearly':
+            key = format(startOfMonth(date), 'MMM yyyy');
+            break;
+          default:
+            key = format(date, 'MMM dd');
+        }
+
+        if (!acc[key]) {
+          acc[key] = { date: key, amount: 0, count: 0 };
+        }
+        acc[key].amount += Number(payment.amount) || 0;
+        acc[key].count += 1;
+        return acc;
+      }, {});
+
+      setPaymentData(Object.values(grouped));
+    } catch (error: any) {
+      console.error("Error loading payment data:", error);
+    }
+  };
+
+  const handleRefresh = () => {
+    setLoading(true);
+    loadStats();
+    loadRevenueData();
+    loadAppointmentData();
+    loadDemographicsData();
+    loadPaymentData();
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-2">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          <h1 className="text-2xl font-bold">Reports & Analytics</h1>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <header className="border-b bg-card/95 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                  Analytics Dashboard
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">Comprehensive insights and performance metrics</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleRefresh} disabled={loading}>
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            </div>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
         {loading && (
-          <div className="text-center py-8 text-muted-foreground">
-            Loading report data...
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <RefreshCw className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-lg text-muted-foreground">Loading analytics...</p>
+            </div>
           </div>
         )}
 
         {!loading && (
-          <div className="space-y-6">
-            <StatsCards stats={stats} />
+          <div className="space-y-8 animate-fade-in">
+            <AdvancedStatsGrid stats={stats} />
 
-            <Tabs defaultValue="revenue" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="revenue">Revenue</TabsTrigger>
-                <TabsTrigger value="appointments">Appointments</TabsTrigger>
-                <TabsTrigger value="demographics">Demographics</TabsTrigger>
-              </TabsList>
+            <PaymentReportsCard 
+              payments={paymentData} 
+              period={paymentPeriod}
+              onPeriodChange={setPaymentPeriod}
+            />
 
-              <TabsContent value="revenue">
-                <RevenueChart data={revenueData} />
-              </TabsContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <EnhancedRevenueChart data={revenueData} />
+              <EnhancedAppointmentChart data={appointmentData} />
+            </div>
 
-              <TabsContent value="appointments">
-                <AppointmentChart data={appointmentData} />
-              </TabsContent>
-
-              <TabsContent value="demographics">
-                <PatientDemographics data={demographicsData} />
-              </TabsContent>
-            </Tabs>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <EnhancedDemographicsChart data={demographicsData} />
+              <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg p-6 border-2 border-primary/20">
+                <h3 className="text-xl font-bold mb-4">Key Insights</h3>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="h-8 w-8 rounded-full bg-success/20 flex items-center justify-center mt-1">
+                      <span className="text-[hsl(var(--success))] font-bold">✓</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">Strong Performance</h4>
+                      <p className="text-sm text-muted-foreground">Revenue trending positively with {stats.completedToday} appointments completed today</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-8 w-8 rounded-full bg-info/20 flex items-center justify-center mt-1">
+                      <span className="text-[hsl(var(--info))] font-bold">i</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">Active Sessions</h4>
+                      <p className="text-sm text-muted-foreground">{stats.activeSessions} active treatment sessions in progress</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-8 w-8 rounded-full bg-warning/20 flex items-center justify-center mt-1">
+                      <span className="text-[hsl(var(--warning))] font-bold">!</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">Pending Invoices</h4>
+                      <p className="text-sm text-muted-foreground">{stats.pendingInvoices} invoices require attention</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </main>
