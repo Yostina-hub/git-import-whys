@@ -96,56 +96,83 @@ export const PublicAppointmentBooking = () => {
 
     setLoading(true);
 
-    // Combine date and time
-    const [hours, minutes] = selectedTime.split(":");
-    const scheduledStart = new Date(selectedDate);
-    scheduledStart.setHours(parseInt(hours), parseInt(minutes), 0);
-    const scheduledEnd = addMinutes(scheduledStart, 30);
+    try {
+      // Step 1: Find or create patient
+      let patientId: string;
 
-    // For public bookings, we'll store appointment request data
-    const appointmentData: any = {
-      clinic_id: formData.clinic_id,
-      scheduled_start: scheduledStart.toISOString(),
-      scheduled_end: scheduledEnd.toISOString(),
-      reason_for_visit: formData.reason_for_visit,
-      source: "online",
-      status: "booked",
-      notes: JSON.stringify({
-        patient_first_name: formData.patient_first_name,
-        patient_last_name: formData.patient_last_name,
-        patient_phone: formData.patient_phone,
-        patient_email: formData.patient_email,
-        appointment_type: appointmentType,
-        consultation_type: consultationType,
-      }),
-    };
+      // Try to find existing patient by phone number
+      const { data: existingPatients } = await supabase
+        .from("patients")
+        .select("id")
+        .eq("phone_mobile", formData.patient_phone)
+        .limit(1);
 
-    // Add provider only if doctor-specific appointment
-    if (appointmentType === "doctor_specific" && formData.provider_id) {
-      appointmentData.provider_id = formData.provider_id;
-    }
+      if (existingPatients && existingPatients.length > 0) {
+        patientId = existingPatients[0].id;
+      } else {
+        // Create new patient with pending registration status
+        // Generate MRN using the database function
+        const { data: mrnData } = await supabase.rpc("generate_mrn");
+        
+        const { data: newPatient, error: patientError } = await supabase
+          .from("patients")
+          .insert([{
+            mrn: mrnData || `MRN${Date.now()}`,
+            first_name: formData.patient_first_name,
+            last_name: formData.patient_last_name,
+            phone_mobile: formData.patient_phone,
+            email: formData.patient_email || null,
+            date_of_birth: "2000-01-01", // Temporary DOB - will be updated during registration
+            registration_status: "pending",
+            registration_notes: `Online booking - ${consultationType} consultation`,
+          }])
+          .select()
+          .single();
 
-    if (formData.service_id) {
-      appointmentData.service_id = formData.service_id;
-    }
+        if (patientError) throw patientError;
+        patientId = newPatient.id;
+      }
 
-    // Note: In production, you'd want to check for existing patient by phone/email
-    // and link to patient_id, or create a pending appointment request table
-    
-    const { error } = await supabase.from("appointments").insert([appointmentData]);
+      // Step 2: Combine date and time
+      const [hours, minutes] = selectedTime.split(":");
+      const scheduledStart = new Date(selectedDate);
+      scheduledStart.setHours(parseInt(hours), parseInt(minutes), 0);
+      const scheduledEnd = addMinutes(scheduledStart, 30);
 
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Booking Failed",
-        description: error.message,
-      });
-    } else {
+      // Step 3: Create appointment with patient_id
+      const appointmentData: any = {
+        patient_id: patientId,
+        clinic_id: formData.clinic_id,
+        scheduled_start: scheduledStart.toISOString(),
+        scheduled_end: scheduledEnd.toISOString(),
+        reason_for_visit: formData.reason_for_visit || `${consultationType} consultation`,
+        source: "online",
+        status: "booked",
+        notes: `Consultation Type: ${consultationType}${appointmentType === "doctor_specific" ? " (Specific Doctor)" : " (General)"}`,
+      };
+
+      // Add provider only if doctor-specific appointment
+      if (appointmentType === "doctor_specific" && formData.provider_id) {
+        appointmentData.provider_id = formData.provider_id;
+      }
+
+      if (formData.service_id) {
+        appointmentData.service_id = formData.service_id;
+      }
+
+      const { error: appointmentError } = await supabase
+        .from("appointments")
+        .insert([appointmentData]);
+
+      if (appointmentError) throw appointmentError;
+
       toast({
         title: "Appointment Request Submitted!",
-        description: "Our team will contact you shortly to confirm your appointment.",
+        description: consultationType === "online" 
+          ? "Our team will contact you with the online consultation link."
+          : "Our team will contact you shortly to confirm your appointment.",
       });
-      
+
       // Reset form
       setFormData({
         patient_first_name: "",
@@ -161,7 +188,15 @@ export const PublicAppointmentBooking = () => {
       setSelectedTime("");
       setAppointmentType("general");
       setConsultationType("in-person");
+
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Booking Failed",
+        description: error.message,
+      });
     }
+
     setLoading(false);
   };
 
