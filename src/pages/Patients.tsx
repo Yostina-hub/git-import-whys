@@ -273,17 +273,14 @@ const Patients = () => {
               </Card>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {patients.map((patient) => (
-                    <EnhancedPatientCard
-                      key={patient.id}
-                      patient={patient}
-                      onViewPatient={handleViewPatient}
-                      onViewInvoices={handleViewInvoices}
-                      onViewAppointments={handleViewAppointments}
-                    />
-                  ))}
-                </div>
+                <PatientTable
+                  patients={patients}
+                  registrationFee={registrationService?.unit_price || 0}
+                  onViewPatient={handleViewPatient}
+                  onViewInvoices={handleViewInvoices}
+                  onViewAppointments={handleViewAppointments}
+                  onRefresh={refetch}
+                />
 
                 {totalCount > 0 && (
                   <div className="mt-6 flex items-center justify-between border-t pt-4">
