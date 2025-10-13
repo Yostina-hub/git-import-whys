@@ -15,6 +15,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@
 import { PatientTable } from "@/components/patients/PatientTable";
 import { PatientRegistrationForm } from "@/components/patients/PatientRegistrationForm";
 import { PatientDetailsDialog } from "@/components/patients/PatientDetailsDialog";
+import { IncompleteRegistrations } from "@/components/patients/IncompleteRegistrations";
 
 const Patients = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const Patients = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [resumingPatient, setResumingPatient] = useState<any>(null);
   
   const registrationService = useRegistrationService();
   const {
@@ -63,8 +65,14 @@ const Patients = () => {
 
   const handleRegistrationSuccess = () => {
     setIsDialogOpen(false);
+    setResumingPatient(null);
     setCurrentPage(1);
     refetch();
+  };
+
+  const handleResumeRegistration = (patient: any) => {
+    setResumingPatient(patient);
+    setIsDialogOpen(true);
   };
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
@@ -92,7 +100,10 @@ const Patients = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 space-y-6">
+        {/* Show incomplete registrations at the top */}
+        <IncompleteRegistrations onResumeRegistration={handleResumeRegistration} />
+        
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -113,7 +124,11 @@ const Patients = () => {
                       registrationServiceId={registrationService.id}
                       registrationPrice={registrationService.unit_price}
                       onSuccess={handleRegistrationSuccess}
-                      onCancel={() => setIsDialogOpen(false)}
+                      onCancel={() => {
+                        setIsDialogOpen(false);
+                        setResumingPatient(null);
+                      }}
+                      existingPatient={resumingPatient}
                     />
                   )}
                 </DialogContent>

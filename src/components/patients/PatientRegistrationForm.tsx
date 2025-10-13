@@ -36,6 +36,7 @@ interface Props {
   onSuccess: () => void;
   onCancel: () => void;
   onAppointmentPath?: (patientData: any) => void;
+  existingPatient?: any; // For resuming incomplete registrations
 }
 
 export const PatientRegistrationForm = ({ 
@@ -45,7 +46,8 @@ export const PatientRegistrationForm = ({
   consultationPrice,
   onSuccess, 
   onCancel,
-  onAppointmentPath
+  onAppointmentPath,
+  existingPatient
 }: Props) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -60,20 +62,34 @@ export const PatientRegistrationForm = ({
   const [paymentReference, setPaymentReference] = useState("");
   
   const [formData, setFormData] = useState<PatientFormData>({
-    first_name: "",
-    middle_name: "",
-    last_name: "",
-    date_of_birth: "",
-    sex_at_birth: "male",
-    phone_mobile: "",
-    phone_alt: "",
-    email: "",
-    national_id: "",
-    address_line1: "",
-    city: "",
-    country: "",
-    emergency_contact_name: "",
-    emergency_contact_phone: "",
+    first_name: existingPatient?.first_name || "",
+    middle_name: existingPatient?.middle_name || "",
+    last_name: existingPatient?.last_name || "",
+    date_of_birth: existingPatient?.date_of_birth || "",
+    sex_at_birth: existingPatient?.sex_at_birth || "male",
+    phone_mobile: existingPatient?.phone_mobile || "",
+    phone_alt: existingPatient?.phone_alt || "",
+    email: existingPatient?.email || "",
+    national_id: existingPatient?.national_id || "",
+    address_line1: existingPatient?.address_line1 || "",
+    city: existingPatient?.city || "",
+    country: existingPatient?.country || "",
+    emergency_contact_name: existingPatient?.emergency_contact_name || "",
+    emergency_contact_phone: existingPatient?.emergency_contact_phone || "",
+  });
+
+  // If resuming, check what step to start from
+  useState(() => {
+    if (existingPatient) {
+      setRegisteredPatient(existingPatient);
+      
+      // Resume based on status
+      if (existingPatient.registration_status === 'pending') {
+        setShowConsentDialog(true);
+      } else if (existingPatient.registration_status === 'consented') {
+        setShowPathSelection(true);
+      }
+    }
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,14 +97,28 @@ export const PatientRegistrationForm = ({
     setLoading(true);
 
     try {
+      // If resuming existing patient, skip to consent
+      if (existingPatient) {
+        setRegisteredPatient(existingPatient);
+        setShowConsentDialog(true);
+        setLoading(false);
+        return;
+      }
+
       const { data: mrnData } = await supabase.rpc("generate_mrn");
       const mrn = mrnData || `MRN${Date.now()}`;
 
       const { data: { user } } = await supabase.auth.getUser();
 
+      // Auto-save patient record with pending status
       const { data: patientData, error: patientError } = await supabase
         .from("patients")
-        .insert([{ ...formData, mrn }])
+        .insert([{ 
+          ...formData, 
+          mrn,
+          registration_status: 'pending',
+          registration_notes: 'Registration started - awaiting consent'
+        }])
         .select()
         .single();
 
@@ -117,8 +147,8 @@ export const PatientRegistrationForm = ({
       await supabase.from("invoices").insert([invoiceData]);
 
       toast({
-        title: "Patient registered successfully",
-        description: `MRN: ${mrn}. Please complete consent form.`,
+        title: "Patient record saved",
+        description: `MRN: ${mrn}. Progress saved - please complete consent.`,
       });
 
       // Store patient data and show consent dialog
@@ -128,14 +158,26 @@ export const PatientRegistrationForm = ({
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error creating patient",
+        title: "Error saving patient",
         description: error.message,
       });
       setLoading(false);
     }
   };
 
-  const handleConsentSuccess = () => {
+  const handleConsentSuccess = async () => {
+    // Update patient status to consented
+    if (registeredPatient) {
+      await supabase
+        .from("patients")
+        .update({ 
+          registration_status: 'consented',
+          consent_completed_at: new Date().toISOString(),
+          registration_notes: 'Consent completed - awaiting payment path selection'
+        })
+        .eq("id", registeredPatient.id);
+    }
+    
     // After consent is recorded, show path selection dialog
     setShowConsentDialog(false);
     setShowPathSelection(true);
@@ -258,10 +300,20 @@ export const PatientRegistrationForm = ({
           notes: "Added after payment confirmation",
         }]);
 
-        toast({
-          title: "Payment recorded and patient queued",
-          description: `Token: ${tokenNumber}. Patient transferred to triage.`,
-        });
+      // Mark registration as completed
+      await supabase
+        .from("patients")
+        .update({ 
+          registration_status: 'completed',
+          payment_completed_at: new Date().toISOString(),
+          registration_notes: 'Registration completed successfully'
+        })
+        .eq("id", registeredPatient.id);
+
+      toast({
+        title: "Payment recorded and patient queued",
+        description: `Token: ${tokenNumber}. Patient transferred to triage.`,
+      });
       } else {
         toast({
           title: "Payment recorded successfully",

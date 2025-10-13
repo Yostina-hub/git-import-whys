@@ -941,6 +941,7 @@ export type Database = {
           address_line1: string | null
           address_line2: string | null
           city: string | null
+          consent_completed_at: string | null
           country: string | null
           created_at: string
           date_of_birth: string
@@ -957,11 +958,16 @@ export type Database = {
           mrn: string
           national_id: string | null
           passport_no: string | null
+          payment_completed_at: string | null
           phone_alt: string | null
           phone_mobile: string
           postal_code: string | null
           preferred_language: string | null
           region: string | null
+          registration_notes: string | null
+          registration_status:
+            | Database["public"]["Enums"]["registration_status"]
+            | null
           sex_at_birth: Database["public"]["Enums"]["sex_at_birth"] | null
           updated_at: string
         }
@@ -969,6 +975,7 @@ export type Database = {
           address_line1?: string | null
           address_line2?: string | null
           city?: string | null
+          consent_completed_at?: string | null
           country?: string | null
           created_at?: string
           date_of_birth: string
@@ -987,11 +994,16 @@ export type Database = {
           mrn: string
           national_id?: string | null
           passport_no?: string | null
+          payment_completed_at?: string | null
           phone_alt?: string | null
           phone_mobile: string
           postal_code?: string | null
           preferred_language?: string | null
           region?: string | null
+          registration_notes?: string | null
+          registration_status?:
+            | Database["public"]["Enums"]["registration_status"]
+            | null
           sex_at_birth?: Database["public"]["Enums"]["sex_at_birth"] | null
           updated_at?: string
         }
@@ -999,6 +1011,7 @@ export type Database = {
           address_line1?: string | null
           address_line2?: string | null
           city?: string | null
+          consent_completed_at?: string | null
           country?: string | null
           created_at?: string
           date_of_birth?: string
@@ -1017,11 +1030,16 @@ export type Database = {
           mrn?: string
           national_id?: string | null
           passport_no?: string | null
+          payment_completed_at?: string | null
           phone_alt?: string | null
           phone_mobile?: string
           postal_code?: string | null
           preferred_language?: string | null
           region?: string | null
+          registration_notes?: string | null
+          registration_status?:
+            | Database["public"]["Enums"]["registration_status"]
+            | null
           sex_at_birth?: Database["public"]["Enums"]["sex_at_birth"] | null
           updated_at?: string
         }
@@ -2191,6 +2209,7 @@ export type Database = {
         | "imaging"
         | "cashier"
         | "pharmacy"
+      registration_status: "pending" | "consented" | "paid" | "completed"
       schedule_type: "regular" | "override" | "leave"
       sex_at_birth: "male" | "female" | "intersex" | "unknown"
       ticket_status: "waiting" | "called" | "no_show" | "served" | "transferred"
@@ -2410,6 +2429,7 @@ export const Constants = {
       priority_level: ["routine", "stat", "vip"],
       protocol_status: ["draft", "active", "on_hold", "completed", "cancelled"],
       queue_type: ["triage", "doctor", "lab", "imaging", "cashier", "pharmacy"],
+      registration_status: ["pending", "consented", "paid", "completed"],
       schedule_type: ["regular", "override", "leave"],
       sex_at_birth: ["male", "female", "intersex", "unknown"],
       ticket_status: ["waiting", "called", "no_show", "served", "transferred"],
