@@ -90,11 +90,43 @@ const PublicPortal = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  HealthCare+
+                  Zemar
                 </h1>
                 <p className="text-xs text-muted-foreground">The Future of Medical Care</p>
               </div>
             </div>
+            
+            <nav className="hidden md:flex items-center gap-6">
+              <a 
+                href="#features" 
+                className="text-sm font-medium hover:text-primary transition-colors"
+                onClick={(e) => { e.preventDefault(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }); }}
+              >
+                Features
+              </a>
+              <a 
+                href="#services" 
+                className="text-sm font-medium hover:text-primary transition-colors"
+                onClick={(e) => { e.preventDefault(); document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); }}
+              >
+                Services
+              </a>
+              <a 
+                href="#booking" 
+                className="text-sm font-medium hover:text-primary transition-colors"
+                onClick={(e) => { e.preventDefault(); document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' }); }}
+              >
+                Book Appointment
+              </a>
+              <a 
+                href="#testimonials" 
+                className="text-sm font-medium hover:text-primary transition-colors"
+                onClick={(e) => { e.preventDefault(); document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' }); }}
+              >
+                Testimonials
+              </a>
+            </nav>
+
             <div className="flex items-center gap-3">
               <Button 
                 variant="ghost" 
@@ -190,7 +222,7 @@ const PublicPortal = () => {
         </section>
 
         {/* Interactive Features Showcase */}
-        <section className="py-20 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <section id="features" className="py-20 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h3 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -235,7 +267,7 @@ const PublicPortal = () => {
         </section>
 
         {/* Services Grid */}
-        <section className="py-20">
+        <section id="services" className="py-20">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h3 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -290,7 +322,7 @@ const PublicPortal = () => {
         </section>
 
         {/* Testimonials Section */}
-        <section className="py-20">
+        <section id="testimonials" className="py-20">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h3 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
