@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   User,
   Calendar,
@@ -21,6 +22,9 @@ import {
   Pill,
   AlertTriangle,
   FileCheck,
+  DollarSign,
+  Clock,
+  CreditCard,
 } from "lucide-react";
 import EMRNotesTab from "@/components/clinical/EMRNotesTab";
 import AssessmentsTab from "@/components/clinical/AssessmentsTab";
@@ -32,6 +36,14 @@ import { CreateOrderDialog } from "@/components/orders/CreateOrderDialog";
 import { UpdateOrderStatusDialog } from "@/components/orders/UpdateOrderStatusDialog";
 import { OrderResultsDialog } from "@/components/orders/OrderResultsDialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { RecordPaymentDialog } from "@/components/billing/RecordPaymentDialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface DoctorConsultationDialogProps {
   ticket: any;
@@ -50,14 +62,20 @@ export function DoctorConsultationDialog({
 }: DoctorConsultationDialogProps) {
   const { toast } = useToast();
   const [orders, setOrders] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
   const [showCreateOrder, setShowCreateOrder] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showUpdateStatus, setShowUpdateStatus] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [completionAction, setCompletionAction] = useState<string>("complete");
+  const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
 
   useEffect(() => {
     if (open && patient) {
       loadOrders();
+      loadInvoices();
+      loadServices();
     }
   }, [open, patient?.id]);
 
@@ -73,30 +91,161 @@ export function DoctorConsultationDialog({
     }
   };
 
-  const completeConsultation = async () => {
-    // Check for pending orders
-    const pendingOrders = orders.filter(
-      (o) => o.status === "draft" || o.status === "pending"
+  const loadInvoices = async () => {
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("*")
+      .eq("patient_id", patient.id)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setInvoices(data);
+    }
+  };
+
+  const loadServices = async () => {
+    const { data } = await supabase
+      .from("services")
+      .select("*")
+      .eq("is_active", true);
+    setServices(data || []);
+  };
+
+  const generateInvoiceFromServices = async () => {
+    setIsGeneratingInvoice(true);
+    
+    const consultationService = services.find(s => 
+      s.name.toLowerCase().includes('consultation') || 
+      s.type.toLowerCase().includes('consultation')
     );
 
-    if (pendingOrders.length > 0) {
+    if (!consultationService) {
       toast({
         variant: "destructive",
-        title: "Pending orders",
-        description: `Please complete or cancel ${pendingOrders.length} pending order(s) before completing consultation.`,
+        title: "No consultation service found",
+        description: "Please configure a consultation service first",
       });
+      setIsGeneratingInvoice(false);
       return;
     }
 
+    const lines = [{
+      description: consultationService.name,
+      quantity: 1,
+      unit_price: Number(consultationService.unit_price),
+      total: Number(consultationService.unit_price),
+    }];
+
+    const subtotal = Number(consultationService.unit_price);
+    const tax = subtotal * (Number(consultationService.tax_rate) || 0);
+    const total = subtotal + tax;
+
+    const { error } = await supabase.from("invoices").insert({
+      patient_id: patient.id,
+      appointment_id: ticket?.id,
+      lines: lines,
+      subtotal,
+      tax_amount: tax,
+      total_amount: total,
+      balance_due: total,
+      status: "issued",
+      issued_at: new Date().toISOString(),
+    });
+
+    setIsGeneratingInvoice(false);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error creating invoice",
+        description: error.message,
+      });
+    } else {
+      toast({
+        title: "Invoice generated",
+        description: "Consultation invoice has been created",
+      });
+      loadInvoices();
+    }
+  };
+
+  const completeConsultation = async () => {
     const { data: { user } } = await supabase.auth.getUser();
+    
+    // Check payment requirements based on completion action
+    const unpaidInvoices = invoices.filter(inv => 
+      inv.status === "issued" || inv.status === "partial"
+    );
+    
+    // Check for scheduled orders
+    const scheduledOrders = orders.filter(o => 
+      o.scheduled_at && new Date(o.scheduled_at) > new Date()
+    );
+
+    let updateData: any = {
+      served_by: user?.id,
+    };
+
+    // Determine final status based on completion action
+    if (completionAction === "complete") {
+      // Standard completion - requires payment
+      if (unpaidInvoices.length > 0) {
+        toast({
+          variant: "destructive",
+          title: "Payment required",
+          description: "Please complete payment before marking consultation as complete",
+        });
+        return;
+      }
+      
+      const pendingOrders = orders.filter(
+        (o) => o.status === "draft" || o.status === "pending"
+      );
+
+      if (pendingOrders.length > 0) {
+        toast({
+          variant: "destructive",
+          title: "Pending orders",
+          description: `Please complete or cancel ${pendingOrders.length} pending order(s)`,
+        });
+        return;
+      }
+
+      updateData.status = "served";
+      updateData.served_at = new Date().toISOString();
+      
+    } else if (completionAction === "schedule") {
+      // Schedule for future - patient stays in queue
+      if (scheduledOrders.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "No scheduled orders",
+          description: "Please create a scheduled order first",
+        });
+        return;
+      }
+      
+      updateData.status = "waiting";
+      // Keep ticket active for scheduled orders
+      
+    } else if (completionAction === "pending_payment") {
+      // Consultation done but payment pending
+      if (invoices.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "No invoice",
+          description: "Please generate an invoice first",
+        });
+        return;
+      }
+      
+      updateData.status = "waiting";
+      // Mark as waiting for payment
+    }
 
     const { error } = await supabase
       .from("tickets")
-      .update({
-        status: "served",
-        served_at: new Date().toISOString(),
-        served_by: user?.id,
-      })
+      .update(updateData)
       .eq("id", ticket.id);
 
     if (error) {
@@ -106,9 +255,15 @@ export function DoctorConsultationDialog({
         description: error.message,
       });
     } else {
+      const actionMessages: Record<string, string> = {
+        complete: "Consultation completed and patient marked as served",
+        schedule: "Patient scheduled for future orders",
+        pending_payment: "Consultation completed, awaiting payment",
+      };
+      
       toast({
-        title: "Consultation completed",
-        description: "Patient marked as served",
+        title: "Success",
+        description: actionMessages[completionAction],
       });
       onComplete();
       onOpenChange(false);
@@ -147,13 +302,21 @@ export function DoctorConsultationDialog({
 
   if (!patient) return null;
 
+  const unpaidInvoices = invoices.filter(inv => 
+    inv.status === "issued" || inv.status === "partial"
+  );
+  const totalDue = unpaidInvoices.reduce((sum, inv) => sum + Number(inv.balance_due), 0);
+  const scheduledOrders = orders.filter(o => 
+    o.scheduled_at && new Date(o.scheduled_at) > new Date()
+  );
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-4">
-              <div>
+              <div className="flex-1">
                 <div className="text-2xl font-bold">
                   {patient.first_name} {patient.last_name}
                 </div>
@@ -161,16 +324,50 @@ export function DoctorConsultationDialog({
                   MRN: {patient.mrn} | Token: {ticket?.token_number}
                 </div>
               </div>
-              <Badge className="ml-auto" variant="outline">
-                {Math.floor(
-                  (new Date().getTime() -
-                    new Date(patient.date_of_birth).getTime()) /
-                    (365.25 * 24 * 60 * 60 * 1000)
-                )}{" "}
-                years
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">
+                  {Math.floor(
+                    (new Date().getTime() -
+                      new Date(patient.date_of_birth).getTime()) /
+                      (365.25 * 24 * 60 * 60 * 1000)
+                  )}{" "}
+                  years
+                </Badge>
+                {unpaidInvoices.length > 0 && (
+                  <Badge variant="destructive" className="gap-1">
+                    <CreditCard className="h-3 w-3" />
+                    ${totalDue.toFixed(2)} Due
+                  </Badge>
+                )}
+                {scheduledOrders.length > 0 && (
+                  <Badge variant="secondary" className="gap-1">
+                    <Clock className="h-3 w-3" />
+                    {scheduledOrders.length} Scheduled
+                  </Badge>
+                )}
+              </div>
             </DialogTitle>
           </DialogHeader>
+
+          {unpaidInvoices.length > 0 && (
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="flex items-center justify-between">
+                <span>
+                  <strong>Payment Required:</strong> ${totalDue.toFixed(2)} outstanding balance
+                </span>
+                <div className="flex gap-2">
+                  {unpaidInvoices.map(inv => (
+                    <RecordPaymentDialog
+                      key={inv.id}
+                      invoice={inv}
+                      onPaymentRecorded={loadInvoices}
+                    />
+                  ))}
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
             <TabsList className="grid w-full grid-cols-8">
@@ -218,16 +415,38 @@ export function DoctorConsultationDialog({
                   </CardContent>
                 </Card>
 
-                <div className="flex gap-2">
+                {invoices.length === 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <DollarSign className="h-5 w-5" />
+                        Payment
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Button
+                        onClick={generateInvoiceFromServices}
+                        disabled={isGeneratingInvoice}
+                        className="w-full"
+                      >
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        Generate Invoice
+                      </Button>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Generate a consultation invoice for this visit
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <div className="grid grid-cols-2 gap-2">
                   <Button
-                    className="flex-1"
                     onClick={() => setShowCreateOrder(true)}
                   >
                     <TestTube className="h-4 w-4 mr-2" />
                     Create Order
                   </Button>
                   <Button
-                    className="flex-1"
                     variant="outline"
                     onClick={() => setActiveTab("emr")}
                   >
@@ -338,14 +557,37 @@ export function DoctorConsultationDialog({
             </div>
           </Tabs>
 
-          <div className="flex gap-2 justify-end pt-4 border-t">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Close
-            </Button>
-            <Button onClick={completeConsultation}>
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Complete Consultation
-            </Button>
+          <div className="flex gap-2 items-center justify-between pt-4 border-t">
+            <div className="flex items-center gap-2 flex-1">
+              <label className="text-sm font-medium">Completion Action:</label>
+              <Select value={completionAction} onValueChange={setCompletionAction}>
+                <SelectTrigger className="w-[250px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="complete">
+                    Complete & Serve (Payment Required)
+                  </SelectItem>
+                  <SelectItem value="pending_payment">
+                    Complete (Pending Payment)
+                  </SelectItem>
+                  <SelectItem value="schedule">
+                    Schedule for Later
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Close
+              </Button>
+              <Button onClick={completeConsultation}>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {completionAction === "complete" ? "Complete & Serve" : 
+                 completionAction === "pending_payment" ? "Complete (Pending Payment)" :
+                 "Schedule Patient"}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
