@@ -12,10 +12,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Edit, UserPlus } from "lucide-react";
+import { Edit, UserPlus, RefreshCw } from "lucide-react";
 import { ManageRolesDialog } from "./ManageRolesDialog";
 import { ManageClinicAccessDialog } from "./ManageClinicAccessDialog";
 import { ClinicAccessBadge } from "./ClinicAccessBadge";
+import { CreateUserDialog } from "./CreateUserDialog";
 
 interface User {
   id: string;
@@ -34,6 +35,7 @@ export const UserManagementTab = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [rolesDialogOpen, setRolesDialogOpen] = useState(false);
   const [clinicAccessDialogOpen, setClinicAccessDialogOpen] = useState(false);
+  const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -85,6 +87,24 @@ export const UserManagementTab = () => {
           <p className="text-sm text-muted-foreground">
             Manage staff accounts and role assignments
           </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadUsers}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button
+            onClick={() => setCreateUserDialogOpen(true)}
+            size="sm"
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            Create User
+          </Button>
         </div>
       </div>
 
@@ -169,6 +189,15 @@ export const UserManagementTab = () => {
           No users found
         </div>
       )}
+
+      <CreateUserDialog
+        open={createUserDialogOpen}
+        onOpenChange={setCreateUserDialogOpen}
+        onSuccess={() => {
+          loadUsers();
+          setCreateUserDialogOpen(false);
+        }}
+      />
 
       {selectedUser && (
         <>
