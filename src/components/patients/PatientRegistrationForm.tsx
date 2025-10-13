@@ -83,11 +83,19 @@ export const PatientRegistrationForm = ({
     if (existingPatient) {
       setRegisteredPatient(existingPatient);
       
-      // Resume based on status
+      // Resume based on status - use the fresh data
       if (existingPatient.registration_status === 'pending') {
         setShowConsentDialog(true);
       } else if (existingPatient.registration_status === 'consented') {
+        // Consent already completed, go straight to path selection
         setShowPathSelection(true);
+      } else if (existingPatient.registration_status === 'paid') {
+        // Payment done, notify that registration is nearly complete
+        toast({
+          title: "Resume registration",
+          description: "Payment already recorded. Completing registration.",
+        });
+        onSuccess();
       }
     }
   });

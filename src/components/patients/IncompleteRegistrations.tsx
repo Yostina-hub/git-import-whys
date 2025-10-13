@@ -35,7 +35,7 @@ export const IncompleteRegistrations = ({ onResumeRegistration }: Props) => {
     try {
       const { data, error } = await supabase
         .from("patients")
-        .select("id, mrn, first_name, last_name, phone_mobile, registration_status, created_at, registration_notes")
+        .select("*")
         .neq("registration_status", "completed")
         .order("created_at", { ascending: false })
         .limit(20);
@@ -50,6 +50,28 @@ export const IncompleteRegistrations = ({ onResumeRegistration }: Props) => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResume = async (patient: IncompletePatient) => {
+    // Fetch fresh data from database to ensure we have the latest status
+    try {
+      const { data: freshPatient, error } = await supabase
+        .from("patients")
+        .select("*")
+        .eq("id", patient.id)
+        .single();
+
+      if (error) throw error;
+
+      // Pass the fresh data
+      onResumeRegistration(freshPatient);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error loading patient data",
+        description: error.message,
+      });
     }
   };
 
@@ -124,7 +146,7 @@ export const IncompleteRegistrations = ({ onResumeRegistration }: Props) => {
                 </div>
               </div>
               <Button
-                onClick={() => onResumeRegistration(patient)}
+                onClick={() => handleResume(patient)}
                 size="sm"
                 className="ml-4"
               >
