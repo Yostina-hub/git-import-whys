@@ -494,6 +494,110 @@ export type Database = {
           },
         ]
       }
+      consultation_messages: {
+        Row: {
+          consultation_id: string
+          content: string | null
+          created_at: string | null
+          file_name: string | null
+          file_url: string | null
+          id: string
+          message_type: string
+          read_at: string | null
+          sender_id: string
+          sender_type: string
+        }
+        Insert: {
+          consultation_id: string
+          content?: string | null
+          created_at?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          message_type?: string
+          read_at?: string | null
+          sender_id: string
+          sender_type: string
+        }
+        Update: {
+          consultation_id?: string
+          content?: string | null
+          created_at?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          message_type?: string
+          read_at?: string | null
+          sender_id?: string
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultation_messages_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "online_consultations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultation_prescriptions: {
+        Row: {
+          consultation_id: string
+          created_at: string | null
+          diagnosis: string | null
+          id: string
+          instructions: string | null
+          medications: Json
+          patient_id: string
+          prescribed_by: string
+          status: string | null
+          updated_at: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          consultation_id: string
+          created_at?: string | null
+          diagnosis?: string | null
+          id?: string
+          instructions?: string | null
+          medications?: Json
+          patient_id: string
+          prescribed_by: string
+          status?: string | null
+          updated_at?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          consultation_id?: string
+          created_at?: string | null
+          diagnosis?: string | null
+          id?: string
+          instructions?: string | null
+          medications?: Json
+          patient_id?: string
+          prescribed_by?: string
+          status?: string | null
+          updated_at?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultation_prescriptions_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "online_consultations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultation_prescriptions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupon_usage: {
         Row: {
           coupon_code: string
@@ -1025,6 +1129,84 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "notification_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      online_consultations: {
+        Row: {
+          actual_end: string | null
+          actual_start: string | null
+          ai_summary: string | null
+          appointment_id: string | null
+          connection_quality: Json | null
+          consultation_type: string
+          created_at: string | null
+          doctor_id: string
+          id: string
+          patient_id: string
+          recording_consent: boolean | null
+          recording_url: string | null
+          room_id: string
+          scheduled_end: string | null
+          scheduled_start: string
+          session_metadata: Json | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          actual_end?: string | null
+          actual_start?: string | null
+          ai_summary?: string | null
+          appointment_id?: string | null
+          connection_quality?: Json | null
+          consultation_type?: string
+          created_at?: string | null
+          doctor_id: string
+          id?: string
+          patient_id: string
+          recording_consent?: boolean | null
+          recording_url?: string | null
+          room_id: string
+          scheduled_end?: string | null
+          scheduled_start: string
+          session_metadata?: Json | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          actual_end?: string | null
+          actual_start?: string | null
+          ai_summary?: string | null
+          appointment_id?: string | null
+          connection_quality?: Json | null
+          consultation_type?: string
+          created_at?: string | null
+          doctor_id?: string
+          id?: string
+          patient_id?: string
+          recording_consent?: boolean | null
+          recording_url?: string | null
+          room_id?: string
+          scheduled_end?: string | null
+          scheduled_start?: string
+          session_metadata?: Json | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "online_consultations_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "online_consultations_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
             referencedColumns: ["id"]
           },
         ]
