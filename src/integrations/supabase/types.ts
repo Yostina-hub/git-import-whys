@@ -920,6 +920,109 @@ export type Database = {
           },
         ]
       }
+      notification_templates: {
+        Row: {
+          body_template: string
+          created_at: string
+          created_by: string | null
+          event_type: string
+          id: string
+          is_active: boolean | null
+          name: string
+          subject: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          body_template: string
+          created_at?: string
+          created_by?: string | null
+          event_type: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          subject?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          body_template?: string
+          created_at?: string
+          created_by?: string | null
+          event_type?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          subject?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications_log: {
+        Row: {
+          body: string
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          notification_type: string
+          recipient_id: string
+          recipient_type: string
+          sent_at: string | null
+          status: string
+          subject: string | null
+          template_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          notification_type: string
+          recipient_id: string
+          recipient_type: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          notification_type?: string
+          recipient_id?: string
+          recipient_type?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_log_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "notification_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           appointment_id: string | null
@@ -1712,6 +1815,72 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduled_notifications: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          metadata: Json | null
+          notification_type: string
+          recipient_id: string
+          recipient_type: string
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          subject: string | null
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          notification_type: string
+          recipient_id: string
+          recipient_type: string
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          notification_type?: string
+          recipient_id?: string
+          recipient_type?: string
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_notifications_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_notifications_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "notification_templates"
             referencedColumns: ["id"]
           },
         ]
