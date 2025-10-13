@@ -29,6 +29,7 @@ import QueueDisplay from "./pages/QueueDisplay";
 import Configuration from "./pages/Configuration";
 import OnlineConsultation from "./pages/OnlineConsultation";
 import JoinConsultation from "./pages/JoinConsultation";
+import UserGuide from "./pages/UserGuide";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/configuration" element={<Configuration />} />
+            <Route path="/user-guide" element={<UserGuide />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

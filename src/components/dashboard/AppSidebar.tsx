@@ -16,6 +16,7 @@ import {
   ClipboardCheck,
   Building2,
   Settings,
+  BookOpen,
 } from "lucide-react";
 import {
   Sidebar,
@@ -60,6 +61,10 @@ const adminNavItems = [
   { title: "Resources", url: "/resources", icon: Building2 },
   { title: "Configuration", url: "/configuration", icon: Settings },
   { title: "Administration", url: "/admin", icon: Shield },
+];
+
+const helpNavItems = [
+  { title: "User Guide", url: "/user-guide", icon: BookOpen },
 ];
 
 export function AppSidebar({ isAdmin }: AppSidebarProps) {
@@ -165,6 +170,25 @@ export function AppSidebar({ isAdmin }: AppSidebarProps) {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
+
+        {/* Help Navigation */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Help</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {helpNavItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild tooltip={item.title}>
+                    <NavLink to={item.url} className={getNavClass(item.url)}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   );
