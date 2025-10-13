@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ConsentFormDialog } from "@/components/clinical/ConsentFormDialog";
+import { AppointmentBookingFlow } from "./AppointmentBookingFlow";
 
 interface PatientFormData {
   first_name: string;
@@ -51,7 +52,8 @@ export const PatientRegistrationForm = ({
   const [showConsentDialog, setShowConsentDialog] = useState(false);
   const [showPathSelection, setShowPathSelection] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [consultationInvoiceId, setConsultationInvoiceId] = useState<string | null>(null);
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
+  const [currentInvoiceId, setCurrentInvoiceId] = useState<string | null>(null);
   const [registeredPatient, setRegisteredPatient] = useState<any>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "insurance" | "mobile_money">("cash");
@@ -181,7 +183,7 @@ export const PatientRegistrationForm = ({
 
       if (invoiceError) throw invoiceError;
 
-      setConsultationInvoiceId(invoice.id);
+      setCurrentInvoiceId(invoice.id);
       setPaymentAmount(consultationPrice.toString());
       setShowPathSelection(false);
       setShowPaymentDialog(true);
@@ -197,19 +199,18 @@ export const PatientRegistrationForm = ({
 
   const handleAppointmentPath = () => {
     setShowPathSelection(false);
-    if (onAppointmentPath) {
-      onAppointmentPath(registeredPatient);
-    } else {
-      toast({
-        title: "Please create an appointment",
-        description: "Add the patient to an appointment, then record payment before triage",
-      });
-      onSuccess();
-    }
+    setShowAppointmentDialog(true);
+  };
+
+  const handleAppointmentPaymentRequired = (invoiceId: string, amount: number) => {
+    setCurrentInvoiceId(invoiceId);
+    setPaymentAmount(amount.toString());
+    setShowAppointmentDialog(false);
+    setShowPaymentDialog(true);
   };
 
   const handlePaymentSubmit = async () => {
-    if (!consultationInvoiceId || !paymentAmount) {
+    if (!currentInvoiceId || !paymentAmount) {
       toast({
         variant: "destructive",
         title: "Invalid payment",
@@ -224,7 +225,7 @@ export const PatientRegistrationForm = ({
 
       // Record payment
       const { error: paymentError } = await supabase.from("payments").insert([{
-        invoice_id: consultationInvoiceId,
+        invoice_id: currentInvoiceId,
         amount: parseFloat(paymentAmount),
         method: paymentMethod,
         transaction_ref: paymentReference || null,
@@ -234,7 +235,7 @@ export const PatientRegistrationForm = ({
 
       if (paymentError) throw paymentError;
 
-      // Now add to triage queue
+      // Now add to triage queue automatically
       const { data: triageQueue } = await supabase
         .from("queues")
         .select("id")
@@ -254,16 +255,17 @@ export const PatientRegistrationForm = ({
           token_number: tokenNumber,
           status: "waiting",
           priority: "routine",
-          notes: "Added after registration, consent, and payment",
+          notes: "Added after payment confirmation",
         }]);
 
         toast({
           title: "Payment recorded and patient queued",
-          description: `Token: ${tokenNumber}`,
+          description: `Token: ${tokenNumber}. Patient transferred to triage.`,
         });
       } else {
         toast({
           title: "Payment recorded successfully",
+          description: "Patient ready for triage",
         });
       }
 
@@ -449,12 +451,24 @@ export const PatientRegistrationForm = ({
         </DialogContent>
       </Dialog>
 
+      {registeredPatient && consultationServiceId && consultationPrice && (
+        <AppointmentBookingFlow
+          open={showAppointmentDialog}
+          onOpenChange={setShowAppointmentDialog}
+          patientId={registeredPatient.id}
+          patientName={`${registeredPatient.first_name} ${registeredPatient.last_name}`}
+          consultationServiceId={consultationServiceId}
+          consultationPrice={consultationPrice}
+          onPaymentRequired={handleAppointmentPaymentRequired}
+        />
+      )}
+
       <Dialog open={showPaymentDialog} onOpenChange={() => {}}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Record Payment</DialogTitle>
             <DialogDescription>
-              Record payment for consultation before proceeding to triage
+              Payment will automatically queue patient for triage
             </DialogDescription>
           </DialogHeader>
 
