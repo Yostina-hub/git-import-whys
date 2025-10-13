@@ -103,12 +103,25 @@ export function VideoCallInterface({
     }
   };
 
+  // ICE servers configuration with optional TURN via env
+  const getIceServers = () => {
+    const servers: RTCIceServer[] = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+    ];
+    const turnUrl = import.meta.env.VITE_TURN_URL as string | undefined;
+    const turnUsername = import.meta.env.VITE_TURN_USERNAME as string | undefined;
+    const turnCredential = import.meta.env.VITE_TURN_CREDENTIAL as string | undefined;
+    if (turnUrl && turnUsername && turnCredential) {
+      servers.push({ urls: turnUrl, username: turnUsername, credential: turnCredential });
+    }
+    return servers;
+  };
+
   const setupPeerConnection = () => {
-    const configuration = {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-      ],
+    const configuration: RTCConfiguration = {
+      iceServers: getIceServers(),
+      iceCandidatePoolSize: 4,
     };
 
     peerConnectionRef.current = new RTCPeerConnection(configuration);
@@ -140,6 +153,42 @@ export function VideoCallInterface({
             targetId: remotePeerIdRef.current,
           })
         );
+      }
+    };
+
+    // Auto negotiate when needed
+    peerConnectionRef.current.onnegotiationneeded = async () => {
+      try {
+        if (!peerConnectionRef.current) return;
+        if (!remotePeerIdRef.current) return;
+        console.log('Negotiation needed - creating offer');
+        const offer = await peerConnectionRef.current.createOffer();
+        await peerConnectionRef.current.setLocalDescription(offer);
+        wsRef.current?.send(
+          JSON.stringify({ type: 'offer', offer, targetId: remotePeerIdRef.current })
+        );
+      } catch (err) {
+        console.error('onnegotiationneeded error:', err);
+      }
+    };
+
+    // ICE connection state handling with restart on failure
+    peerConnectionRef.current.oniceconnectionstatechange = async () => {
+      const iceState = peerConnectionRef.current?.iceConnectionState;
+      console.log('ICE state:', iceState);
+      if (iceState === 'failed' || iceState === 'disconnected') {
+        try {
+          if (!peerConnectionRef.current) return;
+          const offer = await peerConnectionRef.current.createOffer({ iceRestart: true });
+          await peerConnectionRef.current.setLocalDescription(offer);
+          if (remotePeerIdRef.current) {
+            wsRef.current?.send(
+              JSON.stringify({ type: 'offer', offer, targetId: remotePeerIdRef.current })
+            );
+          }
+        } catch (err) {
+          console.error('ICE restart error:', err);
+        }
       }
     };
 
