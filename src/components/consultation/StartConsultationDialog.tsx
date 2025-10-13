@@ -19,7 +19,8 @@ interface StartConsultationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   patientId: string;
-  patientName: string;
+  patientName?: string;
+  onConsultationStarted?: () => void;
 }
 
 export function StartConsultationDialog({
@@ -27,6 +28,7 @@ export function StartConsultationDialog({
   onOpenChange,
   patientId,
   patientName,
+  onConsultationStarted,
 }: StartConsultationDialogProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -73,8 +75,11 @@ export function StartConsultationDialog({
 
       toast({
         title: 'Consultation Started',
-        description: `${consultationType.charAt(0).toUpperCase() + consultationType.slice(1)} consultation with ${patientName}`,
+        description: `${consultationType.charAt(0).toUpperCase() + consultationType.slice(1)} consultation started`,
       });
+
+      onConsultationStarted?.();
+      onOpenChange(false);
 
       // Navigate to consultation page
       navigate(`/online-consultation?id=${data.id}`);

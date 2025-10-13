@@ -1,16 +1,18 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, User, Stethoscope, AlertCircle, FileText } from "lucide-react";
+import { Clock, User, Stethoscope, AlertCircle, Video } from "lucide-react";
 
 interface EnhancedDoctorCardProps {
   ticket: any;
   onConsult: (ticket: any) => void;
+  onOnlineConsult?: (ticket: any) => void;
 }
 
 export const EnhancedDoctorCard = ({
   ticket,
   onConsult,
+  onOnlineConsult,
 }: EnhancedDoctorCardProps) => {
   const getWaitTime = (createdAt: string) => {
     const now = new Date();
@@ -88,8 +90,18 @@ export const EnhancedDoctorCard = ({
               onClick={() => onConsult(ticket)}
             >
               <Stethoscope className="h-4 w-4 mr-2" />
-              Start Consultation
+              In-Person
             </Button>
+            {onOnlineConsult && (
+              <Button
+                variant="outline"
+                className="flex-1 border-primary/50 hover:bg-primary/10 transition-all duration-300"
+                onClick={() => onOnlineConsult(ticket)}
+              >
+                <Video className="h-4 w-4 mr-2" />
+                Online
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>

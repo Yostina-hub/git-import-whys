@@ -12,6 +12,7 @@ import { ArrowLeft, FileText, Search, ChevronLeft, ChevronRight, RefreshCw, User
 import { DoctorConsultationDialog } from "@/components/queue/DoctorConsultationDialog";
 import { DoctorQueueStats } from "@/components/queue/DoctorQueueStats";
 import { EnhancedDoctorCard } from "@/components/queue/EnhancedDoctorCard";
+import { StartConsultationDialog } from "@/components/consultation/StartConsultationDialog";
 
 const DoctorQueue = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const DoctorQueue = () => {
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [showConsultationDialog, setShowConsultationDialog] = useState(false);
+  const [showOnlineConsultDialog, setShowOnlineConsultDialog] = useState(false);
   
   // Pagination and search state
   const [todaySearch, setTodaySearch] = useState("");
@@ -212,6 +214,12 @@ const DoctorQueue = () => {
     setShowConsultationDialog(true);
   };
 
+  const startOnlineConsult = (ticket: any) => {
+    setSelectedPatient(ticket.patients);
+    setSelectedTicket(ticket);
+    setShowOnlineConsultDialog(true);
+  };
+
   const handleConsultationComplete = () => {
     loadDoctorQueue();
     loadCompletedToday();
@@ -344,6 +352,7 @@ const DoctorQueue = () => {
                   key={ticket.id}
                   ticket={ticket}
                   onConsult={viewPatient}
+                  onOnlineConsult={startOnlineConsult}
                 />
               ))}
             </div>
@@ -589,6 +598,16 @@ const DoctorQueue = () => {
         onOpenChange={setShowConsultationDialog}
         onComplete={handleConsultationComplete}
       />
+
+      {/* Online Consultation Dialog */}
+      {selectedPatient && (
+        <StartConsultationDialog
+          open={showOnlineConsultDialog}
+          onOpenChange={setShowOnlineConsultDialog}
+          patientId={selectedPatient.id}
+          onConsultationStarted={handleConsultationComplete}
+        />
+      )}
     </div>
   );
 };

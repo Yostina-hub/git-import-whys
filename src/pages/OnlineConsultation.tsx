@@ -133,7 +133,7 @@ export default function OnlineConsultation() {
       const { error } = await supabase.from('emr_notes').insert({
         patient_id: patient.id,
         author_id: user.id,
-        note_type: 'consultation',
+        note_type: 'subjective',
         content: clinicalNotes,
         tags: ['online-consultation'],
       });
