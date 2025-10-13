@@ -90,7 +90,7 @@ const Appointments = () => {
     const [apptRes, patRes, provRes, clinRes, svcRes] = await Promise.all([
       supabase
         .from("appointments")
-        .select("*, patients!inner(first_name, last_name, mrn), profiles(first_name, last_name), services(name)")
+        .select("*, patients!inner(first_name, last_name, mrn), services(name)")
         .order("scheduled_start", { ascending: false })
         .limit(100),
       supabase.from("patients").select("id, first_name, last_name, mrn").order("first_name").limit(100),
@@ -99,7 +99,23 @@ const Appointments = () => {
       supabase.from("services").select("*").eq("is_active", true),
     ]);
 
-    if (apptRes.data) setAppointments(apptRes.data as any);
+    if (apptRes.data) {
+      // Fetch provider names separately for appointments that have providers
+      const appointmentsWithProviders = await Promise.all(
+        apptRes.data.map(async (apt: any) => {
+          if (apt.provider_id) {
+            const { data: provider } = await supabase
+              .from("profiles")
+              .select("first_name, last_name")
+              .eq("id", apt.provider_id)
+              .single();
+            return { ...apt, profiles: provider };
+          }
+          return { ...apt, profiles: null };
+        })
+      );
+      setAppointments(appointmentsWithProviders as any);
+    }
     if (patRes.data) setPatients(patRes.data);
     if (provRes.data) setProviders(provRes.data);
     if (clinRes.data) setClinics(clinRes.data);
