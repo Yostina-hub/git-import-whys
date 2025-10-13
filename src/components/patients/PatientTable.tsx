@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Eye, Receipt, Calendar, UserCheck, RotateCcw, History } from "lucide-react";
+import { Eye, Receipt, Calendar, UserCheck, RotateCcw, History, TrendingUp } from "lucide-react";
 import { AddToQueueDialog } from "./AddToQueueDialog";
 
 interface PatientTableProps {
@@ -47,10 +47,10 @@ export const PatientTable = ({
           <TableRow className="bg-muted/50">
             <TableHead className="font-semibold">MRN</TableHead>
             <TableHead className="font-semibold">Name</TableHead>
+            <TableHead className="font-semibold">Visit History</TableHead>
             <TableHead className="font-semibold">Gender</TableHead>
             <TableHead className="font-semibold">DOB</TableHead>
             <TableHead className="font-semibold">Phone</TableHead>
-            <TableHead className="font-semibold">Reg. Fee</TableHead>
             <TableHead className="font-semibold">Queue Status</TableHead>
             <TableHead className="font-semibold">Payment Status</TableHead>
             <TableHead className="text-right font-semibold">Actions</TableHead>
@@ -61,7 +61,28 @@ export const PatientTable = ({
             <TableRow key={patient.id} className="hover:bg-muted/30 transition-colors">
               <TableCell className="font-mono font-medium text-primary">{patient.mrn}</TableCell>
               <TableCell className="font-medium">
-                {patient.first_name} {patient.middle_name} {patient.last_name}
+                <div className="flex items-center gap-2">
+                  <span>{patient.first_name} {patient.middle_name} {patient.last_name}</span>
+                  {patient.is_returning && (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 text-xs">
+                      <UserCheck className="h-3 w-3 mr-1" />
+                      Returning
+                    </Badge>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1 text-sm font-semibold text-primary">
+                    <TrendingUp className="h-3 w-3" />
+                    {patient.visit_count || 0} visit{(patient.visit_count || 0) !== 1 ? 's' : ''}
+                  </div>
+                  {patient.last_visit_date && (
+                    <div className="text-xs text-muted-foreground">
+                      Last: {new Date(patient.last_visit_date).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
               </TableCell>
               <TableCell>
                 <Badge variant="outline" className="capitalize">
@@ -72,11 +93,6 @@ export const PatientTable = ({
                 {new Date(patient.date_of_birth).toLocaleDateString()}
               </TableCell>
               <TableCell className="font-medium">{patient.phone_mobile}</TableCell>
-              <TableCell>
-                <span className="font-semibold text-primary">
-                  ${registrationFee.toFixed(2)}
-                </span>
-              </TableCell>
               <TableCell>
                 {patient.queue_status ? (
                   <div className="flex items-center gap-2">
@@ -132,6 +148,7 @@ export const PatientTable = ({
                       <AddToQueueDialog
                         patientId={patient.id}
                         patientName={`${patient.first_name} ${patient.last_name}`}
+                        isReturning={patient.is_returning}
                         onSuccess={onRefresh}
                       />
                     </DropdownMenuItem>

@@ -16,6 +16,9 @@ export interface Patient {
   registration_invoice_id?: string;
   queue_status?: string;
   queue_token?: string;
+  visit_count?: number;
+  last_visit_date?: string;
+  is_returning?: boolean;
 }
 
 interface UsePatientsReturn {
@@ -83,6 +86,13 @@ export const usePatients = (): UsePatientsReturn => {
       .select("patient_id, id, status")
       .in("patient_id", patientIds);
 
+    // Fetch appointment counts and last visit for all patients
+    const { data: appointments } = await supabase
+      .from("appointments")
+      .select("patient_id, scheduled_start, status")
+      .in("patient_id", patientIds)
+      .order("scheduled_start", { ascending: false });
+
     // Create a map of patient_id to invoice status
     const invoiceMap = new Map();
     invoices?.forEach(inv => {
@@ -91,14 +101,35 @@ export const usePatients = (): UsePatientsReturn => {
       }
     });
 
+    // Create a map of patient_id to visit info
+    const visitMap = new Map();
+    appointments?.forEach(apt => {
+      if (!visitMap.has(apt.patient_id)) {
+        visitMap.set(apt.patient_id, {
+          count: 1,
+          lastVisit: apt.scheduled_start
+        });
+      } else {
+        const current = visitMap.get(apt.patient_id);
+        visitMap.set(apt.patient_id, {
+          count: current.count + 1,
+          lastVisit: current.lastVisit // Keep the most recent (already sorted)
+        });
+      }
+    });
+
     const patientsWithStatus = data.map(patient => {
       const invoice = invoiceMap.get(patient.id);
+      const visitInfo = visitMap.get(patient.id);
       return {
         ...patient,
         registration_invoice_status: invoice?.status || "pending",
         registration_invoice_id: invoice?.id || null,
         queue_status: null,
         queue_token: null,
+        visit_count: visitInfo?.count || 0,
+        last_visit_date: visitInfo?.lastVisit || null,
+        is_returning: (visitInfo?.count || 0) > 0
       };
     });
 
