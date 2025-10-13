@@ -8,6 +8,7 @@ import { EnhancedRevenueChart } from "@/components/reports/EnhancedRevenueChart"
 import { EnhancedAppointmentChart } from "@/components/reports/EnhancedAppointmentChart";
 import { EnhancedDemographicsChart } from "@/components/reports/EnhancedDemographicsChart";
 import { PaymentReportsCard } from "@/components/reports/PaymentReportsCard";
+import { AIInsightsPanel } from "@/components/reports/AIInsightsPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { format, subDays, startOfWeek, startOfMonth, subMonths, startOfYear } from "date-fns";
@@ -278,6 +279,16 @@ const Reports = () => {
         {!loading && (
           <div className="space-y-8 animate-fade-in">
             <AdvancedStatsGrid stats={stats} />
+
+            <AIInsightsPanel 
+              reportData={{
+                stats,
+                revenueData,
+                appointmentData,
+                demographicsData,
+                paymentData
+              }}
+            />
 
             <PaymentReportsCard 
               payments={paymentData} 
