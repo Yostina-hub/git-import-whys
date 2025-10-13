@@ -154,11 +154,11 @@ export const AppointmentBookingFlow = ({
       if (invoiceError) throw invoiceError;
 
       toast({
-        title: "Invoice created",
-        description: "Please proceed to payment",
+        title: "Success",
+        description: "Appointment booked and sent to billing department",
       });
 
-      // Trigger payment flow
+      // Trigger billing flow
       onPaymentRequired(invoice.id, consultationPrice);
       onOpenChange(false);
     } catch (error: any) {
