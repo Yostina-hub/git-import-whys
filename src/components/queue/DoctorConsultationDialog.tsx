@@ -213,27 +213,15 @@ export function DoctorConsultationDialog({
 
       if (invoiceError) throw invoiceError;
 
-      // Update ticket status to waiting (for billing)
-      const { error: ticketError } = await supabase
-        .from("tickets")
-        .update({
-          status: "waiting",
-          served_at: new Date().toISOString(),
-          served_by: user?.id,
-        })
-        .eq("id", ticket.id);
-
-      if (ticketError) throw ticketError;
-
       toast({
         title: "Invoice Created",
-        description: "Invoice sent to billing successfully. Patient will proceed after payment.",
+        description: "Invoice sent to billing. Waiting for payment before proceeding.",
       });
 
       setShowBillingForm(false);
       setSelectedServices([]);
-      onComplete();
-      onOpenChange(false);
+      await loadInvoices();
+      setActiveTab("overview");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -244,6 +232,20 @@ export function DoctorConsultationDialog({
   };
 
   const completeConsultation = async () => {
+    // Check for unpaid invoices first
+    const unpaidInvoices = invoices.filter(inv => 
+      inv.status === "issued" || inv.status === "partial"
+    );
+
+    if (unpaidInvoices.length > 0) {
+      toast({
+        title: "Payment Required",
+        description: "Please ensure all invoices are paid before completing the consultation.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // If payment required, show billing form
     if (completionAction === "payment_required") {
       setShowBillingForm(true);
@@ -251,11 +253,6 @@ export function DoctorConsultationDialog({
     }
 
     const { data: { user } } = await supabase.auth.getUser();
-    
-    // Check payment requirements based on completion action
-    const unpaidInvoices = invoices.filter(inv => 
-      inv.status === "issued" || inv.status === "partial"
-    );
     
     // Check for scheduled orders
     const scheduledOrders = orders.filter(o => 
@@ -519,6 +516,22 @@ export function DoctorConsultationDialog({
                   </Card>
                 )}
 
+                {unpaidInvoices.length > 0 && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="flex items-center justify-between">
+                        <span>
+                          <strong>Payment Pending:</strong> ${totalDue.toFixed(2)} must be paid before completing consultation
+                        </span>
+                        <Button size="sm" variant="outline" onClick={loadInvoices}>
+                          Refresh Status
+                        </Button>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     onClick={() => setShowCreateOrder(true)}
@@ -664,7 +677,10 @@ export function DoctorConsultationDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Close
               </Button>
-              <Button onClick={completeConsultation}>
+              <Button 
+                onClick={completeConsultation}
+                disabled={unpaidInvoices.length > 0 && completionAction !== "payment_required"}
+              >
                 <CheckCircle className="h-4 w-4 mr-2" />
                 {completionAction === "complete" ? "Complete & Serve" : 
                  completionAction === "payment_required" ? "Create Invoice & Send to Billing" :
