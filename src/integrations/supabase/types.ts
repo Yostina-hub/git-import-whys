@@ -395,6 +395,10 @@ export type Database = {
           content_html: string | null
           created_at: string
           expires_at: string | null
+          guardian_name: string | null
+          guardian_national_id: string | null
+          guardian_phone: string | null
+          guardian_relationship: string | null
           id: string
           patient_id: string
           signature_blob: string | null
@@ -410,6 +414,10 @@ export type Database = {
           content_html?: string | null
           created_at?: string
           expires_at?: string | null
+          guardian_name?: string | null
+          guardian_national_id?: string | null
+          guardian_phone?: string | null
+          guardian_relationship?: string | null
           id?: string
           patient_id: string
           signature_blob?: string | null
@@ -425,6 +433,10 @@ export type Database = {
           content_html?: string | null
           created_at?: string
           expires_at?: string | null
+          guardian_name?: string | null
+          guardian_national_id?: string | null
+          guardian_phone?: string | null
+          guardian_relationship?: string | null
           id?: string
           patient_id?: string
           signature_blob?: string | null
