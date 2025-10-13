@@ -176,14 +176,16 @@ const EMRNotesTab = ({ patientId, onNoteCreated }: EMRNotesTabProps) => {
     setIsDialogOpen(true);
   };
 
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-    setEditingNote(null);
-    setFormData({
-      patient_id: patientId || "",
-      note_type: "subjective",
-      content: "",
-    });
+  const handleCloseDialog = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      setEditingNote(null);
+      setFormData({
+        patient_id: patientId || "",
+        note_type: "subjective",
+        content: "",
+      });
+    }
   };
 
   return (
