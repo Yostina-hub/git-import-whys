@@ -192,6 +192,16 @@ export const InvoicePrintView = ({ invoice, open, onOpenChange }: InvoicePrintVi
                   <span className="text-gray-700">Subtotal:</span>
                   <span className="font-semibold">${Number(invoice.subtotal || 0).toFixed(2)}</span>
                 </div>
+                {invoice.discount_amount > 0 && (
+                  <div className="flex justify-between" style={{ color: '#10b981' }}>
+                    <span>
+                      Discount {invoice.discount_code && `(${invoice.discount_code})`}:
+                    </span>
+                    <span className="font-semibold">
+                      -${Number(invoice.discount_amount || 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-700">Tax:</span>
                   <span className="font-semibold">${Number(invoice.tax_amount || 0).toFixed(2)}</span>

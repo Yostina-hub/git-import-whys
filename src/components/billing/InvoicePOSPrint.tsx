@@ -180,6 +180,12 @@ export const InvoicePOSPrint = ({ invoice, open, onOpenChange }: InvoicePOSPrint
                 <span>Subtotal:</span>
                 <span>${Number(invoice.subtotal || 0).toFixed(2)}</span>
               </div>
+              {invoice.discount_amount > 0 && (
+                <div className="line-item" style={{ color: '#10b981' }}>
+                  <span>Discount{invoice.discount_code && ` (${invoice.discount_code})`}:</span>
+                  <span>-${Number(invoice.discount_amount || 0).toFixed(2)}</span>
+                </div>
+              )}
               <div className="line-item">
                 <span>Tax:</span>
                 <span>${Number(invoice.tax_amount || 0).toFixed(2)}</span>

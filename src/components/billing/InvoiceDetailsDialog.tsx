@@ -246,6 +246,21 @@ export const InvoiceDetailsDialog = ({ invoice, open, onOpenChange }: InvoiceDet
                       ${Number(invoice.subtotal || 0).toFixed(2)}
                     </span>
                   </div>
+                  {invoice.discount_amount > 0 && (
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-success font-medium">Discount</span>
+                        {invoice.discount_code && (
+                          <Badge variant="outline" className="bg-success/10 text-success border-success text-xs">
+                            {invoice.discount_code}
+                          </Badge>
+                        )}
+                      </div>
+                      <span className="font-mono font-semibold text-success">
+                        -${Number(invoice.discount_amount || 0).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Tax</span>
                     <span className="font-mono font-semibold">

@@ -494,6 +494,58 @@ export type Database = {
           },
         ]
       }
+      coupon_usage: {
+        Row: {
+          coupon_code: string
+          discount_amount: number
+          id: string
+          invoice_id: string
+          patient_id: string
+          used_at: string
+          used_by: string | null
+        }
+        Insert: {
+          coupon_code: string
+          discount_amount: number
+          id?: string
+          invoice_id: string
+          patient_id: string
+          used_at?: string
+          used_by?: string | null
+        }
+        Update: {
+          coupon_code?: string
+          discount_amount?: number
+          id?: string
+          invoice_id?: string
+          patient_id?: string
+          used_at?: string
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_usage_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_usage_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_usage_used_by_fkey"
+            columns: ["used_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discount_policies: {
         Row: {
           applicable_items: Json | null
@@ -736,6 +788,9 @@ export type Database = {
           balance_due: number | null
           created_at: string
           created_by: string | null
+          discount_amount: number | null
+          discount_code: string | null
+          discount_type: string | null
           due_date: string | null
           id: string
           issued_at: string | null
@@ -752,6 +807,9 @@ export type Database = {
           balance_due?: number | null
           created_at?: string
           created_by?: string | null
+          discount_amount?: number | null
+          discount_code?: string | null
+          discount_type?: string | null
           due_date?: string | null
           id?: string
           issued_at?: string | null
@@ -768,6 +826,9 @@ export type Database = {
           balance_due?: number | null
           created_at?: string
           created_by?: string | null
+          discount_amount?: number | null
+          discount_code?: string | null
+          discount_type?: string | null
           due_date?: string | null
           id?: string
           issued_at?: string | null

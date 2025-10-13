@@ -19,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CouponCodeInput } from "./CouponCodeInput";
+import { Separator } from "@/components/ui/separator";
 
 export const CreateInvoiceDialog = ({ onInvoiceCreated }: { onInvoiceCreated: () => void }) => {
   const [open, setOpen] = useState(false);
@@ -30,6 +32,12 @@ export const CreateInvoiceDialog = ({ onInvoiceCreated }: { onInvoiceCreated: ()
   const [lines, setLines] = useState<any[]>([
     { service_id: "", description: "", quantity: 1, unit_price: 0 },
   ]);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    type: string;
+    value: number;
+    amount: number;
+  } | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -83,9 +91,11 @@ export const CreateInvoiceDialog = ({ onInvoiceCreated }: { onInvoiceCreated: ()
       (sum, line) => sum + (Number(line.quantity) || 0) * (Number(line.unit_price) || 0),
       0
     );
-    const tax = subtotal * 0.1; // 10% tax
-    const total = subtotal + tax;
-    return { subtotal, tax, total };
+    const discountAmount = appliedCoupon?.amount || 0;
+    const subtotalAfterDiscount = Math.max(0, subtotal - discountAmount);
+    const tax = subtotalAfterDiscount * 0.1; // 10% tax on discounted amount
+    const total = subtotalAfterDiscount + tax;
+    return { subtotal, discountAmount, tax, total };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,9 +111,9 @@ export const CreateInvoiceDialog = ({ onInvoiceCreated }: { onInvoiceCreated: ()
 
     setLoading(true);
 
-    const { subtotal, tax, total } = calculateTotals();
+    const { subtotal, discountAmount, tax, total } = calculateTotals();
 
-    const { error } = await supabase.from("invoices").insert({
+    const { data: invoice, error } = await supabase.from("invoices").insert({
       patient_id: selectedPatient,
       lines: lines.map((l) => ({
         description: l.description,
@@ -112,12 +122,25 @@ export const CreateInvoiceDialog = ({ onInvoiceCreated }: { onInvoiceCreated: ()
         total: Number(l.quantity) * Number(l.unit_price),
       })),
       subtotal,
+      discount_code: appliedCoupon?.code || null,
+      discount_amount: discountAmount,
+      discount_type: appliedCoupon?.type || null,
       tax_amount: tax,
       total_amount: total,
       balance_due: total,
       status: "issued",
       issued_at: new Date().toISOString(),
-    });
+    }).select().single();
+
+    // Record coupon usage if coupon was applied
+    if (!error && invoice && appliedCoupon) {
+      await supabase.from("coupon_usage").insert({
+        coupon_code: appliedCoupon.code,
+        invoice_id: invoice.id,
+        patient_id: selectedPatient,
+        discount_amount: discountAmount,
+      });
+    }
 
     setLoading(false);
 
@@ -135,11 +158,12 @@ export const CreateInvoiceDialog = ({ onInvoiceCreated }: { onInvoiceCreated: ()
       setOpen(false);
       setSelectedPatient("");
       setLines([{ service_id: "", description: "", quantity: 1, unit_price: 0 }]);
+      setAppliedCoupon(null);
       onInvoiceCreated();
     }
   };
 
-  const { subtotal, tax, total } = calculateTotals();
+  const { subtotal, discountAmount, tax, total } = calculateTotals();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -249,6 +273,15 @@ export const CreateInvoiceDialog = ({ onInvoiceCreated }: { onInvoiceCreated: ()
             </div>
           </div>
 
+          <Separator className="my-4" />
+
+          <CouponCodeInput
+            subtotal={subtotal}
+            appliedCoupon={appliedCoupon}
+            onCouponApplied={setAppliedCoupon}
+            onCouponRemoved={() => setAppliedCoupon(null)}
+          />
+
           <div className="border-t pt-4">
             <div className="flex justify-end space-y-1 text-sm">
               <div className="w-64 space-y-1">
@@ -256,6 +289,12 @@ export const CreateInvoiceDialog = ({ onInvoiceCreated }: { onInvoiceCreated: ()
                   <span>Subtotal:</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-success">
+                    <span>Discount:</span>
+                    <span>-${discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span>Tax (10%):</span>
                   <span>${tax.toFixed(2)}</span>
