@@ -1944,6 +1944,51 @@ export type Database = {
           },
         ]
       }
+      user_clinic_grant: {
+        Row: {
+          all_clinics: boolean
+          clinic_id: string | null
+          created_at: string
+          id: string
+          scope: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          all_clinics?: boolean
+          clinic_id?: string | null
+          created_at?: string
+          id?: string
+          scope: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          all_clinics?: boolean
+          clinic_id?: string | null
+          created_at?: string
+          id?: string
+          scope?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_clinic_grant_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_clinic_grant_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
