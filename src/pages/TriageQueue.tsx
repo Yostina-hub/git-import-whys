@@ -8,9 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle, Clock, FileText, Stethoscope, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, FileText, Search, ChevronLeft, ChevronRight, RefreshCw, Users, Activity } from "lucide-react";
 import { TriageAssessmentDialog } from "@/components/queue/TriageAssessmentDialog";
-import { QueueActions } from "@/components/queue/QueueActions";
+import { TriageQueueStats } from "@/components/queue/TriageQueueStats";
+import { EnhancedTriageCard } from "@/components/queue/EnhancedTriageCard";
 
 const TriageQueue = () => {
   const navigate = useNavigate();
@@ -263,137 +264,141 @@ const TriageQueue = () => {
     return colors[status] || "bg-gray-500";
   };
 
+  const avgWaitTime = tickets.length > 0
+    ? Math.floor(tickets.reduce((sum, t) => sum + getWaitTime(t.created_at), 0) / tickets.length)
+    : 0;
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <header className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur-lg shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-2">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          <h1 className="text-2xl font-bold">Triage Queue</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate("/dashboard")} 
+                className="hover:bg-primary/10 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Dashboard
+              </Button>
+              <div className="h-8 w-px bg-border" />
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-blue-500/20">
+                  <Activity className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                    Triage Queue
+                  </h1>
+                  <p className="text-sm text-muted-foreground">Real-time patient assessment</p>
+                </div>
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={loadTriageQueue}
+              className="gap-2 hover:bg-primary/10 transition-all duration-300"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 space-y-6">
+        {/* Stats Overview */}
+        <TriageQueueStats
+          waiting={tickets.filter(t => t.status === "waiting").length}
+          inAssessment={tickets.filter(t => t.status === "called").length}
+          completedToday={completedToday.length}
+          avgWaitTime={avgWaitTime}
+        />
+
         <Tabs defaultValue="queue" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="queue">Current Queue</TabsTrigger>
-            <TabsTrigger value="completed">Today's Work ({completedToday.length})</TabsTrigger>
-            <TabsTrigger value="previous">Previous Work ({previousWork.length})</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 mb-6 p-1 bg-muted/50 backdrop-blur-sm">
+            <TabsTrigger 
+              value="queue" 
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white transition-all duration-300"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Current Queue
+            </TabsTrigger>
+            <TabsTrigger 
+              value="completed"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white transition-all duration-300"
+            >
+              Today's Work ({completedToday.length})
+            </TabsTrigger>
+            <TabsTrigger 
+              value="previous"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-600 data-[state=active]:text-white transition-all duration-300"
+            >
+              Previous Work ({previousWork.length})
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="queue">
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    {tickets.filter(t => t.status === "waiting").length} waiting
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Stethoscope className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    {tickets.filter(t => t.status === "called").length} in assessment
-                  </span>
-                </div>
+          <TabsContent value="queue" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-sm font-medium text-muted-foreground">
+                  Live Queue • Auto-refresh every 10s
+                </span>
               </div>
               
-              <Button onClick={callNext} size="lg">
+              <Button 
+                onClick={callNext} 
+                size="lg"
+                className="bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              >
+                <Users className="h-5 w-5 mr-2" />
                 Call Next Patient
               </Button>
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Patient Queue</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Token</TableHead>
-                      <TableHead>Patient</TableHead>
-                      <TableHead>MRN</TableHead>
-                      <TableHead>Priority</TableHead>
-                      <TableHead>Wait Time</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {tickets.map((ticket) => {
-                      const waitTime = getWaitTime(ticket.created_at);
-                      return (
-                        <TableRow key={ticket.id}>
-                          <TableCell className="font-bold">{ticket.token_number}</TableCell>
-                          <TableCell>
-                            {ticket.patients.first_name} {ticket.patients.last_name}
-                          </TableCell>
-                          <TableCell>{ticket.patients.mrn}</TableCell>
-                          <TableCell>
-                            <Badge className={getPriorityColor(ticket.priority)}>
-                              {ticket.priority.toUpperCase()}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <span className={waitTime > 15 ? "text-destructive font-semibold" : ""}>
-                              {waitTime} min
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={getStatusColor(ticket.status)}>
-                              {ticket.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {ticket.status === "called" && (
-                                <Button 
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedPatient({
-                                      id: ticket.patient_id,
-                                      name: `${ticket.patients.first_name} ${ticket.patients.last_name}`,
-                                      ticketId: ticket.id
-                                    });
-                                    setShowTriageDialog(true);
-                                  }}
-                                >
-                                  <Stethoscope className="h-4 w-4 mr-1" />
-                                  Assess
-                                </Button>
-                              )}
-                              <QueueActions 
-                                ticket={ticket} 
-                                queues={queues} 
-                                onUpdate={loadTriageQueue} 
-                              />
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {tickets.map((ticket) => (
+                <EnhancedTriageCard
+                  key={ticket.id}
+                  ticket={ticket}
+                  queues={queues}
+                  onUpdate={loadTriageQueue}
+                  onAssess={(patient) => {
+                    setSelectedPatient(patient);
+                    setShowTriageDialog(true);
+                  }}
+                />
+              ))}
+            </div>
 
-                {tickets.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No patients in the triage queue
+            {tickets.length === 0 && (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <div className="p-4 rounded-full bg-muted mb-4">
+                    <Users className="h-12 w-12 text-muted-foreground" />
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  <p className="text-lg font-medium text-muted-foreground">No patients in queue</p>
+                  <p className="text-sm text-muted-foreground mt-1">The triage queue is currently empty</p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="completed">
-            <Card>
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-card via-card to-green-500/5">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Completed Assessments Today</CardTitle>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-green-500/20 to-emerald-500/20">
+                      <Activity className="h-5 w-5 text-green-600" />
+                    </div>
+                    Completed Assessments Today
+                  </CardTitle>
                   <div className="relative w-64">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search by name, MRN, token..."
                       value={todaySearch}
@@ -401,7 +406,7 @@ const TriageQueue = () => {
                         setTodaySearch(e.target.value);
                         setTodayPage(1);
                       }}
-                      className="pl-8"
+                      className="pl-9 border-0 bg-muted/50 focus-visible:ring-green-500"
                     />
                   </div>
                 </div>
@@ -490,12 +495,17 @@ const TriageQueue = () => {
           </TabsContent>
 
           <TabsContent value="previous">
-            <Card>
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-card via-card to-purple-500/5">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Previous Assessments</CardTitle>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+                      <FileText className="h-5 w-5 text-purple-600" />
+                    </div>
+                    Previous Assessments
+                  </CardTitle>
                   <div className="relative w-64">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search by name, MRN, token..."
                       value={previousSearch}
@@ -503,7 +513,7 @@ const TriageQueue = () => {
                         setPreviousSearch(e.target.value);
                         setPreviousPage(1);
                       }}
-                      className="pl-8"
+                      className="pl-9 border-0 bg-muted/50 focus-visible:ring-purple-500"
                     />
                   </div>
                 </div>
