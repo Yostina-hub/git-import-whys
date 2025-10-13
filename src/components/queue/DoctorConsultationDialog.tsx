@@ -17,13 +17,17 @@ import {
   FileText,
   TestTube,
   CheckCircle,
-  Eye,
-  AlertCircle,
-  Pill,
   Activity,
+  Pill,
+  AlertTriangle,
+  FileCheck,
 } from "lucide-react";
 import EMRNotesTab from "@/components/clinical/EMRNotesTab";
 import AssessmentsTab from "@/components/clinical/AssessmentsTab";
+import { VitalSignsTab } from "@/components/clinical/VitalSignsTab";
+import { MedicationsTab } from "@/components/clinical/MedicationsTab";
+import { AllergiesTab } from "@/components/clinical/AllergiesTab";
+import ConsentsTab from "@/components/clinical/ConsentsTab";
 import { CreateOrderDialog } from "@/components/orders/CreateOrderDialog";
 import { UpdateOrderStatusDialog } from "@/components/orders/UpdateOrderStatusDialog";
 import { OrderResultsDialog } from "@/components/orders/OrderResultsDialog";
@@ -169,10 +173,14 @@ export function DoctorConsultationDialog({
           </DialogHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="vitals">Vitals</TabsTrigger>
+              <TabsTrigger value="allergies">Allergies</TabsTrigger>
+              <TabsTrigger value="medications">Medications</TabsTrigger>
               <TabsTrigger value="assessments">Assessments</TabsTrigger>
               <TabsTrigger value="emr">EMR Notes</TabsTrigger>
+              <TabsTrigger value="consents">Consents</TabsTrigger>
               <TabsTrigger value="orders">
                 Orders ({orders.length})
               </TabsTrigger>
@@ -229,6 +237,18 @@ export function DoctorConsultationDialog({
                 </div>
               </TabsContent>
 
+              <TabsContent value="vitals" className="m-0">
+                <VitalSignsTab patientId={patient.id} />
+              </TabsContent>
+
+              <TabsContent value="allergies" className="m-0">
+                <AllergiesTab patientId={patient.id} />
+              </TabsContent>
+
+              <TabsContent value="medications" className="m-0">
+                <MedicationsTab patientId={patient.id} />
+              </TabsContent>
+
               <TabsContent value="assessments" className="m-0">
                 <AssessmentsTab patientId={patient.id} />
               </TabsContent>
@@ -243,6 +263,10 @@ export function DoctorConsultationDialog({
                     });
                   }}
                 />
+              </TabsContent>
+
+              <TabsContent value="consents" className="m-0">
+                <ConsentsTab patientId={patient.id} />
               </TabsContent>
 
               <TabsContent value="orders" className="m-0 space-y-4">
