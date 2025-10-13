@@ -447,17 +447,45 @@ export function DoctorConsultationDialog({
           )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="grid w-full grid-cols-8">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="vitals">Vitals</TabsTrigger>
-              <TabsTrigger value="allergies">Allergies</TabsTrigger>
-              <TabsTrigger value="protocols">Protocols</TabsTrigger>
-              <TabsTrigger value="assessments">Assessments</TabsTrigger>
-              <TabsTrigger value="emr">EMR Notes</TabsTrigger>
-              <TabsTrigger value="orders">
-                Orders ({orders.length})
+            <TabsList className="grid w-full grid-cols-9 h-auto p-1 bg-gradient-to-r from-muted/50 to-muted/30">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white">
+                <Activity className="h-4 w-4 mr-1" />
+                Overview
               </TabsTrigger>
-              <TabsTrigger value="medications">Medications</TabsTrigger>
+              <TabsTrigger value="vitals" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white">
+                Vitals
+              </TabsTrigger>
+              <TabsTrigger value="allergies" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white">
+                Allergies
+              </TabsTrigger>
+              <TabsTrigger value="protocols" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white">
+                Protocols
+              </TabsTrigger>
+              <TabsTrigger value="assessments" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white">
+                Assessments
+              </TabsTrigger>
+              <TabsTrigger value="emr" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white">
+                <FileText className="h-4 w-4 mr-1" />
+                EMR Notes
+              </TabsTrigger>
+              <TabsTrigger value="orders" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-600 data-[state=active]:text-white relative">
+                <TestTube className="h-4 w-4 mr-1" />
+                Orders
+                {orders.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{orders.length}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="billing" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white relative">
+                <DollarSign className="h-4 w-4 mr-1" />
+                Billing
+                {unpaidInvoices.length > 0 && (
+                  <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">{unpaidInvoices.length}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="medications" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white">
+                <Pill className="h-4 w-4 mr-1" />
+                Medications
+              </TabsTrigger>
             </TabsList>
 
             <div className="flex-1 overflow-auto mt-4">
@@ -532,21 +560,102 @@ export function DoctorConsultationDialog({
                   </Alert>
                 )}
 
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    onClick={() => setShowCreateOrder(true)}
-                  >
-                    <TestTube className="h-4 w-4 mr-2" />
-                    Create Order
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setActiveTab("emr")}
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Add EMR Note
-                  </Button>
-                </div>
+                {/* Quick Actions Section */}
+                <Card className="border-2 border-dashed bg-gradient-to-br from-muted/30 to-muted/10">
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      Quick Actions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-2 gap-3">
+                    <Button
+                      onClick={() => setActiveTab("orders")}
+                      variant="outline"
+                      className="h-auto flex-col gap-2 py-4 hover:bg-purple-500/10 hover:border-purple-500/50"
+                    >
+                      <TestTube className="h-6 w-6 text-purple-600" />
+                      <div className="text-center">
+                        <div className="font-semibold">Orders & Tests</div>
+                        <div className="text-xs text-muted-foreground">Lab, Imaging, Rx</div>
+                      </div>
+                    </Button>
+                    <Button
+                      onClick={() => setActiveTab("billing")}
+                      variant="outline"
+                      className="h-auto flex-col gap-2 py-4 hover:bg-green-500/10 hover:border-green-500/50"
+                    >
+                      <DollarSign className="h-6 w-6 text-green-600" />
+                      <div className="text-center">
+                        <div className="font-semibold">Billing</div>
+                        <div className="text-xs text-muted-foreground">Create Invoice</div>
+                      </div>
+                    </Button>
+                    <Button
+                      onClick={() => setActiveTab("emr")}
+                      variant="outline"
+                      className="h-auto flex-col gap-2 py-4 hover:bg-blue-500/10 hover:border-blue-500/50"
+                    >
+                      <FileText className="h-6 w-6 text-blue-600" />
+                      <div className="text-center">
+                        <div className="font-semibold">EMR Notes</div>
+                        <div className="text-xs text-muted-foreground">Clinical Notes</div>
+                      </div>
+                    </Button>
+                    <Button
+                      onClick={() => setActiveTab("vitals")}
+                      variant="outline"
+                      className="h-auto flex-col gap-2 py-4 hover:bg-red-500/10 hover:border-red-500/50"
+                    >
+                      <Activity className="h-6 w-6 text-red-600" />
+                      <div className="text-center">
+                        <div className="font-semibold">Vitals</div>
+                        <div className="text-xs text-muted-foreground">Record Vitals</div>
+                      </div>
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Active Orders Summary */}
+                {orders.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <TestTube className="h-4 w-4 text-purple-600" />
+                        Active Orders ({orders.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {orders.slice(0, 3).map((order) => (
+                        <div key={order.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {order.order_type}
+                            </Badge>
+                            {getOrderStatusBadge(order.status)}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setActiveTab("orders")}
+                          >
+                            View
+                          </Button>
+                        </div>
+                      ))}
+                      {orders.length > 3 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => setActiveTab("orders")}
+                        >
+                          View All {orders.length} Orders
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
 
               <TabsContent value="vitals" className="m-0">
@@ -578,41 +687,53 @@ export function DoctorConsultationDialog({
               </TabsContent>
 
               <TabsContent value="orders" className="m-0 space-y-4">
-                <Card>
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-card via-card to-purple-500/5">
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle>Patient Orders</CardTitle>
-                      <Button onClick={() => setShowCreateOrder(true)}>
-                        <TestTube className="h-4 w-4 mr-2" />
+                      <CardTitle className="flex items-center gap-2">
+                        <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+                          <TestTube className="h-5 w-5 text-purple-600" />
+                        </div>
+                        Patient Orders & Tests
+                      </CardTitle>
+                      <Button 
+                        onClick={() => setShowCreateOrder(true)}
+                        className="gap-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+                      >
+                        <TestTube className="h-4 w-4" />
                         New Order
                       </Button>
                     </div>
                   </CardHeader>
                   <CardContent>
                     {orders.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Priority</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {orders.map((order) => (
-                            <TableRow key={order.id}>
-                              <TableCell>
-                                {new Date(order.created_at).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell className="capitalize">
-                                {order.order_type}
-                              </TableCell>
-                              <TableCell>{getPriorityBadge(order.priority)}</TableCell>
-                              <TableCell>{getOrderStatusBadge(order.status)}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-1">
+                      <div className="space-y-3">
+                        {orders.map((order) => (
+                          <Card key={order.id} className="border-2 hover:shadow-md transition-shadow">
+                            <CardContent className="pt-6">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1 space-y-2">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <Badge variant="outline" className="font-mono">
+                                      {order.order_type.toUpperCase()}
+                                    </Badge>
+                                    {getPriorityBadge(order.priority)}
+                                    {getOrderStatusBadge(order.status)}
+                                    {order.scheduled_at && (
+                                      <Badge variant="secondary" className="gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        {new Date(order.scheduled_at).toLocaleDateString()}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    Created: {new Date(order.created_at).toLocaleString()}
+                                  </p>
+                                  {order.notes && (
+                                    <p className="text-sm">{order.notes}</p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
                                   <OrderResultsDialog
                                     orderId={order.id}
                                     orderType={order.order_type}
@@ -627,17 +748,147 @@ export function DoctorConsultationDialog({
                                     }}
                                   >
                                     <Activity className="h-4 w-4 mr-1" />
-                                    Update
+                                    Update Status
                                   </Button>
                                 </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
                     ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No orders created yet
+                      <div className="text-center py-12 space-y-4">
+                        <div className="flex justify-center">
+                          <div className="p-4 rounded-full bg-muted">
+                            <TestTube className="h-12 w-12 text-muted-foreground" />
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-lg font-medium text-muted-foreground">No orders yet</p>
+                          <p className="text-sm text-muted-foreground mt-1">Create lab tests, imaging, or prescriptions</p>
+                        </div>
+                        <Button onClick={() => setShowCreateOrder(true)}>
+                          <TestTube className="h-4 w-4 mr-2" />
+                          Create First Order
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="billing" className="m-0 space-y-4">
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-card via-card to-green-500/5">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <div className="p-2 rounded-lg bg-gradient-to-br from-green-500/20 to-emerald-500/20">
+                          <DollarSign className="h-5 w-5 text-green-600" />
+                        </div>
+                        Billing & Invoices
+                      </CardTitle>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={generateInvoiceFromServices}
+                          disabled={isGeneratingInvoice}
+                          size="sm"
+                          variant="outline"
+                          className="gap-2"
+                        >
+                          <DollarSign className="h-4 w-4" />
+                          Quick Invoice
+                        </Button>
+                        <Button
+                          onClick={() => setShowBillingForm(true)}
+                          size="sm"
+                          className="gap-2 bg-gradient-to-r from-green-500 to-emerald-600"
+                        >
+                          <CreditCard className="h-4 w-4" />
+                          Create Invoice
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {invoices.length > 0 ? (
+                      <div className="space-y-3">
+                        {invoices.map((invoice) => (
+                          <Card key={invoice.id} className={`border-2 ${
+                            invoice.status === 'paid' 
+                              ? 'border-green-500/30 bg-green-500/5' 
+                              : invoice.status === 'partial'
+                              ? 'border-orange-500/30 bg-orange-500/5'
+                              : 'border-red-500/30 bg-red-500/5'
+                          }`}>
+                            <CardContent className="pt-6">
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-lg">
+                                      ${Number(invoice.total_amount).toFixed(2)}
+                                    </span>
+                                    <Badge className={
+                                      invoice.status === 'paid' 
+                                        ? 'bg-green-600' 
+                                        : invoice.status === 'partial'
+                                        ? 'bg-orange-500'
+                                        : 'bg-red-500'
+                                    }>
+                                      {invoice.status.toUpperCase()}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    Created: {new Date(invoice.created_at).toLocaleDateString()}
+                                  </p>
+                                  {invoice.balance_due > 0 && (
+                                    <p className="text-sm font-medium text-red-600">
+                                      Balance Due: ${Number(invoice.balance_due).toFixed(2)}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex gap-2">
+                                  {(invoice.status === 'issued' || invoice.status === 'partial') && (
+                                    <RecordPaymentDialog
+                                      invoice={invoice}
+                                      onPaymentRecorded={loadInvoices}
+                                    />
+                                  )}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                  >
+                                    <FileText className="h-4 w-4 mr-1" />
+                                    View
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 space-y-4">
+                        <div className="flex justify-center">
+                          <div className="p-4 rounded-full bg-muted">
+                            <CreditCard className="h-12 w-12 text-muted-foreground" />
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-lg font-medium text-muted-foreground">No invoices yet</p>
+                          <p className="text-sm text-muted-foreground mt-1">Create an invoice to bill for services</p>
+                        </div>
+                        <div className="flex gap-2 justify-center">
+                          <Button
+                            onClick={generateInvoiceFromServices}
+                            disabled={isGeneratingInvoice}
+                            variant="outline"
+                          >
+                            Quick Invoice
+                          </Button>
+                          <Button onClick={() => setShowBillingForm(true)}>
+                            Custom Invoice
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </CardContent>
@@ -650,42 +901,75 @@ export function DoctorConsultationDialog({
             </div>
           </Tabs>
 
-          <div className="flex gap-2 items-center justify-between pt-4 border-t">
-            <div className="flex items-center gap-2 flex-1">
-              <label className="text-sm font-medium">Completion Action:</label>
+          <div className="flex flex-col gap-4 pt-4 border-t bg-gradient-to-r from-muted/30 to-muted/10 p-4 rounded-lg">
+            {/* Consultation Summary */}
+            <div className="grid grid-cols-3 gap-4">
+              <Card className="border-2">
+                <CardContent className="pt-4 text-center">
+                  <div className="text-2xl font-bold text-purple-600">{orders.length}</div>
+                  <div className="text-xs text-muted-foreground flex items-center justify-center gap-1 mt-1">
+                    <TestTube className="h-3 w-3" />
+                    Orders Created
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-2">
+                <CardContent className="pt-4 text-center">
+                  <div className="text-2xl font-bold text-green-600">{invoices.length}</div>
+                  <div className="text-xs text-muted-foreground flex items-center justify-center gap-1 mt-1">
+                    <DollarSign className="h-3 w-3" />
+                    Invoices
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-2">
+                <CardContent className="pt-4 text-center">
+                  <div className="text-2xl font-bold text-red-600">
+                    ${totalDue.toFixed(2)}
+                  </div>
+                  <div className="text-xs text-muted-foreground flex items-center justify-center gap-1 mt-1">
+                    <CreditCard className="h-3 w-3" />
+                    Outstanding
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Label className="text-sm font-semibold whitespace-nowrap">Complete As:</Label>
               <Select value={completionAction} onValueChange={setCompletionAction}>
-                <SelectTrigger className="w-[250px]">
+                <SelectTrigger className="flex-1 bg-card">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="complete">
-                    Complete & Serve (Payment Required)
+                    ✓ Complete & Serve (Payment Required)
                   </SelectItem>
                   <SelectItem value="payment_required">
-                    Payment Required (Create Invoice)
+                    💳 Create Invoice First
                   </SelectItem>
                   <SelectItem value="pending_payment">
-                    Complete (Pending Payment)
+                    ⏳ Complete (Pending Payment)
                   </SelectItem>
                   <SelectItem value="schedule">
-                    Schedule for Later
+                    📅 Schedule for Later
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex gap-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Close
               </Button>
               <Button 
                 onClick={completeConsultation}
                 disabled={unpaidInvoices.length > 0 && completionAction !== "payment_required"}
+                size="lg"
+                className="gap-2 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90"
               >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                {completionAction === "complete" ? "Complete & Serve" : 
-                 completionAction === "payment_required" ? "Create Invoice & Send to Billing" :
-                 completionAction === "pending_payment" ? "Complete (Pending Payment)" :
-                 "Schedule Patient"}
+                <CheckCircle className="h-5 w-5" />
+                {completionAction === "complete" ? "Complete" : 
+                 completionAction === "payment_required" ? "Generate Invoice" :
+                 completionAction === "pending_payment" ? "Complete" :
+                 "Schedule"}
               </Button>
             </div>
           </div>
