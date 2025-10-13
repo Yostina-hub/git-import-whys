@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +31,7 @@ interface Appointment {
 
 const Appointments = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<any[]>([]);
@@ -56,6 +57,18 @@ const Appointments = () => {
   useEffect(() => {
     checkAuth();
     loadData();
+    
+    // Check if coming from registration with pre-filled patient
+    if (location.state?.fromRegistration && location.state?.prefilledPatientId) {
+      setFormData(prev => ({ 
+        ...prev, 
+        patient_id: location.state.prefilledPatientId 
+      }));
+      setIsDialogOpen(true);
+      
+      // Clear the navigation state to prevent re-opening on refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
   }, []);
 
   useEffect(() => {
@@ -130,44 +143,90 @@ const Appointments = () => {
 
     setLoading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
 
-    // Combine date and time
-    const [hours, minutes] = selectedTime.split(":");
-    const scheduledStart = new Date(selectedDate);
-    scheduledStart.setHours(parseInt(hours), parseInt(minutes), 0);
-    const scheduledEnd = addMinutes(scheduledStart, 30);
+      // Combine date and time
+      const [hours, minutes] = selectedTime.split(":");
+      const scheduledStart = new Date(selectedDate);
+      scheduledStart.setHours(parseInt(hours), parseInt(minutes), 0);
+      const scheduledEnd = addMinutes(scheduledStart, 30);
 
-    const appointmentData: any = {
-      patient_id: formData.patient_id,
-      clinic_id: formData.clinic_id,
-      service_id: formData.service_id || null,
-      scheduled_start: scheduledStart.toISOString(),
-      scheduled_end: scheduledEnd.toISOString(),
-      reason_for_visit: formData.reason_for_visit,
-      source: formData.source,
-      created_by: user?.id,
-      status: "booked",
-    };
+      const appointmentData: any = {
+        patient_id: formData.patient_id,
+        clinic_id: formData.clinic_id,
+        service_id: formData.service_id || null,
+        scheduled_start: scheduledStart.toISOString(),
+        scheduled_end: scheduledEnd.toISOString(),
+        reason_for_visit: formData.reason_for_visit,
+        source: formData.source,
+        created_by: user?.id,
+        status: "booked",
+      };
 
-    // Only add provider if doctor-specific appointment
-    if (appointmentType === "doctor_specific" && formData.provider_id) {
-      appointmentData.provider_id = formData.provider_id;
-    }
-    
-    const { error } = await supabase.from("appointments").insert([appointmentData]);
+      // Only add provider if doctor-specific appointment
+      if (appointmentType === "doctor_specific" && formData.provider_id) {
+        appointmentData.provider_id = formData.provider_id;
+      }
+      
+      const { data: appointment, error: apptError } = await supabase
+        .from("appointments")
+        .insert([appointmentData])
+        .select()
+        .single();
 
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error creating appointment",
-        description: error.message,
-      });
-    } else {
-      toast({
-        title: "Appointment created",
-        description: "The appointment has been scheduled successfully.",
-      });
+      if (apptError) throw apptError;
+
+      // Create invoice for the appointment
+      const consultationService = services.find(s => s.code === 'CONSULT');
+      if (consultationService) {
+        const invoiceData = {
+          patient_id: formData.patient_id,
+          appointment_id: appointment.id,
+          status: "issued" as const,
+          subtotal: consultationService.unit_price,
+          tax_amount: 0,
+          total_amount: consultationService.unit_price,
+          balance_due: consultationService.unit_price,
+          issued_at: new Date().toISOString(),
+          created_by: user?.id,
+          lines: [{
+            service_id: consultationService.id,
+            description: consultationService.name,
+            quantity: 1,
+            unit_price: consultationService.unit_price,
+            total: consultationService.unit_price,
+            item_type: "service",
+          }],
+        };
+
+        const { data: invoice, error: invoiceError } = await supabase
+          .from("invoices")
+          .insert([invoiceData])
+          .select()
+          .single();
+
+        if (invoiceError) throw invoiceError;
+
+        // Update patient registration notes
+        await supabase
+          .from("patients")
+          .update({ 
+            registration_notes: `Path B selected - Invoice #${invoice.id} sent to billing department`
+          })
+          .eq("id", formData.patient_id);
+
+        toast({
+          title: "Success",
+          description: "Appointment created and sent to billing department for payment processing.",
+        });
+      } else {
+        toast({
+          title: "Appointment created",
+          description: "The appointment has been scheduled successfully.",
+        });
+      }
+
       setIsDialogOpen(false);
       setSelectedDate(undefined);
       setSelectedTime("");
@@ -181,6 +240,12 @@ const Appointments = () => {
       });
       setAppointmentType("general");
       loadData();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error creating appointment",
+        description: error.message,
+      });
     }
     setLoading(false);
   };
