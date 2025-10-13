@@ -12,6 +12,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, UserPlus } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PublicAppointmentBooking } from "@/components/appointments/PublicAppointmentBooking";
 
 const PublicPortal = () => {
   const navigate = useNavigate();
@@ -107,7 +109,7 @@ const PublicPortal = () => {
       <header className="border-b bg-card/80 backdrop-blur">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">Patient Registration</h1>
+            <h1 className="text-3xl font-bold">Patient Portal</h1>
             <Button variant="ghost" onClick={() => navigate("/auth")}>
               Staff Login
             </Button>
@@ -116,6 +118,17 @@ const PublicPortal = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        <Tabs defaultValue="appointment" className="space-y-6">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+            <TabsTrigger value="appointment">Book Appointment</TabsTrigger>
+            <TabsTrigger value="register">Patient Registration</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="appointment">
+            <PublicAppointmentBooking />
+          </TabsContent>
+
+          <TabsContent value="register">
         <Card className="max-w-4xl mx-auto">
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -341,6 +354,8 @@ const PublicPortal = () => {
             </form>
           </CardContent>
         </Card>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
