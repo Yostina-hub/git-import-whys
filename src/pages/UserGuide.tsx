@@ -31,6 +31,9 @@ import { InteractiveTutorial } from "@/components/guide/InteractiveTutorial";
 import { QuickStartGuide } from "@/components/guide/QuickStartGuide";
 import { VideoTutorials } from "@/components/guide/VideoTutorials";
 import { IntegrationsGuide } from "@/components/guide/IntegrationsGuide";
+import { PatientManagementGuide } from "@/components/guide/detailed/PatientManagementGuide";
+import { AppointmentsGuide } from "@/components/guide/detailed/AppointmentsGuide";
+import { ClinicalRecordsGuide } from "@/components/guide/detailed/ClinicalRecordsGuide";
 
 const UserGuide = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -191,7 +194,7 @@ const UserGuide = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 h-auto">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-9 h-auto">
             <TabsTrigger value="overview" className="gap-2">
               <Sparkles className="h-4 w-4" />
               Overview
@@ -199,6 +202,18 @@ const UserGuide = () => {
             <TabsTrigger value="quickstart" className="gap-2">
               <Zap className="h-4 w-4" />
               Quick Start
+            </TabsTrigger>
+            <TabsTrigger value="patients" className="gap-2">
+              <Users className="h-4 w-4" />
+              Patients
+            </TabsTrigger>
+            <TabsTrigger value="appointments" className="gap-2">
+              <Calendar className="h-4 w-4" />
+              Appointments
+            </TabsTrigger>
+            <TabsTrigger value="clinical" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Clinical
             </TabsTrigger>
             <TabsTrigger value="tutorials" className="gap-2">
               <Play className="h-4 w-4" />
@@ -286,6 +301,19 @@ const UserGuide = () => {
           {/* Quick Start Tab */}
           <TabsContent value="quickstart" className="animate-fade-in">
             <QuickStartGuide />
+          </TabsContent>
+
+          {/* Detailed Guides */}
+          <TabsContent value="patients" className="animate-fade-in">
+            <PatientManagementGuide />
+          </TabsContent>
+
+          <TabsContent value="appointments" className="animate-fade-in">
+            <AppointmentsGuide />
+          </TabsContent>
+
+          <TabsContent value="clinical" className="animate-fade-in">
+            <ClinicalRecordsGuide />
           </TabsContent>
 
           {/* Tutorials Tab */}
