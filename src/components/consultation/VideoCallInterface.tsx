@@ -41,6 +41,7 @@ export function VideoCallInterface({
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [connectionQuality, setConnectionQuality] = useState<'good' | 'fair' | 'poor'>('good');
   const [remoteConnected, setRemoteConnected] = useState(false);
+  const [needsAudioUnlock, setNeedsAudioUnlock] = useState(false);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -49,6 +50,9 @@ export function VideoCallInterface({
   const wsRef = useRef<WebSocket | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
   const remotePeerIdRef = useRef<string | null>(null);
+  const makingOfferRef = useRef(false);
+  const ignoreOfferRef = useRef(false);
+  const politeRef = useRef(false);
 
   useEffect(() => {
     initializeCall();
@@ -161,7 +165,12 @@ export function VideoCallInterface({
       try {
         if (!peerConnectionRef.current) return;
         if (!remotePeerIdRef.current) return;
+        if (peerConnectionRef.current.signalingState !== 'stable') {
+          console.log('Skip negotiationneeded: signaling not stable');
+          return;
+        }
         console.log('Negotiation needed - creating offer');
+        makingOfferRef.current = true;
         const offer = await peerConnectionRef.current.createOffer();
         await peerConnectionRef.current.setLocalDescription(offer);
         wsRef.current?.send(
@@ -169,6 +178,8 @@ export function VideoCallInterface({
         );
       } catch (err) {
         console.error('onnegotiationneeded error:', err);
+      } finally {
+        makingOfferRef.current = false;
       }
     };
 
@@ -186,6 +197,13 @@ export function VideoCallInterface({
               JSON.stringify({ type: 'offer', offer, targetId: remotePeerIdRef.current })
             );
           }
+          if (iceState === 'failed') {
+            toast({
+              title: 'Network issue detected',
+              description: 'Connection failed. A TURN server may be required for your network.',
+              variant: 'destructive',
+            });
+          }
         } catch (err) {
           console.error('ICE restart error:', err);
         }
@@ -199,6 +217,7 @@ export function VideoCallInterface({
 
       if (state === 'connected') {
         setRemoteConnected(true);
+        setNeedsAudioUnlock(true);
         monitorConnectionQuality();
       } else if (state === 'disconnected' || state === 'failed') {
         setRemoteConnected(false);
@@ -216,21 +235,34 @@ export function VideoCallInterface({
         // Store the remote peer ID
         if (message.userId !== userId) {
           remotePeerIdRef.current = message.userId;
-          console.log('Stored remote peer ID:', remotePeerIdRef.current);
+          // Determine polite peer deterministically (higher userId is polite)
+          politeRef.current = userId.localeCompare(message.userId) > 0;
+          console.log('Stored remote peer ID:', remotePeerIdRef.current, 'polite:', politeRef.current);
           
           // Create and send offer
           if (peerConnectionRef.current) {
-            console.log('Creating offer for:', message.userId);
-            const offer = await peerConnectionRef.current.createOffer();
-            await peerConnectionRef.current.setLocalDescription(offer);
-            wsRef.current?.send(
-              JSON.stringify({
-                type: 'offer',
-                offer,
-                targetId: message.userId,
-              })
-            );
-            console.log('Sent offer to:', message.userId);
+            try {
+              if (peerConnectionRef.current.signalingState !== 'stable') {
+                console.log('Skip initial offer: signaling not stable');
+                break;
+              }
+              console.log('Creating offer for:', message.userId);
+              makingOfferRef.current = true;
+              const offer = await peerConnectionRef.current.createOffer();
+              await peerConnectionRef.current.setLocalDescription(offer);
+              wsRef.current?.send(
+                JSON.stringify({
+                  type: 'offer',
+                  offer,
+                  targetId: message.userId,
+                })
+              );
+              console.log('Sent offer to:', message.userId);
+            } catch (err) {
+              console.error('Initial offer error:', err);
+            } finally {
+              makingOfferRef.current = false;
+            }
           }
         }
         break;
@@ -239,21 +271,43 @@ export function VideoCallInterface({
         console.log('Received offer from:', message.senderId);
         // Store the remote peer ID
         remotePeerIdRef.current = message.senderId;
+        // Determine polite based on ids if not set yet
+        if (politeRef.current === false && message.senderId) {
+          politeRef.current = userId.localeCompare(message.senderId) > 0;
+        }
         
         if (peerConnectionRef.current) {
-          await peerConnectionRef.current.setRemoteDescription(
-            new RTCSessionDescription(message.offer)
-          );
-          const answer = await peerConnectionRef.current.createAnswer();
-          await peerConnectionRef.current.setLocalDescription(answer);
-          wsRef.current?.send(
-            JSON.stringify({
-              type: 'answer',
-              answer,
-              targetId: message.senderId,
-            })
-          );
-          console.log('Sent answer to:', message.senderId);
+          const pc = peerConnectionRef.current;
+          const offerDesc = new RTCSessionDescription(message.offer);
+          const offerCollision = makingOfferRef.current || pc.signalingState !== 'stable';
+          ignoreOfferRef.current = !politeRef.current && offerCollision;
+          if (ignoreOfferRef.current) {
+            console.warn('Offer collision detected (impolite). Ignoring offer.');
+            break;
+          }
+          try {
+            if (offerCollision) {
+              try {
+                // Rollback local description before applying remote offer
+                await pc.setLocalDescription({ type: 'rollback' } as any);
+              } catch (e) {
+                console.warn('Rollback failed or unsupported:', e);
+              }
+            }
+            await pc.setRemoteDescription(offerDesc);
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            wsRef.current?.send(
+              JSON.stringify({
+                type: 'answer',
+                answer,
+                targetId: message.senderId,
+              })
+            );
+            console.log('Sent answer to:', message.senderId);
+          } catch (err) {
+            console.error('Error handling offer:', err);
+          }
         }
         break;
 
@@ -336,6 +390,17 @@ export function VideoCallInterface({
     }
   };
 
+  const handleEnableAudio = async () => {
+    try {
+      if (remoteVideoRef.current) {
+        await remoteVideoRef.current.play();
+        setNeedsAudioUnlock(false);
+      }
+    } catch (e) {
+      console.warn('Audio unlock failed:', e);
+    }
+  };
+
   const toggleScreenShare = async () => {
     if (isScreenSharing) {
       // Stop screen sharing
@@ -352,6 +417,10 @@ export function VideoCallInterface({
           if (sender) {
             sender.replaceTrack(videoTrack);
           }
+        }
+        // Restore local preview to camera
+        if (localVideoRef.current && localStreamRef.current) {
+          localVideoRef.current.srcObject = localStreamRef.current;
         }
       }
       setIsScreenSharing(false);
@@ -439,6 +508,13 @@ export function VideoCallInterface({
           <Badge className="absolute top-4 left-4" variant="secondary">
             Patient
           </Badge>
+          {remoteConnected && needsAudioUnlock && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+              <Button variant="secondary" onClick={handleEnableAudio} className="gap-2">
+                Enable audio
+              </Button>
+            </div>
+          )}
         </Card>
 
         {/* Local Video */}
