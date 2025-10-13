@@ -13,10 +13,11 @@ import { Info } from "lucide-react";
 interface AddToQueueDialogProps {
   patientId: string;
   patientName: string;
+  isReturning?: boolean;
   onSuccess?: () => void;
 }
 
-export function AddToQueueDialog({ patientId, patientName, onSuccess }: AddToQueueDialogProps) {
+export function AddToQueueDialog({ patientId, patientName, isReturning = false, onSuccess }: AddToQueueDialogProps) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -24,12 +25,31 @@ export function AddToQueueDialog({ patientId, patientName, onSuccess }: AddToQue
   const [selectedQueue, setSelectedQueue] = useState("");
   const [priority, setPriority] = useState<"routine" | "stat" | "vip">("routine");
   const [notes, setNotes] = useState("");
+  const [visitHistory, setVisitHistory] = useState<any>(null);
 
   useEffect(() => {
     if (open) {
       loadQueues();
+      checkVisitHistory();
     }
   }, [open]);
+
+  const checkVisitHistory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("id, scheduled_start, status")
+        .eq("patient_id", patientId)
+        .order("scheduled_start", { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      setVisitHistory(data && data.length > 0 ? data[0] : null);
+    } catch (error) {
+      console.error("Error checking visit history:", error);
+    }
+  };
 
   const loadQueues = async () => {
     const { data, error } = await supabase
@@ -64,9 +84,12 @@ export function AddToQueueDialog({ patientId, patientName, onSuccess }: AddToQue
       // Check payment status before adding to triage or doctor queue
       const selectedQueueData = queues.find(q => q.id === selectedQueue);
       if (selectedQueueData && (selectedQueueData.queue_type === 'triage' || selectedQueueData.queue_type === 'doctor')) {
+        // Check if patient is returning
+        const hasVisitHistory = visitHistory !== null;
+        
         const { data: invoices, error: invoiceError } = await supabase
           .from("invoices")
-          .select("status")
+          .select("status, lines")
           .eq("patient_id", patientId)
           .order("created_at", { ascending: false })
           .limit(1);
@@ -74,10 +97,14 @@ export function AddToQueueDialog({ patientId, patientName, onSuccess }: AddToQue
         if (invoiceError) throw invoiceError;
 
         if (!invoices || invoices.length === 0) {
+          const message = hasVisitHistory 
+            ? "Returning patient needs a consultation fee invoice. Registration fee is waived for returning patients."
+            : "New patient must have a paid invoice (including registration fee) before proceeding to triage or doctor queue.";
+          
           toast({
             variant: "destructive",
             title: "Payment Required",
-            description: "Patient must have a paid invoice before proceeding to triage or doctor queue.",
+            description: message,
           });
           setLoading(false);
           return;
@@ -147,12 +174,26 @@ export function AddToQueueDialog({ patientId, patientName, onSuccess }: AddToQue
           <DialogTitle>Add Patient to Queue</DialogTitle>
         </DialogHeader>
         
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            Patients should start in <strong>Triage Queue</strong> for initial assessment before being routed to other departments.
-          </AlertDescription>
-        </Alert>
+        {isReturning || visitHistory ? (
+          <Alert className="bg-green-50 border-green-300">
+            <Info className="h-4 w-4 text-green-700" />
+            <AlertDescription className="text-green-700">
+              <strong>Returning Patient</strong> - Registration fee waived. Only consultation fee required.
+              {visitHistory && (
+                <div className="text-xs mt-1">
+                  Last visit: {new Date(visitHistory.scheduled_start).toLocaleDateString()}
+                </div>
+              )}
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <strong>New Patient</strong> - Patients should start in Triage Queue for initial assessment. Registration fee + consultation fee required.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

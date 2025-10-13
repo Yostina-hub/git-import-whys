@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Calendar, List, UserPlus, Clock, CheckCircle } from "lucide-react";
+import { PatientQuickSearch } from "@/components/patients/PatientQuickSearch";
 
 export function ReceptionDashboard() {
   const navigate = useNavigate();
@@ -64,6 +65,17 @@ export function ReceptionDashboard() {
         <h1 className="text-3xl font-bold tracking-tight">Reception Dashboard</h1>
         <p className="text-muted-foreground">Patient registration and appointment management</p>
       </div>
+
+      {/* Quick Patient Search */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Patient Lookup</CardTitle>
+          <CardDescription>Search for returning patients by MRN, name, or phone</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PatientQuickSearch />
+        </CardContent>
+      </Card>
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
