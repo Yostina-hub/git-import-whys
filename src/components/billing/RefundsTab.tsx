@@ -43,8 +43,7 @@ export function RefundsTab() {
             id,
             patient:patients(first_name, last_name, mrn)
           )
-        ),
-        approved_by:profiles!refunds_approved_by_fkey(first_name, last_name)
+        )
       `)
       .order("created_at", { ascending: false });
 
@@ -54,9 +53,30 @@ export function RefundsTab() {
         title: "Error loading refunds",
         description: error.message,
       });
-    } else {
-      setRefunds(data || []);
+      setLoading(false);
+      return;
     }
+
+    // Fetch approver details separately for each refund
+    const refundsWithApprovers = await Promise.all(
+      (data || []).map(async (refund) => {
+        if (refund.approved_by) {
+          const { data: approver } = await supabase
+            .from("profiles")
+            .select("first_name, last_name")
+            .eq("id", refund.approved_by)
+            .single();
+          
+          return {
+            ...refund,
+            approved_by: approver
+          };
+        }
+        return refund;
+      })
+    );
+
+    setRefunds(refundsWithApprovers);
     setLoading(false);
   };
 
