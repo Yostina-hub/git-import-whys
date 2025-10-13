@@ -19,6 +19,8 @@ export interface Patient {
   visit_count?: number;
   last_visit_date?: string;
   is_returning?: boolean;
+  appointment_status?: string;
+  appointment_date?: string;
 }
 
 interface UsePatientsReturn {
@@ -199,6 +201,11 @@ export const usePatients = (): UsePatientsReturn => {
     const patientsWithStatus = data.map(patient => {
       const invoice = invoiceMap.get(patient.id);
       const visitInfo = visitMap.get(patient.id);
+      
+      // Get most recent appointment
+      const patientAppointments = appointmentsRes.data?.filter((apt: any) => apt.patient_id === patient.id) || [];
+      const latestAppointment = patientAppointments.length > 0 ? patientAppointments[0] : null;
+      
       return {
         ...patient,
         registration_invoice_status: invoice?.status || "pending",
@@ -207,7 +214,9 @@ export const usePatients = (): UsePatientsReturn => {
         queue_token: null,
         visit_count: visitInfo?.count || 0,
         last_visit_date: visitInfo?.lastVisit || null,
-        is_returning: (visitInfo?.count || 0) > 0
+        is_returning: (visitInfo?.count || 0) > 0,
+        appointment_status: latestAppointment?.status || null,
+        appointment_date: latestAppointment?.scheduled_start || null,
       };
     });
 

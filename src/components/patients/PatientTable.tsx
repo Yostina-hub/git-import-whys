@@ -51,6 +51,7 @@ export const PatientTable = ({
             <TableHead className="font-semibold">Gender</TableHead>
             <TableHead className="font-semibold">DOB</TableHead>
             <TableHead className="font-semibold">Phone</TableHead>
+            <TableHead className="font-semibold">Appointment</TableHead>
             <TableHead className="font-semibold">Queue Status</TableHead>
             <TableHead className="font-semibold">Payment Status</TableHead>
             <TableHead className="text-right font-semibold">Actions</TableHead>
@@ -93,6 +94,35 @@ export const PatientTable = ({
                 {new Date(patient.date_of_birth).toLocaleDateString()}
               </TableCell>
               <TableCell className="font-medium">{patient.phone_mobile}</TableCell>
+              <TableCell>
+                {patient.appointment_status ? (
+                  <div className="space-y-1">
+                    <Badge 
+                      variant={
+                        patient.appointment_status === "booked" ? "default" : 
+                        patient.appointment_status === "confirmed" ? "default" : 
+                        patient.appointment_status === "completed" ? "secondary" : 
+                        "outline"
+                      }
+                      className={
+                        patient.appointment_status === "booked" ? "bg-blue-600" :
+                        patient.appointment_status === "confirmed" ? "bg-green-600" :
+                        ""
+                      }
+                    >
+                      {patient.appointment_status}
+                    </Badge>
+                    {patient.appointment_date && (
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(patient.appointment_date).toLocaleDateString()} at{" "}
+                        {new Date(patient.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">No appointment</span>
+                )}
+              </TableCell>
               <TableCell>
                 {patient.queue_status ? (
                   <div className="flex items-center gap-2">
