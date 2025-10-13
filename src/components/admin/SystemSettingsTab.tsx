@@ -75,9 +75,8 @@ export const SystemSettingsTab = () => {
   };
 
   const renderInput = (setting: Setting) => {
-    const value = typeof setting.setting_value === 'string' 
-      ? JSON.parse(setting.setting_value)
-      : setting.setting_value;
+    // Handle JSONB values - they come as already parsed objects/values from Supabase
+    const value = setting.setting_value;
 
     switch (setting.setting_type) {
       case "boolean":
