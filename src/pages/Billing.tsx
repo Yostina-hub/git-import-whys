@@ -16,6 +16,7 @@ import { DiscountTaxSettings } from "@/components/billing/DiscountTaxSettings";
 import { CreatePackageInvoiceDialog } from "@/components/billing/CreatePackageInvoiceDialog";
 import { BillingStats } from "@/components/billing/BillingStats";
 import { EnhancedInvoiceCard } from "@/components/billing/EnhancedInvoiceCard";
+import { InvoiceTable } from "@/components/billing/InvoiceTable";
 
 const Billing = () => {
   const navigate = useNavigate();
@@ -306,15 +307,10 @@ const Billing = () => {
                     Loading invoices...
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {invoices.map((invoice) => (
-                      <EnhancedInvoiceCard
-                        key={invoice.id}
-                        invoice={invoice}
-                        onPaymentRecorded={loadInvoices}
-                      />
-                    ))}
-                  </div>
+                  <InvoiceTable 
+                    invoices={invoices}
+                    onPaymentRecorded={loadInvoices}
+                  />
                 )}
 
                 {!loading && invoices.length === 0 && (
