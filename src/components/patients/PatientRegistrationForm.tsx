@@ -197,7 +197,7 @@ export const PatientRegistrationForm = ({
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
-      // Create consultation invoice
+      // Create consultation invoice and send to billing
       const invoiceData = {
         patient_id: registeredPatient.id,
         status: "issued" as const,
@@ -225,10 +225,21 @@ export const PatientRegistrationForm = ({
 
       if (invoiceError) throw invoiceError;
 
-      setCurrentInvoiceId(invoice.id);
-      setPaymentAmount(consultationPrice.toString());
+      // Update patient status to indicate sent to billing
+      await supabase
+        .from("patients")
+        .update({ 
+          registration_notes: `Path A selected - Invoice #${invoice.id} sent to billing department`
+        })
+        .eq("id", registeredPatient.id);
+
+      toast({
+        title: "Success",
+        description: "Patient information sent to billing department. Status: Pending Payment.",
+      });
+
       setShowPathSelection(false);
-      setShowPaymentDialog(true);
+      onSuccess();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -244,11 +255,40 @@ export const PatientRegistrationForm = ({
     setShowAppointmentDialog(true);
   };
 
-  const handleAppointmentPaymentRequired = (invoiceId: string, amount: number) => {
-    setCurrentInvoiceId(invoiceId);
-    setPaymentAmount(amount.toString());
-    setShowAppointmentDialog(false);
-    setShowPaymentDialog(true);
+  const handleAppointmentPaymentRequired = async (invoiceId: string, amount: number) => {
+    // Send to billing instead of handling payment
+    try {
+      await supabase
+        .from("patients")
+        .update({ 
+          registration_notes: `Path B selected - Invoice #${invoiceId} sent to billing department`
+        })
+        .eq("id", registeredPatient.id);
+
+      toast({
+        title: "Success",
+        description: "Appointment created and sent to billing department. Status: Pending Payment.",
+      });
+
+      setShowAppointmentDialog(false);
+      onSuccess();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error updating patient status",
+        description: error.message,
+      });
+    }
+  };
+
+  const handlePathSelectionCancel = () => {
+    // Allow cancel without affecting data
+    setShowPathSelection(false);
+    toast({
+      title: "Selection cancelled",
+      description: "Patient record saved. You can continue later from incomplete registrations.",
+    });
+    onCancel();
   };
 
   const handlePaymentSubmit = async () => {
@@ -453,7 +493,7 @@ export const PatientRegistrationForm = ({
         />
       )}
 
-      <Dialog open={showPathSelection} onOpenChange={() => {}}>
+      <Dialog open={showPathSelection} onOpenChange={setShowPathSelection}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Select Workflow Path</DialogTitle>
@@ -480,7 +520,7 @@ export const PatientRegistrationForm = ({
                 <div className="text-left">
                   <div className="font-semibold">Path A: Direct Consultation</div>
                   <div className="text-sm text-muted-foreground">
-                    Pay consultation fee → Triage → Doctor
+                    Send to billing → Pending payment status
                   </div>
                 </div>
               </Button>
@@ -494,9 +534,21 @@ export const PatientRegistrationForm = ({
                 <div className="text-left">
                   <div className="font-semibold">Path B: Book Appointment</div>
                   <div className="text-sm text-muted-foreground">
-                    Create appointment → Invoice → Pay → Triage
+                    Create appointment → Send to billing
                   </div>
                 </div>
+              </Button>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handlePathSelectionCancel}
+                disabled={loading}
+                className="flex-1"
+              >
+                Cancel
               </Button>
             </div>
           </div>
