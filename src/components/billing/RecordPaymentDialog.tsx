@@ -135,7 +135,11 @@ export const RecordPaymentDialog = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
+        <Button 
+          size="sm" 
+          variant="destructive"
+          className="bg-red-600 hover:bg-red-700 animate-pulse shadow-lg shadow-red-500/50"
+        >
           <DollarSign className="h-4 w-4 mr-1" />
           Record Payment
         </Button>
