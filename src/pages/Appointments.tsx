@@ -2,21 +2,27 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Calendar as CalendarIcon, Plus, UserCheck, Users, Clock } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Calendar as CalendarIcon, Plus, UserCheck, Users, Clock, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format, addMinutes, setHours, setMinutes } from "date-fns";
+import { format, addMinutes, setHours, setMinutes, startOfToday, addMonths, subMonths } from "date-fns";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { AppointmentFilters } from "@/components/appointments/AppointmentFilters";
+import { AppointmentStats } from "@/components/appointments/AppointmentStats";
+import { AppointmentCalendarView } from "@/components/appointments/AppointmentCalendarView";
+import { AppointmentCard } from "@/components/appointments/AppointmentCard";
+import { useRealtimeAppointments } from "@/hooks/useRealtimeAppointments";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CardHeader } from "@/components/ui/card";
 
 interface Appointment {
   id: string;
@@ -25,8 +31,9 @@ interface Appointment {
   status: string;
   reason_for_visit?: string;
   patients: { first_name: string; last_name: string; mrn: string };
-  profiles: { first_name: string; last_name: string };
-  services: { name: string };
+  profiles?: { first_name: string; last_name: string } | null;
+  services?: { name: string } | null;
+  clinics?: { name: string } | null;
 }
 
 const Appointments = () => {
@@ -44,6 +51,12 @@ const Appointments = () => {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState("");
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [clinicFilter, setClinicFilter] = useState("all");
+  const [providerFilter, setProviderFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const [formData, setFormData] = useState({
     patient_id: "",
@@ -53,6 +66,14 @@ const Appointments = () => {
     reason_for_visit: "",
     source: "walk_in" as const,
   });
+
+
+  const handleAppointmentUpdate = () => {
+    loadData();
+  };
+
+  // Real-time updates
+  useRealtimeAppointments({ onAppointmentUpdate: handleAppointmentUpdate });
 
   useEffect(() => {
     checkAuth();
@@ -90,9 +111,9 @@ const Appointments = () => {
     const [apptRes, patRes, provRes, clinRes, svcRes] = await Promise.all([
       supabase
         .from("appointments")
-        .select("*, patients!inner(first_name, last_name, mrn), services(name)")
+        .select("*, patients!inner(first_name, last_name, mrn), services(name), clinics(name)")
         .order("scheduled_start", { ascending: false })
-        .limit(100),
+        .limit(500),
       supabase.from("patients").select("id, first_name, last_name, mrn").order("first_name").limit(100),
       supabase.from("profiles").select("id, first_name, last_name").order("first_name"),
       supabase.from("clinics").select("*").eq("is_active", true),
@@ -266,17 +287,63 @@ const Appointments = () => {
     setLoading(false);
   };
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      booked: "bg-blue-500",
-      confirmed: "bg-green-500",
-      arrived: "bg-purple-500",
-      in_progress: "bg-orange-500",
-      completed: "bg-gray-500",
-      cancelled: "bg-red-500",
-      no_show: "bg-red-700",
-    };
-    return colors[status] || "bg-gray-500";
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const validStatuses = ["booked", "confirmed", "arrived", "in_progress", "completed", "cancelled", "no_show", "rescheduled"];
+      if (!validStatuses.includes(newStatus)) {
+        throw new Error("Invalid status");
+      }
+
+      const { error } = await supabase
+        .from("appointments")
+        .update({ status: newStatus as any })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Status updated",
+        description: `Appointment status changed to ${newStatus.replace("_", " ")}`,
+      });
+      loadData();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error updating status",
+        description: error.message,
+      });
+    }
+  };
+
+  // Filter appointments
+  const filteredAppointments = appointments.filter((apt) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      `${apt.patients.first_name} ${apt.patients.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      apt.patients.mrn.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || apt.status === statusFilter;
+    const matchesClinic = clinicFilter === "all" || apt.clinics?.name === clinics.find(c => c.id === clinicFilter)?.name;
+    const matchesProvider = 
+      providerFilter === "all" || 
+      (providerFilter === "unassigned" && !apt.profiles) ||
+      (apt.profiles && providers.find(p => p.id === providerFilter && 
+        `${p.first_name} ${p.last_name}` === `${apt.profiles?.first_name} ${apt.profiles?.last_name}`));
+
+    return matchesSearch && matchesStatus && matchesClinic && matchesProvider;
+  });
+
+  // Calculate stats
+  const stats = {
+    total: appointments.length,
+    booked: appointments.filter(a => a.status === "booked").length,
+    completed: appointments.filter(a => a.status === "completed").length,
+    cancelled: appointments.filter(a => a.status === "cancelled").length,
+    today: appointments.filter(a => {
+      const aptDate = new Date(a.scheduled_start);
+      const today = startOfToday();
+      return aptDate.toDateString() === today.toDateString();
+    }).length,
   };
 
   return (
@@ -293,13 +360,17 @@ const Appointments = () => {
                 <p className="text-sm text-muted-foreground hidden sm:block">Manage patient appointments</p>
               </div>
             </div>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full sm:w-auto">
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Appointment
-                </Button>
-              </DialogTrigger>
+            <div className="flex gap-2">
+              <Button variant="outline" size="icon" onClick={() => loadData()}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full sm:w-auto">
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Appointment
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Schedule New Appointment</DialogTitle>
@@ -519,11 +590,12 @@ const Appointments = () => {
                   </form>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 space-y-6">
         {loading ? (
           <Card>
             <CardContent className="py-12">
@@ -548,98 +620,81 @@ const Appointments = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
-            {/* Desktop Table View */}
-            <Card className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date/Time</TableHead>
-                    <TableHead>Patient</TableHead>
-                    <TableHead>Provider</TableHead>
-                    <TableHead>Service</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {appointments.map((appt) => (
-                    <TableRow key={appt.id}>
-                      <TableCell className="font-medium">
-                        {format(new Date(appt.scheduled_start), "PPp")}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{appt.patients?.first_name} {appt.patients?.last_name}</span>
-                          <span className="text-xs text-muted-foreground">{appt.patients?.mrn}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {appt.profiles ? `${appt.profiles.first_name} ${appt.profiles.last_name}` : (
-                          <span className="text-muted-foreground">Any Available</span>
-                        )}
-                      </TableCell>
-                      <TableCell>{appt.services?.name || "-"}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(appt.status)}>
-                          {appt.status.replace("_", " ")}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          <>
+            {/* Stats Grid */}
+            <AppointmentStats stats={stats} />
+
+            {/* Filters */}
+            <Card className="border-2">
+              <CardContent className="p-4">
+                <AppointmentFilters
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  statusFilter={statusFilter}
+                  onStatusFilterChange={setStatusFilter}
+                  clinicFilter={clinicFilter}
+                  onClinicFilterChange={setClinicFilter}
+                  providerFilter={providerFilter}
+                  onProviderFilterChange={setProviderFilter}
+                  clinics={clinics}
+                  providers={providers}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                  totalAppointments={appointments.length}
+                  filteredCount={filteredAppointments.length}
+                />
+              </CardContent>
             </Card>
 
-            {/* Mobile Card View */}
-            <div className="md:hidden space-y-3">
-              {appointments.map((appt) => (
-                <Card key={appt.id} className="overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <CalendarIcon className="h-4 w-4 text-primary flex-shrink-0" />
-                            <span className="text-sm font-medium truncate">
-                              {format(new Date(appt.scheduled_start), "PPp")}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-sm font-medium truncate">
-                                {appt.patients?.first_name} {appt.patients?.last_name}
-                              </span>
-                              <span className="text-xs text-muted-foreground">{appt.patients?.mrn}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <Badge className={getStatusColor(appt.status)}>
-                          {appt.status.replace("_", " ")}
-                        </Badge>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 text-sm">
-                        <UserCheck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <span className="truncate">
-                          {appt.profiles ? `${appt.profiles.first_name} ${appt.profiles.last_name}` : (
-                            <span className="text-muted-foreground">Any Available</span>
-                          )}
-                        </span>
-                      </div>
-                      
-                      {appt.services?.name && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span className="truncate">{appt.services.name}</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
+            {/* Calendar View Navigation */}
+            {viewMode === "calendar" && (
+              <Card className="border-2">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <h2 className="text-lg font-semibold">
+                      {format(currentMonth, "MMMM yyyy")}
+                    </h2>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Appointments Display */}
+            {viewMode === "calendar" ? (
+              <Card className="border-2">
+                <CardContent className="p-4">
+                  <AppointmentCalendarView
+                    appointments={filteredAppointments}
+                    currentMonth={currentMonth}
+                  />
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredAppointments.map((appt) => (
+                  <AppointmentCard
+                    key={appt.id}
+                    appointment={appt}
+                    onStatusChange={handleStatusChange}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>
