@@ -976,12 +976,14 @@ export type Database = {
           id: string
           metadata: Json | null
           notification_type: string
+          read_at: string | null
           recipient_id: string
           recipient_type: string
           sent_at: string | null
           status: string
           subject: string | null
           template_id: string | null
+          user_id: string | null
         }
         Insert: {
           body: string
@@ -991,12 +993,14 @@ export type Database = {
           id?: string
           metadata?: Json | null
           notification_type: string
+          read_at?: string | null
           recipient_id: string
           recipient_type: string
           sent_at?: string | null
           status?: string
           subject?: string | null
           template_id?: string | null
+          user_id?: string | null
         }
         Update: {
           body?: string
@@ -1006,12 +1010,14 @@ export type Database = {
           id?: string
           metadata?: Json | null
           notification_type?: string
+          read_at?: string | null
           recipient_id?: string
           recipient_type?: string
           sent_at?: string | null
           status?: string
           subject?: string | null
           template_id?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {

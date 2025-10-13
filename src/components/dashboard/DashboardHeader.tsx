@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AIClinicalAssistant } from "./AIClinicalAssistant";
 import { AIVoiceAssistant } from "./AIVoiceAssistant";
+import { NotificationBell } from "./NotificationBell";
 
 interface DashboardHeaderProps {
   user: User | null;
@@ -52,35 +53,7 @@ export function DashboardHeader({
             <span className="hidden sm:inline">AI Assistant</span>
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px]"
-                >
-                  2
-                </Badge>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72 bg-popover">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer py-3">
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium">New appointment booked</p>
-                  <p className="text-xs text-muted-foreground">Sarah Johnson - 10 minutes ago</p>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer py-3">
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium">Patient checked in</p>
-                  <p className="text-xs text-muted-foreground">Michael Brown - 25 minutes ago</p>
-                </div>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <NotificationBell />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

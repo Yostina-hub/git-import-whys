@@ -122,6 +122,7 @@ serve(async (req) => {
         body: personalizedBody,
         template_id,
         status: "pending",
+        user_id: recipient_type !== "patient" ? recipientId : null, // Add user_id for staff notifications
         metadata: {
           recipient_email: recipientEmail,
           recipient_phone: recipientPhone,
