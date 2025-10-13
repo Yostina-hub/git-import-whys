@@ -2687,6 +2687,7 @@ export type Database = {
         | "walk_in"
         | "mobile_app"
         | "referral"
+        | "online"
       appointment_status:
         | "booked"
         | "confirmed"
@@ -2910,6 +2911,7 @@ export const Constants = {
         "walk_in",
         "mobile_app",
         "referral",
+        "online",
       ],
       appointment_status: [
         "booked",
