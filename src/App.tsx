@@ -27,6 +27,7 @@ import PublicPortal from "./pages/PublicPortal";
 import Resources from "./pages/Resources";
 import QueueDisplay from "./pages/QueueDisplay";
 import Configuration from "./pages/Configuration";
+import OnlineConsultation from "./pages/OnlineConsultation";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/" element={<PublicPortal />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/queue-display" element={<QueueDisplay />} />
+          <Route path="/online-consultation" element={<OnlineConsultation />} />
 
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
