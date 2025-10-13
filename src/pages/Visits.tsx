@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, 
-  Plus, 
   Search, 
   ClipboardCheck, 
   Users, 
@@ -22,7 +21,6 @@ import {
   FileText,
   Eye
 } from "lucide-react";
-import { CreateVisitDialog } from "@/components/visits/CreateVisitDialog";
 import { UpdateVisitDialog } from "@/components/visits/UpdateVisitDialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
@@ -33,7 +31,6 @@ const Visits = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [updatingVisit, setUpdatingVisit] = useState<any>(null);
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
   const [stats, setStats] = useState({
@@ -184,12 +181,8 @@ const Visits = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">Visits & Admissions</h1>
-              <p className="text-muted-foreground mt-1">Track patient journeys from admission to discharge</p>
+              <p className="text-muted-foreground mt-1">Monitor patient journeys from admission to discharge</p>
             </div>
-            <Button onClick={() => setCreateDialogOpen(true)} size="lg">
-              <Plus className="h-4 w-4 mr-2" />
-              New Visit
-            </Button>
           </div>
         </div>
       </header>
@@ -456,12 +449,6 @@ const Visits = () => {
           </CardContent>
         </Card>
       </main>
-
-      <CreateVisitDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onSuccess={loadVisits}
-      />
 
       {updatingVisit && (
         <UpdateVisitDialog
