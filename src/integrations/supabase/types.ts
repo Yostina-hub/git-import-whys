@@ -2492,6 +2492,7 @@ export type Database = {
         | "billing"
         | "manager"
         | "patient"
+        | "nurse"
       appointment_source:
         | "call_center"
         | "website"
@@ -2713,6 +2714,7 @@ export const Constants = {
         "billing",
         "manager",
         "patient",
+        "nurse",
       ],
       appointment_source: [
         "call_center",

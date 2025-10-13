@@ -65,6 +65,7 @@ export const UserManagementTab = () => {
       admin: "bg-red-500",
       manager: "bg-purple-500",
       clinician: "bg-blue-500",
+      nurse: "bg-teal-500",
       reception: "bg-green-500",
       billing: "bg-yellow-500",
     };

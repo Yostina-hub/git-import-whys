@@ -25,6 +25,7 @@ const AVAILABLE_ROLES = [
   { value: "admin", label: "Admin", description: "Full system access", icon: Shield },
   { value: "manager", label: "Manager", description: "View analytics and reports", icon: Shield },
   { value: "clinician", label: "Clinician", description: "Clinical workflows and patient care", icon: Shield },
+  { value: "nurse", label: "Nurse", description: "Triage and patient assessment", icon: Shield },
   { value: "reception", label: "Reception", description: "Patient registration and scheduling", icon: Shield },
   { value: "billing", label: "Billing", description: "Financial operations", icon: Shield },
 ];
