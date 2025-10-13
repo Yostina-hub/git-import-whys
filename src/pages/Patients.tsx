@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePatients, Patient } from "@/hooks/usePatients";
 import { useRegistrationService } from "@/hooks/useRegistrationService";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,8 +25,26 @@ const Patients = () => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [resumingPatient, setResumingPatient] = useState<any>(null);
+  const [consultationService, setConsultationService] = useState<any>(null);
   
   const registrationService = useRegistrationService();
+  
+  // Load consultation service
+  useState(() => {
+    const loadConsultationService = async () => {
+      const { data } = await supabase
+        .from("services")
+        .select("id, name, unit_price")
+        .eq("code", "CONSULT")
+        .eq("is_active", true)
+        .maybeSingle();
+      
+      if (data) {
+        setConsultationService(data);
+      }
+    };
+    loadConsultationService();
+  });
   const {
     patients,
     loading,
@@ -123,6 +142,8 @@ const Patients = () => {
                     <PatientRegistrationForm
                       registrationServiceId={registrationService.id}
                       registrationPrice={registrationService.unit_price}
+                      consultationServiceId={consultationService?.id}
+                      consultationPrice={consultationService?.unit_price}
                       onSuccess={handleRegistrationSuccess}
                       onCancel={() => {
                         setIsDialogOpen(false);
