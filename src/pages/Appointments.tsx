@@ -77,7 +77,7 @@ const Appointments = () => {
     const [apptRes, patRes, provRes, clinRes, svcRes] = await Promise.all([
       supabase
         .from("appointments")
-        .select("*, patients!inner(first_name, last_name, mrn), profiles!inner(first_name, last_name), services!inner(name)")
+        .select("*, patients!inner(first_name, last_name, mrn), profiles(first_name, last_name), services(name)")
         .order("scheduled_start", { ascending: false })
         .limit(100),
       supabase.from("patients").select("id, first_name, last_name, mrn").order("first_name").limit(100),
@@ -200,29 +200,26 @@ const Appointments = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
+      <header className="sticky top-0 z-10 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-2">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          <h1 className="text-2xl font-bold">Appointment Management</h1>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Appointments</CardTitle>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Appointment
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold">Appointments</h1>
+                <p className="text-sm text-muted-foreground hidden sm:block">Manage patient appointments</p>
+              </div>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Appointment
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Schedule New Appointment</DialogTitle>
                   </DialogHeader>
@@ -439,51 +436,130 @@ const Appointments = () => {
                       </Button>
                     </div>
                   </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date/Time</TableHead>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>Provider</TableHead>
-                  <TableHead>Service</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {appointments.map((appt) => (
-                  <TableRow key={appt.id}>
-                    <TableCell>
-                      {new Date(appt.scheduled_start).toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      {appt.patients?.mrn} - {appt.patients?.first_name} {appt.patients?.last_name}
-                    </TableCell>
-                    <TableCell>
-                      {appt.profiles ? `${appt.profiles.first_name} ${appt.profiles.last_name}` : "Any Available"}
-                    </TableCell>
-                    <TableCell>{appt.services?.name || "-"}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(appt.status)}>
-                        {appt.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+      </header>
 
-            {appointments.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No appointments scheduled yet.
+      <main className="container mx-auto px-4 py-6">
+        {loading ? (
+          <Card>
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center justify-center gap-2">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                <p className="text-sm text-muted-foreground">Loading appointments...</p>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : appointments.length === 0 ? (
+          <Card>
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center justify-center gap-2 text-center">
+                <CalendarIcon className="h-12 w-12 text-muted-foreground/50" />
+                <h3 className="text-lg font-semibold">No appointments scheduled</h3>
+                <p className="text-sm text-muted-foreground">Create your first appointment to get started</p>
+                <Button onClick={() => setIsDialogOpen(true)} className="mt-4">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Appointment
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {/* Desktop Table View */}
+            <Card className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date/Time</TableHead>
+                    <TableHead>Patient</TableHead>
+                    <TableHead>Provider</TableHead>
+                    <TableHead>Service</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {appointments.map((appt) => (
+                    <TableRow key={appt.id}>
+                      <TableCell className="font-medium">
+                        {format(new Date(appt.scheduled_start), "PPp")}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{appt.patients?.first_name} {appt.patients?.last_name}</span>
+                          <span className="text-xs text-muted-foreground">{appt.patients?.mrn}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {appt.profiles ? `${appt.profiles.first_name} ${appt.profiles.last_name}` : (
+                          <span className="text-muted-foreground">Any Available</span>
+                        )}
+                      </TableCell>
+                      <TableCell>{appt.services?.name || "-"}</TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(appt.status)}>
+                          {appt.status.replace("_", " ")}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+              {appointments.map((appt) => (
+                <Card key={appt.id} className="overflow-hidden">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <CalendarIcon className="h-4 w-4 text-primary flex-shrink-0" />
+                            <span className="text-sm font-medium truncate">
+                              {format(new Date(appt.scheduled_start), "PPp")}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-sm font-medium truncate">
+                                {appt.patients?.first_name} {appt.patients?.last_name}
+                              </span>
+                              <span className="text-xs text-muted-foreground">{appt.patients?.mrn}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Badge className={getStatusColor(appt.status)}>
+                          {appt.status.replace("_", " ")}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-sm">
+                        <UserCheck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="truncate">
+                          {appt.profiles ? `${appt.profiles.first_name} ${appt.profiles.last_name}` : (
+                            <span className="text-muted-foreground">Any Available</span>
+                          )}
+                        </span>
+                      </div>
+                      
+                      {appt.services?.name && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="truncate">{appt.services.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
