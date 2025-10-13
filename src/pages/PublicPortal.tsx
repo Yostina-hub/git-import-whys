@@ -1,14 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, Calendar, Users, Sparkles, ArrowRight, Activity, Shield, Clock, Star, Zap, Brain, Stethoscope, Pill, TestTube, Target, LineChart, Microscope, Play } from "lucide-react";
+import { Heart, Calendar, Users, Sparkles, ArrowRight, Activity, Shield, Clock, Star, Zap, Brain, Stethoscope, Pill, TestTube, Target, LineChart, Microscope, Play, Waves, Radio, Sparkle } from "lucide-react";
 import { PublicAppointmentBooking } from "@/components/appointments/PublicAppointmentBooking";
 import { PublicFooter } from "@/components/public/PublicFooter";
 import { Badge } from "@/components/ui/badge";
 
 const PublicPortal = () => {
   const navigate = useNavigate();
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const benefits = [
     {
@@ -74,7 +81,7 @@ const PublicPortal = () => {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-2xl blur-lg opacity-50 animate-pulse" />
-                <div className="relative p-3 rounded-2xl bg-gradient-to-br from-primary to-secondary shadow-xl">
+                <div className="relative p-3 rounded-2xl bg-gradient-to-br from-primary to-secondary shadow-xl hover:scale-110 transition-transform duration-300">
                   <Brain className="h-8 w-8 text-white" />
                 </div>
               </div>
@@ -82,7 +89,7 @@ const PublicPortal = () => {
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
                   Zemar
                 </h1>
-                <p className="text-xs text-muted-foreground">by Neuro Spinal Innovation</p>
+                <p className="text-xs text-muted-foreground font-medium">by Neuro Spinal Innovation</p>
               </div>
             </div>
             
@@ -150,9 +157,10 @@ const PublicPortal = () => {
           <div className="container mx-auto relative z-10">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               {/* Left Content */}
-              <div className="space-y-8">
-                <div className="inline-block">
-                  <span className="px-4 py-2 bg-primary/10 backdrop-blur-sm rounded-full text-primary font-semibold border border-primary/20 text-sm">
+              <div className="space-y-8 animate-fade-in">
+                <div className="inline-block animate-slide-in-right">
+                  <span className="px-4 py-2 bg-primary/10 backdrop-blur-sm rounded-full text-primary font-semibold border border-primary/20 text-sm flex items-center gap-2 w-fit">
+                    <Sparkle className="h-4 w-4 animate-spin" style={{ animationDuration: '3s' }} />
                     Powered by Neuro Spinal Innovation
                   </span>
                 </div>
@@ -227,13 +235,117 @@ const PublicPortal = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {benefits.map((benefit, index) => (
-                <Card key={index} className="p-8 text-center hover:shadow-xl transition-all hover:-translate-y-2 bg-card border-primary/20 group">
-                  <div className="w-20 h-20 mx-auto mb-6 bg-primary/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <benefit.icon className="h-10 w-10 text-primary" />
+                <Card 
+                  key={index} 
+                  className="p-8 text-center hover:shadow-xl transition-all hover:-translate-y-2 bg-card border-primary/20 group animate-fade-in"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:blur-2xl transition-all" />
+                    <div className="relative w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
+                      <benefit.icon className="h-10 w-10 text-primary" />
+                    </div>
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{benefit.title}</h3>
+                  <h3 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">{benefit.title}</h3>
                   <p className="text-muted-foreground leading-relaxed">{benefit.description}</p>
                 </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* NSI Technology Showcase */}
+        <section className="py-24 px-4 bg-gradient-to-br from-primary/10 via-background to-secondary/10 overflow-hidden relative">
+          {/* Animated wave lines */}
+          <div className="absolute inset-0 opacity-20">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse"
+                style={{
+                  top: `${20 + i * 15}%`,
+                  animationDelay: `${i * 0.5}s`,
+                  animationDuration: '3s'
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="container mx-auto relative z-10">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-3 mb-6 animate-bounce" style={{ animationDuration: '3s' }}>
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-2xl">
+                  <Radio className="h-8 w-8 text-white animate-pulse" />
+                </div>
+              </div>
+              <h2 className="text-4xl md:text-6xl font-bold mb-6">
+                <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+                  ALKINDI Technology
+                </span>
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                Accelerated Low-Frequency Kinetically Directed Impulses
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {[
+                {
+                  icon: Waves,
+                  title: "Precision Delivery",
+                  description: "ALKINDI pulses are delivered directly to damaged or compromised regions with pinpoint accuracy using advanced 3D diagnostics.",
+                  delay: "0s"
+                },
+                {
+                  icon: Brain,
+                  title: "Gene Expression",
+                  description: "Scientifically proven to positively influence gene expression at the cellular level, promoting deep healing from within.",
+                  delay: "0.2s"
+                },
+                {
+                  icon: Heart,
+                  title: "Personalized Protocols",
+                  description: "ZEMAR Intelligence software creates customized treatment protocols addressing your unique pain and dysfunction patterns.",
+                  delay: "0.4s"
+                }
+              ].map((feature, idx) => (
+                <Card 
+                  key={idx} 
+                  className="border-2 border-primary/30 bg-card/80 backdrop-blur-sm hover:scale-105 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 group"
+                  style={{ animationDelay: feature.delay }}
+                >
+                  <CardContent className="pt-8 text-center">
+                    <div className="relative mb-6 inline-block">
+                      <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:blur-2xl transition-all" />
+                      <div className="relative w-20 h-20 mx-auto bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center group-hover:rotate-12 transition-transform duration-500">
+                        <feature.icon className="h-10 w-10 text-white" />
+                      </div>
+                    </div>
+                    <h3 className="text-2xl font-bold mb-4 group-hover:text-primary transition-colors">{feature.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Animated stats bar */}
+            <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+              {[
+                { label: "Clinical Studies", value: "200+" },
+                { label: "Data Points", value: "2M+" },
+                { label: "Success Rate", value: "98%" },
+                { label: "Countries", value: "25+" }
+              ].map((stat, idx) => (
+                <div 
+                  key={idx} 
+                  className="text-center p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 hover:scale-110 transition-all duration-300 animate-fade-in"
+                  style={{ animationDelay: `${idx * 0.1}s` }}
+                >
+                  <div className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
+                    {stat.value}
+                  </div>
+                  <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
+                </div>
               ))}
             </div>
           </div>
@@ -244,26 +356,32 @@ const PublicPortal = () => {
           <div className="container mx-auto">
             <div className="max-w-6xl mx-auto">
               <div className="text-center mb-12">
-                <Badge className="bg-primary/10 text-primary border-primary/20 px-6 py-2 text-sm mb-4">
+                <Badge className="bg-primary/10 text-primary border-primary/20 px-6 py-2 text-sm mb-4 animate-pulse">
                   About Us
                 </Badge>
-                <h2 className="text-4xl md:text-5xl font-bold mb-8">
-                  The <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">ZEMAR</span> Treatment
+                <h2 className="text-4xl md:text-5xl font-bold mb-8 animate-fade-in">
+                  The <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">ZEMAR</span> Treatment
                 </h2>
               </div>
 
-              <div className="bg-card/50 backdrop-blur-sm border-2 border-primary/20 rounded-3xl p-8 md:p-12">
-                <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                  Neuro Spinal Innovation (NSI) is proud to introduce the ZEMAR device, a ground-breaking treatment for, among other things, back and neck pain. This non-invasive medical device delivers Accelerated Low-Frequency Kinetically Directed Impulses (ALKINDI pulses) directly to the region of the body that has been damaged or compromised.
-                </p>
-                <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                  The delivery of the ALKINDI pulses through the ZEMAR device has been shown to positively influence gene expression. The era of deep healing has arrived. The ZEMAR Intelligence software and 3D diagnostics allow clinicians to build a personalized treatment protocol to address the root cause of pain and dysfunction.
-                </p>
-                <div className="flex justify-center pt-6">
-                  <Button size="lg" className="bg-gradient-to-r from-primary to-secondary hover:opacity-90">
-                    Learn More
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
+              <div className="bg-card/50 backdrop-blur-sm border-2 border-primary/20 rounded-3xl p-8 md:p-12 relative overflow-hidden group hover:border-primary/40 transition-all duration-500">
+                {/* Animated corner accent */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-br from-secondary/20 to-primary/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+                
+                <div className="relative z-10">
+                  <p className="text-lg text-muted-foreground leading-relaxed mb-6">
+                    <span className="font-bold text-primary">Neuro Spinal Innovation (NSI)</span> is proud to introduce the ZEMAR device, a ground-breaking treatment for, among other things, back and neck pain. This non-invasive medical device delivers <span className="font-semibold text-primary">Accelerated Low-Frequency Kinetically Directed Impulses (ALKINDI pulses)</span> directly to the region of the body that has been damaged or compromised.
+                  </p>
+                  <p className="text-lg text-muted-foreground leading-relaxed mb-6">
+                    The delivery of the ALKINDI pulses through the ZEMAR device has been shown to <span className="font-semibold text-primary">positively influence gene expression</span>. The era of deep healing has arrived. The <span className="font-semibold text-primary">ZEMAR Intelligence software and 3D diagnostics</span> allow clinicians to build a personalized treatment protocol to address the root cause of pain and dysfunction.
+                  </p>
+                  <div className="flex justify-center pt-6">
+                    <Button size="lg" className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 group">
+                      Learn More
+                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -375,8 +493,38 @@ const PublicPortal = () => {
           }
         }
 
+        @keyframes slide-in-right {
+          from {
+            transform: translateX(-100px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
         .animate-float {
           animation: float linear infinite;
+        }
+
+        .animate-slide-in-right {
+          animation: slide-in-right 0.8s ease-out;
+        }
+
+        .animate-fade-in {
+          animation: fade-in 0.8s ease-out;
         }
       `}</style>
     </div>
