@@ -179,7 +179,12 @@ const ClinicalRecords = () => {
         ) : (
           <div className="space-y-6">
             {/* Patient Info Card */}
-            <PatientInfoCard patient={patient} age={calculateAge(patient.date_of_birth)} />
+            {patient ? (
+              <PatientInfoCard patient={patient} age={patient.date_of_birth ? calculateAge(patient.date_of_birth) : 0} />
+            ) : (
+              <Card><CardContent className="p-6 text-muted-foreground">Loading patient...</CardContent></Card>
+            )}
+
 
             {/* Clinical Stats */}
             <ClinicalStats
