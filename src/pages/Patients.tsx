@@ -14,12 +14,14 @@ import { DocumentsTab } from "@/components/documents/DocumentsTab";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
 import { PatientTable } from "@/components/patients/PatientTable";
 import { PatientRegistrationForm } from "@/components/patients/PatientRegistrationForm";
+import { PatientDetailsDialog } from "@/components/patients/PatientDetailsDialog";
 
 const Patients = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   
   const registrationService = useRegistrationService();
   const {
@@ -36,6 +38,7 @@ const Patients = () => {
 
   const handleViewPatient = (patient: Patient) => {
     setSelectedPatient(patient);
+    setShowDetailsDialog(true);
   };
 
   const handleViewInvoices = (patientId: string, invoiceId: string | undefined, patientName: string) => {
@@ -284,6 +287,13 @@ const Patients = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Patient Details Dialog */}
+        <PatientDetailsDialog
+          patient={selectedPatient}
+          open={showDetailsDialog}
+          onOpenChange={setShowDetailsDialog}
+        />
       </main>
     </div>
   );
