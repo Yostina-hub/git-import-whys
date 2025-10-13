@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ClinicalSummary } from "./ClinicalSummary";
 import { VisitTimeline } from "./VisitTimeline";
+import { ClinicalAIAssistant } from "./ClinicalAIAssistant";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -23,6 +24,10 @@ export const PatientClinicalHistory = ({ patientId }: PatientClinicalHistoryProp
   });
   const [visits, setVisits] = useState<any[]>([]);
   const [emrNotes, setEmrNotes] = useState<any[]>([]);
+  const [patient, setPatient] = useState<any>(null);
+  const [medications, setMedications] = useState<any[]>([]);
+  const [allergies, setAllergies] = useState<any[]>([]);
+  const [recentVitals, setRecentVitals] = useState<any[]>([]);
 
   useEffect(() => {
     if (patientId) {
@@ -38,12 +43,21 @@ export const PatientClinicalHistory = ({ patientId }: PatientClinicalHistoryProp
     try {
       // Load all clinical data in parallel
       const [
+        patientRes,
         visitsRes,
         notesRes,
         medicationsRes,
         allergiesRes,
         appointmentsRes,
+        vitalsRes,
       ] = await Promise.all([
+        // Patient info
+        supabase
+          .from("patients")
+          .select("*")
+          .eq("id", patientId)
+          .maybeSingle(),
+        
         // Visits
         supabase
           .from("visits")
@@ -80,7 +94,15 @@ export const PatientClinicalHistory = ({ patientId }: PatientClinicalHistoryProp
           .select("*")
           .eq("patient_id", patientId)
           .gte("scheduled_start", new Date().toISOString())
-          .in("status", ["booked", "confirmed"])
+          .in("status", ["booked", "confirmed"]),
+        
+        // Recent vital signs
+        supabase
+          .from("vital_signs")
+          .select("*")
+          .eq("patient_id", patientId)
+          .order("recorded_at", { ascending: false })
+          .limit(10)
       ]);
 
       // Set stats
@@ -93,8 +115,12 @@ export const PatientClinicalHistory = ({ patientId }: PatientClinicalHistoryProp
         upcomingAppointments: appointmentsRes.data?.length || 0,
       });
 
+      setPatient(patientRes.data);
       setVisits(visitsRes.data || []);
       setEmrNotes(notesRes.data || []);
+      setMedications(medicationsRes.data || []);
+      setAllergies(allergiesRes.data || []);
+      setRecentVitals(vitalsRes.data || []);
 
     } catch (error: any) {
       toast({
@@ -140,9 +166,35 @@ export const PatientClinicalHistory = ({ patientId }: PatientClinicalHistoryProp
     );
   }
 
+  const calculateAge = (dateOfBirth: string) => {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   return (
     <div className="space-y-6">
       <ClinicalSummary stats={stats} />
+      
+      <ClinicalAIAssistant
+        patientData={{
+          patient: patient ? {
+            ...patient,
+            age: patient.date_of_birth ? calculateAge(patient.date_of_birth) : null,
+          } : null,
+          stats,
+          allergies: allergies,
+          medications: medications,
+          recentNotes: emrNotes.slice(0, 5),
+          recentVitals: recentVitals,
+        }}
+      />
+      
       <VisitTimeline visits={visits} emrNotes={emrNotes} />
     </div>
   );
