@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Loader2, FileText, Save } from 'lucide-react';
+import { Loader2, FileText, Save, Copy, ExternalLink } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function OnlineConsultation() {
   const navigate = useNavigate();
@@ -185,8 +186,39 @@ export default function OnlineConsultation() {
     return null;
   }
 
+  const copyJoinLink = () => {
+    const joinUrl = `${window.location.origin}/join-consultation?id=${consultationId}`;
+    navigator.clipboard.writeText(joinUrl);
+    toast({
+      title: 'Link Copied!',
+      description: 'Share this link with the patient to join',
+    });
+  };
+
   return (
     <div className="h-screen flex flex-col">
+      {/* Header with Patient Info and Join Link */}
+      <div className="bg-card border-b px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-500/20">
+            Live Consultation
+          </Badge>
+          <span className="text-sm font-medium">{patient.first_name} {patient.last_name}</span>
+          <span className="text-sm text-muted-foreground">MRN: {patient.mrn}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={copyJoinLink}
+            className="gap-2"
+          >
+            <Copy className="h-4 w-4" />
+            Copy Patient Link
+          </Button>
+        </div>
+      </div>
+
       {/* Video Call Interface */}
       <VideoCallInterface
         roomId={consultation.room_id}

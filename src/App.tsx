@@ -28,6 +28,7 @@ import Resources from "./pages/Resources";
 import QueueDisplay from "./pages/QueueDisplay";
 import Configuration from "./pages/Configuration";
 import OnlineConsultation from "./pages/OnlineConsultation";
+import JoinConsultation from "./pages/JoinConsultation";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/queue-display" element={<QueueDisplay />} />
           <Route path="/online-consultation" element={<OnlineConsultation />} />
+          <Route path="/join-consultation" element={<JoinConsultation />} />
 
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
