@@ -42,30 +42,77 @@ export const RecordPaymentDialog = ({
     e.preventDefault();
     setLoading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from("payments").insert([{
-      invoice_id: invoice.id,
-      amount: Number(formData.amount),
-      method: formData.method as any,
-      transaction_ref: formData.transaction_ref || null,
-      notes: formData.notes || null,
-      received_by: user?.id,
-    }]);
+      const { error: paymentError } = await supabase.from("payments").insert([{
+        invoice_id: invoice.id,
+        amount: Number(formData.amount),
+        method: formData.method as any,
+        transaction_ref: formData.transaction_ref || null,
+        notes: formData.notes || null,
+        received_by: user?.id,
+      }]);
 
-    setLoading(false);
+      if (paymentError) throw paymentError;
 
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error recording payment",
-        description: error.message,
-      });
-    } else {
-      toast({
-        title: "Payment recorded",
-        description: "Payment has been recorded successfully",
-      });
+      // Check if invoice is now fully paid
+      const { data: updatedInvoice } = await supabase
+        .from("invoices")
+        .select("status, balance_due, patient_id")
+        .eq("id", invoice.id)
+        .single();
+
+      // If payment is complete, automatically add patient to triage queue
+      if (updatedInvoice && (updatedInvoice.status === "paid" || updatedInvoice.balance_due <= 0)) {
+        // Find triage queue
+        const { data: triageQueue } = await supabase
+          .from("queues")
+          .select("id")
+          .eq("queue_type", "triage")
+          .eq("is_active", true)
+          .single();
+
+        if (triageQueue) {
+          // Generate token number
+          const { data: tokenData } = await supabase.rpc("generate_ticket_token", {
+            queue_prefix: "Q"
+          });
+          const tokenNumber = tokenData || `Q${Date.now()}`;
+
+          // Add to triage queue
+          await supabase.from("tickets").insert([{
+            queue_id: triageQueue.id,
+            patient_id: updatedInvoice.patient_id,
+            token_number: tokenNumber,
+            status: "waiting",
+            priority: "routine",
+            notes: "Auto-added after payment completion",
+          }]);
+
+          // Update patient registration status to completed
+          await supabase
+            .from("patients")
+            .update({ registration_status: "completed" })
+            .eq("id", updatedInvoice.patient_id);
+
+          toast({
+            title: "Payment recorded & transferred to triage",
+            description: `Patient automatically added to triage queue with token ${tokenNumber}`,
+          });
+        } else {
+          toast({
+            title: "Payment recorded",
+            description: "Payment has been recorded successfully",
+          });
+        }
+      } else {
+        toast({
+          title: "Payment recorded",
+          description: "Payment has been recorded successfully",
+        });
+      }
+
       setOpen(false);
       setFormData({
         amount: 0,
@@ -74,6 +121,14 @@ export const RecordPaymentDialog = ({
         notes: "",
       });
       onPaymentRecorded();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error recording payment",
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
