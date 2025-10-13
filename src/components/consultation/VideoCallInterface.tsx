@@ -48,6 +48,7 @@ export function VideoCallInterface({
   const localStreamRef = useRef<MediaStream | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
+  const remotePeerIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     initializeCall();
@@ -130,12 +131,13 @@ export function VideoCallInterface({
 
     // Handle ICE candidates
     peerConnectionRef.current.onicecandidate = (event) => {
-      if (event.candidate && wsRef.current?.readyState === WebSocket.OPEN) {
+      if (event.candidate && wsRef.current?.readyState === WebSocket.OPEN && remotePeerIdRef.current) {
+        console.log('Sending ICE candidate to:', remotePeerIdRef.current);
         wsRef.current.send(
           JSON.stringify({
             type: 'ice-candidate',
             candidate: event.candidate,
-            targetId: 'other-peer', // In real app, track peer IDs
+            targetId: remotePeerIdRef.current,
           })
         );
       }
@@ -157,25 +159,38 @@ export function VideoCallInterface({
 
   const handleSignalingMessage = async (event: MessageEvent) => {
     const message = JSON.parse(event.data);
-    console.log('Received signaling message:', message.type);
+    console.log('Received signaling message:', message.type, message);
 
     switch (message.type) {
       case 'user-connected':
-        // Create and send offer
-        if (peerConnectionRef.current) {
-          const offer = await peerConnectionRef.current.createOffer();
-          await peerConnectionRef.current.setLocalDescription(offer);
-          wsRef.current?.send(
-            JSON.stringify({
-              type: 'offer',
-              offer,
-              targetId: message.userId,
-            })
-          );
+        console.log('User connected:', message.userId);
+        // Store the remote peer ID
+        if (message.userId !== userId) {
+          remotePeerIdRef.current = message.userId;
+          console.log('Stored remote peer ID:', remotePeerIdRef.current);
+          
+          // Create and send offer
+          if (peerConnectionRef.current) {
+            console.log('Creating offer for:', message.userId);
+            const offer = await peerConnectionRef.current.createOffer();
+            await peerConnectionRef.current.setLocalDescription(offer);
+            wsRef.current?.send(
+              JSON.stringify({
+                type: 'offer',
+                offer,
+                targetId: message.userId,
+              })
+            );
+            console.log('Sent offer to:', message.userId);
+          }
         }
         break;
 
       case 'offer':
+        console.log('Received offer from:', message.senderId);
+        // Store the remote peer ID
+        remotePeerIdRef.current = message.senderId;
+        
         if (peerConnectionRef.current) {
           await peerConnectionRef.current.setRemoteDescription(
             new RTCSessionDescription(message.offer)
@@ -189,10 +204,12 @@ export function VideoCallInterface({
               targetId: message.senderId,
             })
           );
+          console.log('Sent answer to:', message.senderId);
         }
         break;
 
       case 'answer':
+        console.log('Received answer from:', message.senderId);
         if (peerConnectionRef.current) {
           await peerConnectionRef.current.setRemoteDescription(
             new RTCSessionDescription(message.answer)
@@ -201,18 +218,26 @@ export function VideoCallInterface({
         break;
 
       case 'ice-candidate':
+        console.log('Received ICE candidate from:', message.senderId);
         if (peerConnectionRef.current && message.candidate) {
-          await peerConnectionRef.current.addIceCandidate(
-            new RTCIceCandidate(message.candidate)
-          );
+          try {
+            await peerConnectionRef.current.addIceCandidate(
+              new RTCIceCandidate(message.candidate)
+            );
+            console.log('Added ICE candidate');
+          } catch (error) {
+            console.error('Error adding ICE candidate:', error);
+          }
         }
         break;
 
       case 'user-disconnected':
+        console.log('User disconnected:', message.userId);
         setRemoteConnected(false);
+        remotePeerIdRef.current = null;
         toast({
           title: 'Participant Left',
-          description: `${message.userId} has left the call`,
+          description: 'The other participant has left the call',
         });
         break;
     }
