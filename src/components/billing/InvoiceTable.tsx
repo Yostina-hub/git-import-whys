@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, FileText, Calendar, DollarSign, CreditCard, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { User, FileText, Calendar, DollarSign, CreditCard, ArrowUpDown, ArrowUp, ArrowDown, Eye } from "lucide-react";
 import { RecordPaymentDialog } from "./RecordPaymentDialog";
+import { InvoiceDetailsDialog } from "./InvoiceDetailsDialog";
 
 interface InvoiceTableProps {
   invoices: any[];
@@ -16,6 +17,7 @@ type SortOrder = 'asc' | 'desc' | null;
 export const InvoiceTable = ({ invoices, onPaymentRecorded }: InvoiceTableProps) => {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -257,18 +259,37 @@ export const InvoiceTable = ({ invoices, onPaymentRecorded }: InvoiceTableProps)
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  {invoice.balance_due > 0 && invoice.status !== 'void' && (
-                    <RecordPaymentDialog 
-                      invoice={invoice} 
-                      onPaymentRecorded={onPaymentRecorded} 
-                    />
-                  )}
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedInvoice(invoice)}
+                      className="gap-2"
+                    >
+                      <Eye className="h-4 w-4" />
+                      View
+                    </Button>
+                    {invoice.balance_due > 0 && invoice.status !== 'void' && (
+                      <RecordPaymentDialog 
+                        invoice={invoice} 
+                        onPaymentRecorded={onPaymentRecorded} 
+                      />
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             );
           })}
         </TableBody>
       </Table>
+
+      {selectedInvoice && (
+        <InvoiceDetailsDialog
+          invoice={selectedInvoice}
+          open={!!selectedInvoice}
+          onOpenChange={(open) => !open && setSelectedInvoice(null)}
+        />
+      )}
     </div>
   );
 };
