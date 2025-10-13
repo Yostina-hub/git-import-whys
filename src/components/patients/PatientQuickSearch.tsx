@@ -28,31 +28,50 @@ export function PatientQuickSearch() {
     setSearching(true);
 
     try {
+      // Search with both appointments and visits for complete history
       const { data, error } = await supabase
         .from("patients")
-        .select(`
-          *,
-          appointments:appointments(count),
-          last_visit:appointments(scheduled_start, status)
-        `)
+        .select("*")
         .or(`mrn.ilike.%${query}%,first_name.ilike.%${query}%,last_name.ilike.%${query}%,phone_mobile.ilike.%${query}%`)
         .order("created_at", { ascending: false })
         .limit(5);
 
       if (error) throw error;
 
-      // Process results to add visit count and last visit info
+      // Fetch both appointments and visits for each patient
+      const patientIds = data?.map(p => p.id) || [];
+      
+      const [appointmentsRes, visitsRes] = await Promise.all([
+        supabase
+          .from("appointments")
+          .select("patient_id, scheduled_start, status")
+          .in("patient_id", patientIds),
+        supabase
+          .from("visits")
+          .select("patient_id, opened_at, state")
+          .in("patient_id", patientIds)
+      ]);
+
+      // Process results to add combined visit count
       const processedResults = data?.map(patient => {
-        const visits = patient.appointments as any[];
-        const lastVisit = visits && visits.length > 0 
-          ? visits.sort((a: any, b: any) => new Date(b.scheduled_start).getTime() - new Date(a.scheduled_start).getTime())[0]
-          : null;
+        // Count appointments
+        const appointments = appointmentsRes.data?.filter(a => a.patient_id === patient.id) || [];
+        // Count visits
+        const visits = visitsRes.data?.filter(v => v.patient_id === patient.id) || [];
+        
+        // Combine all dates to find the most recent
+        const allDates = [
+          ...appointments.map(a => ({ date: a.scheduled_start, type: 'appointment' })),
+          ...visits.map(v => ({ date: v.opened_at, type: 'visit' }))
+        ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        const totalVisits = appointments.length + visits.length;
         
         return {
           ...patient,
-          visitCount: visits?.length || 0,
-          lastVisitDate: lastVisit?.scheduled_start,
-          isReturning: (visits?.length || 0) > 0
+          visitCount: totalVisits,
+          lastVisitDate: allDates[0]?.date,
+          isReturning: totalVisits > 0
         };
       }) || [];
 

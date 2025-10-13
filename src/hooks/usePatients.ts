@@ -86,12 +86,19 @@ export const usePatients = (): UsePatientsReturn => {
       .select("patient_id, id, status")
       .in("patient_id", patientIds);
 
-    // Fetch appointment counts and last visit for all patients
-    const { data: appointments } = await supabase
-      .from("appointments")
-      .select("patient_id, scheduled_start, status")
-      .in("patient_id", patientIds)
-      .order("scheduled_start", { ascending: false });
+    // Fetch both appointments and visits for complete visit history
+    const [appointmentsRes, visitsRes] = await Promise.all([
+      supabase
+        .from("appointments")
+        .select("patient_id, scheduled_start, status")
+        .in("patient_id", patientIds)
+        .order("scheduled_start", { ascending: false }),
+      supabase
+        .from("visits")
+        .select("patient_id, opened_at, state")
+        .in("patient_id", patientIds)
+        .order("opened_at", { ascending: false })
+    ]);
 
     // Create a map of patient_id to invoice status
     const invoiceMap = new Map();
@@ -101,19 +108,45 @@ export const usePatients = (): UsePatientsReturn => {
       }
     });
 
-    // Create a map of patient_id to visit info
+    // Create a map of patient_id to combined visit info (appointments + visits)
     const visitMap = new Map();
-    appointments?.forEach(apt => {
+    
+    // Process appointments
+    appointmentsRes.data?.forEach(apt => {
       if (!visitMap.has(apt.patient_id)) {
         visitMap.set(apt.patient_id, {
           count: 1,
-          lastVisit: apt.scheduled_start
+          lastVisit: apt.scheduled_start,
+          visits: [{ date: apt.scheduled_start, type: 'appointment', status: apt.status }]
         });
       } else {
         const current = visitMap.get(apt.patient_id);
         visitMap.set(apt.patient_id, {
           count: current.count + 1,
-          lastVisit: current.lastVisit // Keep the most recent (already sorted)
+          lastVisit: current.lastVisit, // Keep the most recent
+          visits: [...current.visits, { date: apt.scheduled_start, type: 'appointment', status: apt.status }]
+        });
+      }
+    });
+
+    // Process actual visits (check-ins)
+    visitsRes.data?.forEach(visit => {
+      if (!visitMap.has(visit.patient_id)) {
+        visitMap.set(visit.patient_id, {
+          count: 1,
+          lastVisit: visit.opened_at,
+          visits: [{ date: visit.opened_at, type: 'visit', state: visit.state }]
+        });
+      } else {
+        const current = visitMap.get(visit.patient_id);
+        const allVisits = [...current.visits, { date: visit.opened_at, type: 'visit', state: visit.state }];
+        // Sort to find the most recent across both types
+        allVisits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
+        visitMap.set(visit.patient_id, {
+          count: current.count + 1,
+          lastVisit: allVisits[0].date,
+          visits: allVisits
         });
       }
     });
