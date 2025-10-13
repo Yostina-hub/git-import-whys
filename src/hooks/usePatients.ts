@@ -83,11 +83,11 @@ export const usePatients = (): UsePatientsReturn => {
     const patientIds = data.map(p => p.id);
     const { data: invoices } = await supabase
       .from("invoices")
-      .select("patient_id, id, status")
+      .select("patient_id, id, status, created_at")
       .in("patient_id", patientIds);
 
     // Fetch both appointments and visits for complete visit history
-    const [appointmentsRes, visitsRes] = await Promise.all([
+    const [appointmentsRes, visitsRes, notesRes] = await Promise.all([
       supabase
         .from("appointments")
         .select("patient_id, scheduled_start, status")
@@ -97,22 +97,33 @@ export const usePatients = (): UsePatientsReturn => {
         .from("visits")
         .select("patient_id, opened_at, state")
         .in("patient_id", patientIds)
-        .order("opened_at", { ascending: false })
+        .order("opened_at", { ascending: false }),
+      supabase
+        .from("emr_notes")
+        .select("patient_id, created_at")
+        .in("patient_id", patientIds)
+        .order("created_at", { ascending: false })
     ]);
 
-    // Create a map of patient_id to invoice status
+    // Create a map of patient_id to invoice status (and created_at for last-visit calc)
     const invoiceMap = new Map();
-    invoices?.forEach(inv => {
+    const invoiceDatesMap = new Map();
+    invoices?.forEach((inv: any) => {
       if (!invoiceMap.has(inv.patient_id)) {
         invoiceMap.set(inv.patient_id, { id: inv.id, status: inv.status });
       }
+      // Track most recent invoice date
+      const prev = invoiceDatesMap.get(inv.patient_id) as string | undefined;
+      if (!prev || new Date(inv.created_at) > new Date(prev)) {
+        invoiceDatesMap.set(inv.patient_id, inv.created_at);
+      }
     });
 
-    // Create a map of patient_id to combined visit info (appointments + visits)
+    // Create a map of patient_id to combined visit info (appointments + visits + notes + invoices)
     const visitMap = new Map();
     
     // Process appointments
-    appointmentsRes.data?.forEach(apt => {
+    appointmentsRes.data?.forEach((apt: any) => {
       if (!visitMap.has(apt.patient_id)) {
         visitMap.set(apt.patient_id, {
           count: 1,
@@ -123,14 +134,14 @@ export const usePatients = (): UsePatientsReturn => {
         const current = visitMap.get(apt.patient_id);
         visitMap.set(apt.patient_id, {
           count: current.count + 1,
-          lastVisit: current.lastVisit, // Keep the most recent
+          lastVisit: current.lastVisit,
           visits: [...current.visits, { date: apt.scheduled_start, type: 'appointment', status: apt.status }]
         });
       }
     });
 
     // Process actual visits (check-ins)
-    visitsRes.data?.forEach(visit => {
+    visitsRes.data?.forEach((visit: any) => {
       if (!visitMap.has(visit.patient_id)) {
         visitMap.set(visit.patient_id, {
           count: 1,
@@ -140,10 +151,44 @@ export const usePatients = (): UsePatientsReturn => {
       } else {
         const current = visitMap.get(visit.patient_id);
         const allVisits = [...current.visits, { date: visit.opened_at, type: 'visit', state: visit.state }];
-        // Sort to find the most recent across both types
         allVisits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        
         visitMap.set(visit.patient_id, {
+          count: current.count + 1,
+          lastVisit: allVisits[0].date,
+          visits: allVisits
+        });
+      }
+    });
+
+    // Process EMR notes as encounters
+    notesRes.data?.forEach((note: any) => {
+      if (!visitMap.has(note.patient_id)) {
+        visitMap.set(note.patient_id, {
+          count: 1,
+          lastVisit: note.created_at,
+          visits: [{ date: note.created_at, type: 'note' }]
+        });
+      } else {
+        const current = visitMap.get(note.patient_id);
+        const allVisits = [...current.visits, { date: note.created_at, type: 'note' }];
+        allVisits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        visitMap.set(note.patient_id, {
+          count: current.count + 1,
+          lastVisit: allVisits[0].date,
+          visits: allVisits
+        });
+      }
+    });
+
+    // Factor in most recent invoice date for last visit if newer
+    invoiceDatesMap.forEach((created_at: string, pid: string) => {
+      if (!visitMap.has(pid)) {
+        visitMap.set(pid, { count: 1, lastVisit: created_at, visits: [{ date: created_at, type: 'invoice' }] });
+      } else {
+        const current = visitMap.get(pid);
+        const allVisits = [...current.visits, { date: created_at, type: 'invoice' }];
+        allVisits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        visitMap.set(pid, {
           count: current.count + 1,
           lastVisit: allVisits[0].date,
           visits: allVisits

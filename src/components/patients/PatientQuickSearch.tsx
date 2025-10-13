@@ -41,7 +41,7 @@ export function PatientQuickSearch() {
       // Fetch both appointments and visits for each patient
       const patientIds = data?.map(p => p.id) || [];
       
-      const [appointmentsRes, visitsRes] = await Promise.all([
+      const [appointmentsRes, visitsRes, notesRes, invoicesRes] = await Promise.all([
         supabase
           .from("appointments")
           .select("patient_id, scheduled_start, status")
@@ -49,23 +49,33 @@ export function PatientQuickSearch() {
         supabase
           .from("visits")
           .select("patient_id, opened_at, state")
+          .in("patient_id", patientIds),
+        supabase
+          .from("emr_notes")
+          .select("patient_id, created_at")
+          .in("patient_id", patientIds),
+        supabase
+          .from("invoices")
+          .select("patient_id, created_at")
           .in("patient_id", patientIds)
       ]);
 
       // Process results to add combined visit count
       const processedResults = data?.map(patient => {
-        // Count appointments
         const appointments = appointmentsRes.data?.filter(a => a.patient_id === patient.id) || [];
-        // Count visits
         const visits = visitsRes.data?.filter(v => v.patient_id === patient.id) || [];
+        const notes = notesRes.data?.filter(n => n.patient_id === patient.id) || [];
+        const invoices = invoicesRes.data?.filter(i => i.patient_id === patient.id) || [];
         
         // Combine all dates to find the most recent
         const allDates = [
           ...appointments.map(a => ({ date: a.scheduled_start, type: 'appointment' })),
-          ...visits.map(v => ({ date: v.opened_at, type: 'visit' }))
+          ...visits.map(v => ({ date: v.opened_at, type: 'visit' })),
+          ...notes.map(n => ({ date: n.created_at, type: 'note' })),
+          ...invoices.map(i => ({ date: i.created_at, type: 'invoice' })),
         ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-        const totalVisits = appointments.length + visits.length;
+        const totalVisits = appointments.length + visits.length + notes.length + invoices.length;
         
         return {
           ...patient,
