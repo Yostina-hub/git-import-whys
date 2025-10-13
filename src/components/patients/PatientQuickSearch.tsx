@@ -9,13 +9,27 @@ import { useNavigate } from "react-router-dom";
 import { AddToQueueDialog } from "./AddToQueueDialog";
 import { useToast } from "@/hooks/use-toast";
 
-export function PatientQuickSearch() {
+interface PatientQuickSearchProps {
+  onPatientSelect?: (patient: any) => void;
+}
+
+export function PatientQuickSearch({ onPatientSelect }: PatientQuickSearchProps = {}) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+
+  const handlePatientClick = (patient: any) => {
+    if (onPatientSelect) {
+      onPatientSelect(patient);
+      setSearchQuery("");
+      setResults([]);
+    } else {
+      navigate(`/clinical?patient=${patient.id}`);
+    }
+  };
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -156,10 +170,10 @@ export function PatientQuickSearch() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => navigate(`/clinical?patient=${patient.id}`)}
+                      onClick={() => handlePatientClick(patient)}
                     >
                       <Stethoscope className="h-4 w-4 mr-1" />
-                      View Records
+                      {onPatientSelect ? 'Select' : 'View Records'}
                     </Button>
                     <AddToQueueDialog
                       patientId={patient.id}
