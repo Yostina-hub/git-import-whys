@@ -902,39 +902,6 @@ export function DoctorConsultationDialog({
           </Tabs>
 
           <div className="flex flex-col gap-4 pt-4 border-t bg-gradient-to-r from-muted/30 to-muted/10 p-4 rounded-lg">
-            {/* Consultation Summary */}
-            <div className="grid grid-cols-3 gap-4">
-              <Card className="border-2">
-                <CardContent className="pt-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600">{orders.length}</div>
-                  <div className="text-xs text-muted-foreground flex items-center justify-center gap-1 mt-1">
-                    <TestTube className="h-3 w-3" />
-                    Orders Created
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-2">
-                <CardContent className="pt-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">{invoices.length}</div>
-                  <div className="text-xs text-muted-foreground flex items-center justify-center gap-1 mt-1">
-                    <DollarSign className="h-3 w-3" />
-                    Invoices
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-2">
-                <CardContent className="pt-4 text-center">
-                  <div className="text-2xl font-bold text-red-600">
-                    ${totalDue.toFixed(2)}
-                  </div>
-                  <div className="text-xs text-muted-foreground flex items-center justify-center gap-1 mt-1">
-                    <CreditCard className="h-3 w-3" />
-                    Outstanding
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
             <div className="flex items-center gap-3">
               <Label className="text-sm font-semibold whitespace-nowrap">Complete As:</Label>
               <Select value={completionAction} onValueChange={setCompletionAction}>
