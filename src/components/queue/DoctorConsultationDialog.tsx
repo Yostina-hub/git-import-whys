@@ -32,6 +32,7 @@ import { VitalSignsTab } from "@/components/clinical/VitalSignsTab";
 import { MedicationsTab } from "@/components/clinical/MedicationsTab";
 import { AllergiesTab } from "@/components/clinical/AllergiesTab";
 import ConsentsTab from "@/components/clinical/ConsentsTab";
+import ProtocolsTab from "@/components/clinical/ProtocolsTab";
 import { CreateOrderDialog } from "@/components/orders/CreateOrderDialog";
 import { UpdateOrderStatusDialog } from "@/components/orders/UpdateOrderStatusDialog";
 import { OrderResultsDialog } from "@/components/orders/OrderResultsDialog";
@@ -370,17 +371,18 @@ export function DoctorConsultationDialog({
           )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="grid w-full grid-cols-8">
+            <TabsList className="grid w-full grid-cols-9">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="vitals">Vitals</TabsTrigger>
               <TabsTrigger value="allergies">Allergies</TabsTrigger>
-              <TabsTrigger value="medications">Medications</TabsTrigger>
+              <TabsTrigger value="protocols">Protocols</TabsTrigger>
               <TabsTrigger value="assessments">Assessments</TabsTrigger>
               <TabsTrigger value="emr">EMR Notes</TabsTrigger>
               <TabsTrigger value="consents">Consents</TabsTrigger>
               <TabsTrigger value="orders">
                 Orders ({orders.length})
               </TabsTrigger>
+              <TabsTrigger value="medications">Medications</TabsTrigger>
             </TabsList>
 
             <div className="flex-1 overflow-auto mt-4">
@@ -464,8 +466,8 @@ export function DoctorConsultationDialog({
                 <AllergiesTab patientId={patient.id} />
               </TabsContent>
 
-              <TabsContent value="medications" className="m-0">
-                <MedicationsTab patientId={patient.id} />
+              <TabsContent value="protocols" className="m-0">
+                <ProtocolsTab patientId={patient.id} />
               </TabsContent>
 
               <TabsContent value="assessments" className="m-0">
@@ -553,6 +555,10 @@ export function DoctorConsultationDialog({
                     )}
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="medications" className="m-0">
+                <MedicationsTab patientId={patient.id} />
               </TabsContent>
             </div>
           </Tabs>
