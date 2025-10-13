@@ -45,6 +45,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { DialogFooter } from "@/components/ui/dialog";
 
 interface DoctorConsultationDialogProps {
   ticket: any;
@@ -71,6 +73,8 @@ export function DoctorConsultationDialog({
   const [activeTab, setActiveTab] = useState("overview");
   const [completionAction, setCompletionAction] = useState<string>("complete");
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
+  const [showBillingForm, setShowBillingForm] = useState(false);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   useEffect(() => {
     if (open && patient) {
@@ -170,7 +174,83 @@ export function DoctorConsultationDialog({
     }
   };
 
+  const handleCreateInvoice = async () => {
+    if (selectedServices.length === 0) {
+      toast({
+        title: "Services Required",
+        description: "Please select at least one service.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const serviceDetails = services.filter(s => selectedServices.includes(s.id));
+      const lines = serviceDetails.map(service => ({
+        description: service.name,
+        quantity: 1,
+        unit_price: Number(service.unit_price),
+        total: Number(service.unit_price),
+      }));
+
+      const subtotal = lines.reduce((sum, line) => sum + Number(line.total), 0);
+      const taxAmount = lines.reduce((sum, line) => sum + (Number(line.total) * 0.16), 0);
+      const totalAmount = subtotal + taxAmount;
+
+      const { error: invoiceError } = await supabase
+        .from("invoices")
+        .insert({
+          patient_id: patient.id,
+          status: "issued",
+          lines,
+          subtotal,
+          tax_amount: taxAmount,
+          total_amount: totalAmount,
+          balance_due: totalAmount,
+          issued_at: new Date().toISOString(),
+          created_by: user?.id,
+        });
+
+      if (invoiceError) throw invoiceError;
+
+      // Update ticket status to waiting (for billing)
+      const { error: ticketError } = await supabase
+        .from("tickets")
+        .update({
+          status: "waiting",
+          served_at: new Date().toISOString(),
+          served_by: user?.id,
+        })
+        .eq("id", ticket.id);
+
+      if (ticketError) throw ticketError;
+
+      toast({
+        title: "Invoice Created",
+        description: "Invoice sent to billing successfully. Patient will proceed after payment.",
+      });
+
+      setShowBillingForm(false);
+      setSelectedServices([]);
+      onComplete();
+      onOpenChange(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const completeConsultation = async () => {
+    // If payment required, show billing form
+    if (completionAction === "payment_required") {
+      setShowBillingForm(true);
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     
     // Check payment requirements based on completion action
@@ -574,6 +654,9 @@ export function DoctorConsultationDialog({
                   <SelectItem value="complete">
                     Complete & Serve (Payment Required)
                   </SelectItem>
+                  <SelectItem value="payment_required">
+                    Payment Required (Create Invoice)
+                  </SelectItem>
                   <SelectItem value="pending_payment">
                     Complete (Pending Payment)
                   </SelectItem>
@@ -590,6 +673,7 @@ export function DoctorConsultationDialog({
               <Button onClick={completeConsultation}>
                 <CheckCircle className="h-4 w-4 mr-2" />
                 {completionAction === "complete" ? "Complete & Serve" : 
+                 completionAction === "payment_required" ? "Create Invoice & Send to Billing" :
                  completionAction === "pending_payment" ? "Complete (Pending Payment)" :
                  "Schedule Patient"}
               </Button>
@@ -617,6 +701,91 @@ export function DoctorConsultationDialog({
           setShowUpdateStatus(false);
         }}
       />
+
+      {/* Billing Form Dialog */}
+      <Dialog open={showBillingForm} onOpenChange={setShowBillingForm}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create Invoice for Billing</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Select Services/Treatments</Label>
+              <div className="mt-2 space-y-2 max-h-60 overflow-y-auto border rounded-md p-3">
+                {services.map(service => (
+                  <div key={service.id} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={service.id}
+                      checked={selectedServices.includes(service.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedServices([...selectedServices, service.id]);
+                        } else {
+                          setSelectedServices(selectedServices.filter(id => id !== service.id));
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <label htmlFor={service.id} className="flex-1 cursor-pointer">
+                      <div className="flex justify-between">
+                        <span className="font-medium">{service.name}</span>
+                        <span className="font-semibold">${Number(service.unit_price).toFixed(2)}</span>
+                      </div>
+                      {service.description && (
+                        <p className="text-xs text-muted-foreground">{service.description}</p>
+                      )}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {selectedServices.length > 0 && (
+              <div className="bg-muted p-4 rounded-md space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal:</span>
+                  <span>
+                    ${services
+                      .filter(s => selectedServices.includes(s.id))
+                      .reduce((sum, s) => sum + Number(s.unit_price), 0)
+                      .toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Tax (16%):</span>
+                  <span>
+                    ${(services
+                      .filter(s => selectedServices.includes(s.id))
+                      .reduce((sum, s) => sum + Number(s.unit_price), 0) * 0.16)
+                      .toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                  <span>Total:</span>
+                  <span>
+                    ${(services
+                      .filter(s => selectedServices.includes(s.id))
+                      .reduce((sum, s) => sum + Number(s.unit_price), 0) * 1.16)
+                      .toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowBillingForm(false);
+              setSelectedServices([]);
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateInvoice} disabled={selectedServices.length === 0}>
+              <DollarSign className="h-4 w-4 mr-2" />
+              Create Invoice & Send to Billing
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
