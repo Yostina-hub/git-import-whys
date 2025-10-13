@@ -31,7 +31,6 @@ import AssessmentsTab from "@/components/clinical/AssessmentsTab";
 import { VitalSignsTab } from "@/components/clinical/VitalSignsTab";
 import { MedicationsTab } from "@/components/clinical/MedicationsTab";
 import { AllergiesTab } from "@/components/clinical/AllergiesTab";
-import ConsentsTab from "@/components/clinical/ConsentsTab";
 import ProtocolsTab from "@/components/clinical/ProtocolsTab";
 import { CreateOrderDialog } from "@/components/orders/CreateOrderDialog";
 import { UpdateOrderStatusDialog } from "@/components/orders/UpdateOrderStatusDialog";
@@ -451,14 +450,13 @@ export function DoctorConsultationDialog({
           )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="grid w-full grid-cols-9">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="vitals">Vitals</TabsTrigger>
               <TabsTrigger value="allergies">Allergies</TabsTrigger>
               <TabsTrigger value="protocols">Protocols</TabsTrigger>
               <TabsTrigger value="assessments">Assessments</TabsTrigger>
               <TabsTrigger value="emr">EMR Notes</TabsTrigger>
-              <TabsTrigger value="consents">Consents</TabsTrigger>
               <TabsTrigger value="orders">
                 Orders ({orders.length})
               </TabsTrigger>
@@ -564,10 +562,6 @@ export function DoctorConsultationDialog({
                     });
                   }}
                 />
-              </TabsContent>
-
-              <TabsContent value="consents" className="m-0">
-                <ConsentsTab patientId={patient.id} />
               </TabsContent>
 
               <TabsContent value="orders" className="m-0 space-y-4">
