@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Patient } from "@/hooks/usePatients";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Eye, Receipt, Calendar, UserCheck, RotateCcw, History, TrendingUp } from "lucide-react";
+import { Eye, Receipt, Calendar, UserCheck, RotateCcw, History, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { AddToQueueDialog } from "./AddToQueueDialog";
 
 interface PatientTableProps {
@@ -21,6 +22,9 @@ interface PatientTableProps {
   onRefresh: () => void;
 }
 
+type SortKey = 'mrn' | 'name' | 'visit_count' | 'sex_at_birth' | 'date_of_birth' | 'phone_mobile';
+type SortOrder = 'asc' | 'desc' | null;
+
 export const PatientTable = ({
   patients,
   registrationFee,
@@ -29,6 +33,76 @@ export const PatientTable = ({
   onViewAppointments,
   onRefresh,
 }: PatientTableProps) => {
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>(null);
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      // Cycle through: asc -> desc -> null
+      if (sortOrder === 'asc') {
+        setSortOrder('desc');
+      } else if (sortOrder === 'desc') {
+        setSortKey(null);
+        setSortOrder(null);
+      }
+    } else {
+      setSortKey(key);
+      setSortOrder('asc');
+    }
+  };
+
+  const getSortIcon = (key: SortKey) => {
+    if (sortKey !== key) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 opacity-40" />;
+    }
+    if (sortOrder === 'asc') {
+      return <ArrowUp className="h-4 w-4 ml-1" />;
+    }
+    if (sortOrder === 'desc') {
+      return <ArrowDown className="h-4 w-4 ml-1" />;
+    }
+    return <ArrowUpDown className="h-4 w-4 ml-1 opacity-40" />;
+  };
+
+  const sortedPatients = [...patients].sort((a, b) => {
+    if (!sortKey || !sortOrder) return 0;
+
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortKey) {
+      case 'mrn':
+        aValue = a.mrn;
+        bValue = b.mrn;
+        break;
+      case 'name':
+        aValue = `${a.first_name} ${a.last_name}`.toLowerCase();
+        bValue = `${b.first_name} ${b.last_name}`.toLowerCase();
+        break;
+      case 'visit_count':
+        aValue = a.visit_count || 0;
+        bValue = b.visit_count || 0;
+        break;
+      case 'sex_at_birth':
+        aValue = a.sex_at_birth || '';
+        bValue = b.sex_at_birth || '';
+        break;
+      case 'date_of_birth':
+        aValue = new Date(a.date_of_birth).getTime();
+        bValue = new Date(b.date_of_birth).getTime();
+        break;
+      case 'phone_mobile':
+        aValue = a.phone_mobile;
+        bValue = b.phone_mobile;
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
   const getStatusBadge = (status?: string) => {
     if (!status || status === "pending" || status === "issued" || status === "draft") {
       return <Badge variant="destructive">Unpaid</Badge>;
@@ -45,12 +119,84 @@ export const PatientTable = ({
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead className="font-semibold">MRN</TableHead>
-            <TableHead className="font-semibold">Name</TableHead>
-            <TableHead className="font-semibold">Visit History</TableHead>
-            <TableHead className="font-semibold">Gender</TableHead>
-            <TableHead className="font-semibold">DOB</TableHead>
-            <TableHead className="font-semibold">Phone</TableHead>
+            <TableHead className="font-semibold">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-auto p-0 font-semibold hover:bg-transparent"
+                onClick={() => handleSort('mrn')}
+              >
+                <span className="flex items-center">
+                  MRN
+                  {getSortIcon('mrn')}
+                </span>
+              </Button>
+            </TableHead>
+            <TableHead className="font-semibold">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-auto p-0 font-semibold hover:bg-transparent"
+                onClick={() => handleSort('name')}
+              >
+                <span className="flex items-center">
+                  Name
+                  {getSortIcon('name')}
+                </span>
+              </Button>
+            </TableHead>
+            <TableHead className="font-semibold">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-auto p-0 font-semibold hover:bg-transparent"
+                onClick={() => handleSort('visit_count')}
+              >
+                <span className="flex items-center">
+                  Visit History
+                  {getSortIcon('visit_count')}
+                </span>
+              </Button>
+            </TableHead>
+            <TableHead className="font-semibold">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-auto p-0 font-semibold hover:bg-transparent"
+                onClick={() => handleSort('sex_at_birth')}
+              >
+                <span className="flex items-center">
+                  Gender
+                  {getSortIcon('sex_at_birth')}
+                </span>
+              </Button>
+            </TableHead>
+            <TableHead className="font-semibold">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-auto p-0 font-semibold hover:bg-transparent"
+                onClick={() => handleSort('date_of_birth')}
+              >
+                <span className="flex items-center">
+                  DOB
+                  {getSortIcon('date_of_birth')}
+                </span>
+              </Button>
+            </TableHead>
+            <TableHead className="font-semibold">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-auto p-0 font-semibold hover:bg-transparent"
+                onClick={() => handleSort('phone_mobile')}
+              >
+                <span className="flex items-center">
+                  Phone
+                  {getSortIcon('phone_mobile')}
+                </span>
+              </Button>
+            </TableHead>
             <TableHead className="font-semibold">Appointment</TableHead>
             <TableHead className="font-semibold">Queue Status</TableHead>
             <TableHead className="font-semibold">Payment Status</TableHead>
@@ -58,7 +204,7 @@ export const PatientTable = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {patients.map((patient) => (
+          {sortedPatients.map((patient) => (
             <TableRow key={patient.id} className="hover:bg-muted/30 transition-colors">
               <TableCell className="font-mono font-medium text-primary">{patient.mrn}</TableCell>
               <TableCell className="font-medium">
