@@ -51,8 +51,7 @@ export const OrdersWorklist = () => {
       .from("orders")
       .select(`
         *,
-        patients(mrn, first_name, last_name),
-        profiles(first_name, last_name)
+        patients(mrn, first_name, last_name)
       `)
       .order("created_at", { ascending: false });
 
@@ -67,25 +66,42 @@ export const OrdersWorklist = () => {
     }
 
     if (data) {
-      const worklistItems: WorklistItem[] = data.map((order: any) => {
-        const turnaroundTime = order.completed_at 
-          ? Math.floor((new Date(order.completed_at).getTime() - new Date(order.created_at).getTime()) / (1000 * 60))
-          : undefined;
+      // Fetch provider names separately
+      const worklistItems: WorklistItem[] = await Promise.all(
+        data.map(async (order: any) => {
+          const turnaroundTime = order.completed_at 
+            ? Math.floor((new Date(order.completed_at).getTime() - new Date(order.created_at).getTime()) / (1000 * 60))
+            : undefined;
 
-        return {
-          id: order.id,
-          patient_mrn: order.patients?.mrn || "N/A",
-          patient_name: `${order.patients?.first_name} ${order.patients?.last_name}`,
-          order_type: order.order_type,
-          priority: order.priority,
-          status: order.status,
-          ordered_at: order.created_at,
-          scheduled_at: order.scheduled_at,
-          ordered_by: `${order.profiles?.first_name} ${order.profiles?.last_name}`,
-          has_results: order.result_payload && Object.keys(order.result_payload).length > 0,
-          turnaround_time: turnaroundTime,
-        };
-      });
+          // Get provider info
+          let orderedBy = "Unknown";
+          if (order.ordered_by) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("first_name, last_name")
+              .eq("id", order.ordered_by)
+              .single();
+            
+            if (profile) {
+              orderedBy = `${profile.first_name} ${profile.last_name}`;
+            }
+          }
+
+          return {
+            id: order.id,
+            patient_mrn: order.patients?.mrn || "N/A",
+            patient_name: `${order.patients?.first_name} ${order.patients?.last_name}`,
+            order_type: order.order_type,
+            priority: order.priority,
+            status: order.status,
+            ordered_at: order.created_at,
+            scheduled_at: order.scheduled_at,
+            ordered_by: orderedBy,
+            has_results: order.result_payload && Object.keys(order.result_payload).length > 0,
+            turnaround_time: turnaroundTime,
+          };
+        })
+      );
 
       setOrders(worklistItems);
     }

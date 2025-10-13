@@ -30,6 +30,7 @@ import { AIGuideAssistant } from "@/components/guide/AIGuideAssistant";
 import { InteractiveTutorial } from "@/components/guide/InteractiveTutorial";
 import { QuickStartGuide } from "@/components/guide/QuickStartGuide";
 import { VideoTutorials } from "@/components/guide/VideoTutorials";
+import { IntegrationsGuide } from "@/components/guide/IntegrationsGuide";
 
 const UserGuide = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -190,7 +191,7 @@ const UserGuide = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 h-auto">
             <TabsTrigger value="overview" className="gap-2">
               <Sparkles className="h-4 w-4" />
               Overview
@@ -206,6 +207,10 @@ const UserGuide = () => {
             <TabsTrigger value="interactive" className="gap-2">
               <MessageSquare className="h-4 w-4" />
               Interactive
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="gap-2">
+              <Settings className="h-4 w-4" />
+              Integrations
             </TabsTrigger>
             <TabsTrigger value="ai" className="gap-2">
               <Sparkles className="h-4 w-4" />
@@ -291,6 +296,11 @@ const UserGuide = () => {
           {/* Interactive Tutorial Tab */}
           <TabsContent value="interactive" className="animate-fade-in">
             <InteractiveTutorial />
+          </TabsContent>
+
+          {/* Integrations Tab */}
+          <TabsContent value="integrations" className="animate-fade-in">
+            <IntegrationsGuide />
           </TabsContent>
 
           {/* AI Assistant Tab */}
