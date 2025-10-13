@@ -102,7 +102,11 @@ export function PatientDetailsDialog({ patient, open, onOpenChange }: PatientDet
         });
 
         // Calculate statistics
-        const totalVisits = (appointmentsRes.data?.length || 0) + (visitsRes.data?.length || 0);
+        const totalVisits =
+          (appointmentsRes.data?.length || 0) +
+          (visitsRes.data?.length || 0) +
+          (notesRes.data?.length || 0) +
+          (invoicesRes.data?.length || 0);
         const totalSpent = invoicesRes.data?.reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0) || 0;
         const pendingBalance = invoicesRes.data
           ?.filter(inv => inv.status !== 'paid')
@@ -111,7 +115,9 @@ export function PatientDetailsDialog({ patient, open, onOpenChange }: PatientDet
         // Get most recent visit date
         const allDates = [
           ...(appointmentsRes.data?.map(a => a.scheduled_start) || []),
-          ...(visitsRes.data?.map(v => v.opened_at) || [])
+          ...(visitsRes.data?.map(v => v.opened_at) || []),
+          ...(notesRes.data?.map(n => n.created_at) || []),
+          ...(invoicesRes.data?.map(i => i.created_at) || []),
         ].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
         const upcomingAppointments = appointmentsRes.data?.filter(
