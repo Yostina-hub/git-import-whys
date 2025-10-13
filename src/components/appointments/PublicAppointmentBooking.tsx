@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Clock, UserCheck, Users } from "lucide-react";
+import { CalendarIcon, Clock, UserCheck, Users, Video, Stethoscope } from "lucide-react";
 import { format, addMinutes, setHours, setMinutes } from "date-fns";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -18,6 +18,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 export const PublicAppointmentBooking = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [consultationType, setConsultationType] = useState<"online" | "in-person">("in-person");
   const [appointmentType, setAppointmentType] = useState<"doctor_specific" | "general">("general");
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState("");
@@ -115,6 +116,7 @@ export const PublicAppointmentBooking = () => {
         patient_phone: formData.patient_phone,
         patient_email: formData.patient_email,
         appointment_type: appointmentType,
+        consultation_type: consultationType,
       }),
     };
 
@@ -158,6 +160,7 @@ export const PublicAppointmentBooking = () => {
       setSelectedDate(undefined);
       setSelectedTime("");
       setAppointmentType("general");
+      setConsultationType("in-person");
     }
     setLoading(false);
   };
@@ -177,6 +180,54 @@ export const PublicAppointmentBooking = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Consultation Type Selection */}
+          <div className="space-y-4">
+            <Label>Consultation Type</Label>
+            <RadioGroup value={consultationType} onValueChange={(v: any) => setConsultationType(v)}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className={cn(
+                  "cursor-pointer transition-all",
+                  consultationType === "in-person" && "border-primary ring-2 ring-primary"
+                )}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="in-person" id="in-person" />
+                      <Label htmlFor="in-person" className="flex items-center gap-2 cursor-pointer">
+                        <Stethoscope className="h-5 w-5 text-primary" />
+                        <div>
+                          <div className="font-semibold">In-Person Visit</div>
+                          <div className="text-xs text-muted-foreground">
+                            Visit the clinic physically
+                          </div>
+                        </div>
+                      </Label>
+                    </div>
+                  </CardHeader>
+                </Card>
+
+                <Card className={cn(
+                  "cursor-pointer transition-all",
+                  consultationType === "online" && "border-primary ring-2 ring-primary"
+                )}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="online" id="online" />
+                      <Label htmlFor="online" className="flex items-center gap-2 cursor-pointer">
+                        <Video className="h-5 w-5 text-primary" />
+                        <div>
+                          <div className="font-semibold">Online Consultation</div>
+                          <div className="text-xs text-muted-foreground">
+                            Video/audio consultation
+                          </div>
+                        </div>
+                      </Label>
+                    </div>
+                  </CardHeader>
+                </Card>
+              </div>
+            </RadioGroup>
+          </div>
+
           {/* Appointment Type Selection */}
           <div className="space-y-4">
             <Label>Appointment Type</Label>

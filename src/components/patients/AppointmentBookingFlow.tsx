@@ -8,8 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Video, Stethoscope } from "lucide-react";
 import { format } from "date-fns";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Card, CardHeader } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface Props {
   open: boolean;
@@ -33,6 +36,7 @@ export const AppointmentBookingFlow = ({
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"appointment" | "invoice">("appointment");
+  const [consultationType, setConsultationType] = useState<"online" | "in-person">("in-person");
   
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState("");
@@ -183,6 +187,43 @@ export const AppointmentBookingFlow = ({
 
         {step === "appointment" && (
           <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Consultation Type</Label>
+              <RadioGroup value={consultationType} onValueChange={(v: any) => setConsultationType(v)}>
+                <div className="grid grid-cols-2 gap-3">
+                  <Card className={cn(
+                    "cursor-pointer transition-all",
+                    consultationType === "in-person" && "border-primary ring-2 ring-primary"
+                  )}>
+                    <CardHeader className="pb-3 pt-3">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="in-person" id="apt-in-person" />
+                        <Label htmlFor="apt-in-person" className="flex items-center gap-2 cursor-pointer text-sm">
+                          <Stethoscope className="h-4 w-4 text-primary" />
+                          <div className="font-medium">In-Person</div>
+                        </Label>
+                      </div>
+                    </CardHeader>
+                  </Card>
+
+                  <Card className={cn(
+                    "cursor-pointer transition-all",
+                    consultationType === "online" && "border-primary ring-2 ring-primary"
+                  )}>
+                    <CardHeader className="pb-3 pt-3">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="online" id="apt-online" />
+                        <Label htmlFor="apt-online" className="flex items-center gap-2 cursor-pointer text-sm">
+                          <Video className="h-4 w-4 text-primary" />
+                          <div className="font-medium">Online</div>
+                        </Label>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                </div>
+              </RadioGroup>
+            </div>
+
             <div className="space-y-2">
               <Label>Clinic *</Label>
               <Select value={clinicId} onValueChange={setClinicId}>
