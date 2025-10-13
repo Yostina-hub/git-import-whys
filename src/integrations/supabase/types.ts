@@ -2474,6 +2474,15 @@ export type Database = {
           status: string
         }[]
       }
+      log_audit: {
+        Args: {
+          p_action: string
+          p_metadata?: Json
+          p_resource_id?: string
+          p_resource_type: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
