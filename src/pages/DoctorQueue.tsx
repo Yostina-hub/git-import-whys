@@ -8,10 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle, AlertCircle, Clock, FileText, Stethoscope, Pill, TestTube, Search, ChevronLeft, ChevronRight } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Clock, FileText, Stethoscope, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { DoctorConsultationDialog } from "@/components/queue/DoctorConsultationDialog";
 
 const DoctorQueue = () => {
   const navigate = useNavigate();
@@ -21,7 +19,8 @@ const DoctorQueue = () => {
   const [previousWork, setPreviousWork] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
-  const [showPatientDialog, setShowPatientDialog] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const [showConsultationDialog, setShowConsultationDialog] = useState(false);
   
   // Pagination and search state
   const [todaySearch, setTodaySearch] = useState("");
@@ -207,36 +206,13 @@ const DoctorQueue = () => {
 
   const viewPatient = (ticket: any) => {
     setSelectedPatient(ticket.patients);
-    setShowPatientDialog(true);
+    setSelectedTicket(ticket);
+    setShowConsultationDialog(true);
   };
 
-  const completeConsultation = async (ticketId: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    const { error } = await supabase
-      .from("tickets")
-      .update({ 
-        status: "served", 
-        served_at: new Date().toISOString(),
-        served_by: user?.id 
-      })
-      .eq("id", ticketId);
-
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
-    } else {
-      toast({
-        title: "Consultation completed",
-        description: "Patient marked as served",
-      });
-      setShowPatientDialog(false);
-      loadDoctorQueue();
-      loadCompletedToday();
-    }
+  const handleConsultationComplete = () => {
+    loadDoctorQueue();
+    loadCompletedToday();
   };
 
   const getWaitTime = (createdAt: string) => {
@@ -353,18 +329,9 @@ const DoctorQueue = () => {
                                 onClick={() => viewPatient(ticket)}
                               >
                                 <FileText className="h-4 w-4 mr-1" />
-                                View
-                              </Button>
-                              {ticket.status === "called" && (
-                                <Button 
-                                  size="sm"
-                                  onClick={() => completeConsultation(ticket.id)}
-                                >
-                                  <CheckCircle className="h-4 w-4 mr-1" />
-                                  Complete
-                                </Button>
-                              )}
-                            </div>
+                                 Consult
+                               </Button>
+                             </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -591,91 +558,14 @@ const DoctorQueue = () => {
         </Tabs>
       </main>
 
-      {/* Patient Details Dialog */}
-      <Dialog open={showPatientDialog} onOpenChange={setShowPatientDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              Patient Consultation
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedPatient && (
-            <div className="space-y-6">
-              {/* Patient Summary */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Patient Information</CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Name</p>
-                    <p className="font-medium">{selectedPatient.first_name} {selectedPatient.last_name}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">MRN</p>
-                    <p className="font-medium">{selectedPatient.mrn}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Date of Birth</p>
-                    <p className="font-medium">{new Date(selectedPatient.date_of_birth).toLocaleDateString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Age</p>
-                    <p className="font-medium">
-                      {Math.floor((new Date().getTime() - new Date(selectedPatient.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} years
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Quick Actions */}
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => navigate(`/clinical?patient=${selectedPatient.id}`)}
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  View Full Clinical Record
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => navigate(`/orders?patient=${selectedPatient.id}`)}
-                >
-                  <TestTube className="h-4 w-4 mr-2" />
-                  Create Order
-                </Button>
-              </div>
-
-              {/* Quick Consultation Note */}
-              <div className="space-y-2">
-                <Label htmlFor="quick-note">Quick Consultation Note</Label>
-                <Textarea 
-                  id="quick-note"
-                  placeholder="Enter consultation notes..."
-                  rows={6}
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={() => setShowPatientDialog(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={() => {
-                  const ticket = tickets.find(t => t.patients.id === selectedPatient.id);
-                  if (ticket) completeConsultation(ticket.id);
-                }}>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Complete Consultation
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Consultation Dialog */}
+      <DoctorConsultationDialog
+        ticket={selectedTicket}
+        patient={selectedPatient}
+        open={showConsultationDialog}
+        onOpenChange={setShowConsultationDialog}
+        onComplete={handleConsultationComplete}
+      />
     </div>
   );
 };
