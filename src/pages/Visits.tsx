@@ -68,7 +68,6 @@ const Visits = () => {
       .select(`
         *,
         patients(id, mrn, first_name, last_name, date_of_birth, phone_mobile, sex_at_birth),
-        primary_provider:profiles!visits_primary_provider_id_fkey(first_name, last_name, specialty),
         linked_invoice:invoices(id, total_amount, balance_due, status)
       `)
       .order("opened_at", { ascending: false });
@@ -79,9 +78,30 @@ const Visits = () => {
         title: "Error loading visits",
         description: error.message,
       });
-    } else {
-      setVisits(data || []);
+      setLoading(false);
+      return;
     }
+
+    // Fetch provider details separately for each visit
+    const visitsWithProviders = await Promise.all(
+      (data || []).map(async (visit) => {
+        if (visit.primary_provider_id) {
+          const { data: provider } = await supabase
+            .from("profiles")
+            .select("first_name, last_name, specialty")
+            .eq("id", visit.primary_provider_id)
+            .single();
+          
+          return {
+            ...visit,
+            primary_provider: provider
+          };
+        }
+        return visit;
+      })
+    );
+
+    setVisits(visitsWithProviders);
     setLoading(false);
   };
 
