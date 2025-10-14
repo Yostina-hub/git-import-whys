@@ -12,11 +12,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Edit, UserPlus, RefreshCw } from "lucide-react";
+import { Edit, UserPlus, RefreshCw, KeyRound } from "lucide-react";
 import { ManageRolesDialog } from "./ManageRolesDialog";
 import { ManageClinicAccessDialog } from "./ManageClinicAccessDialog";
 import { ClinicAccessBadge } from "./ClinicAccessBadge";
 import { CreateUserDialog } from "./CreateUserDialog";
+import { ResetPasswordDialog } from "./ResetPasswordDialog";
 
 interface User {
   id: string;
@@ -36,6 +37,7 @@ export const UserManagementTab = () => {
   const [rolesDialogOpen, setRolesDialogOpen] = useState(false);
   const [clinicAccessDialogOpen, setClinicAccessDialogOpen] = useState(false);
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -177,6 +179,17 @@ export const UserManagementTab = () => {
                       <Edit className="h-4 w-4 mr-2" />
                       Clinics
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setResetPasswordDialogOpen(true);
+                      }}
+                    >
+                      <KeyRound className="h-4 w-4 mr-2" />
+                      Reset Password
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -215,6 +228,12 @@ export const UserManagementTab = () => {
             open={clinicAccessDialogOpen}
             onOpenChange={setClinicAccessDialogOpen}
             userId={selectedUser.id}
+            userName={`${selectedUser.first_name} ${selectedUser.last_name}`}
+          />
+          <ResetPasswordDialog
+            open={resetPasswordDialogOpen}
+            onOpenChange={setResetPasswordDialogOpen}
+            userEmail={selectedUser.email}
             userName={`${selectedUser.first_name} ${selectedUser.last_name}`}
           />
         </>
