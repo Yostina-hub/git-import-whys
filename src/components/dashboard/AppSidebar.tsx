@@ -47,6 +47,7 @@ const mainNavItems = [
 const clinicalNavItems = [
   { title: "Clinical Records", url: "/clinical", icon: FileText },
   { title: "Orders", url: "/orders", icon: Stethoscope },
+  { title: "Doctors", url: "/doctors", icon: Stethoscope },
 ];
 
 const operationsNavItems = [

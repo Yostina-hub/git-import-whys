@@ -30,6 +30,7 @@ import Configuration from "./pages/Configuration";
 import OnlineConsultation from "./pages/OnlineConsultation";
 import JoinConsultation from "./pages/JoinConsultation";
 import UserGuide from "./pages/UserGuide";
+import Doctors from "./pages/Doctors";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/configuration" element={<Configuration />} />
             <Route path="/user-guide" element={<UserGuide />} />
+            <Route path="/doctors" element={<Doctors />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
