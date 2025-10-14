@@ -12,12 +12,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Edit, UserPlus, RefreshCw, KeyRound } from "lucide-react";
+import { Edit, UserPlus, RefreshCw, KeyRound, Trash2 } from "lucide-react";
 import { ManageRolesDialog } from "./ManageRolesDialog";
 import { ManageClinicAccessDialog } from "./ManageClinicAccessDialog";
 import { ClinicAccessBadge } from "./ClinicAccessBadge";
 import { CreateUserDialog } from "./CreateUserDialog";
 import { ResetPasswordDialog } from "./ResetPasswordDialog";
+import { DeleteUserDialog } from "./DeleteUserDialog";
 
 interface User {
   id: string;
@@ -38,11 +39,27 @@ export const UserManagementTab = () => {
   const [clinicAccessDialogOpen, setClinicAccessDialogOpen] = useState(false);
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     loadUsers();
+    checkSuperAdmin();
   }, []);
+
+  const checkSuperAdmin = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id);
+
+    const hasSuperAdmin = roles?.some((r: any) => r.role === "superadmin");
+    setIsSuperAdmin(!!hasSuperAdmin);
+  };
 
   const loadUsers = async () => {
     setLoading(true);
@@ -190,6 +207,19 @@ export const UserManagementTab = () => {
                       <KeyRound className="h-4 w-4 mr-2" />
                       Reset Password
                     </Button>
+                    {isSuperAdmin && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -235,6 +265,17 @@ export const UserManagementTab = () => {
             onOpenChange={setResetPasswordDialogOpen}
             userEmail={selectedUser.email}
             userName={`${selectedUser.first_name} ${selectedUser.last_name}`}
+          />
+          <DeleteUserDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            userId={selectedUser.id}
+            userName={`${selectedUser.first_name} ${selectedUser.last_name}`}
+            userEmail={selectedUser.email}
+            onSuccess={() => {
+              loadUsers();
+              setDeleteDialogOpen(false);
+            }}
           />
         </>
       )}

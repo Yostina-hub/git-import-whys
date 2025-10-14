@@ -2621,6 +2621,10 @@ export type Database = {
         Args: { user_email: string }
         Returns: undefined
       }
+      delete_user: {
+        Args: { user_id_to_delete: string }
+        Returns: undefined
+      }
       generate_mrn: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -2681,6 +2685,7 @@ export type Database = {
         | "manager"
         | "patient"
         | "nurse"
+        | "superadmin"
       appointment_source:
         | "call_center"
         | "website"
@@ -2904,6 +2909,7 @@ export const Constants = {
         "manager",
         "patient",
         "nurse",
+        "superadmin",
       ],
       appointment_source: [
         "call_center",
