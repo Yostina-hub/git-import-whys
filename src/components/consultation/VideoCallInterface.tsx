@@ -79,7 +79,7 @@ export function VideoCallInterface({
       }
 
       // Connect to signaling server
-      const wsUrl = `wss://obbyvxodxvgdaarzmsbd.supabase.co/functions/v1/webrtc-signaling?roomId=${roomId}&userId=${userId}`;
+      const wsUrl = `wss://obbyvxodxvgdaarzmsbd.functions.supabase.co/webrtc-signaling?roomId=${roomId}&userId=${userId}`;
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {
