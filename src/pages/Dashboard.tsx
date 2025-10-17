@@ -9,7 +9,8 @@ import { ClinicianDashboard } from "@/components/dashboard/ClinicianDashboard";
 import { ReceptionDashboard } from "@/components/dashboard/ReceptionDashboard";
 import { BillingDashboard } from "@/components/dashboard/BillingDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { AlertCircle } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -126,6 +127,7 @@ const Dashboard = () => {
   const renderDashboard = () => {
     switch (userRole) {
       case "admin":
+      case "superadmin":
         return <AdminDashboard />;
       case "manager":
         return <AdminDashboard />;
@@ -138,10 +140,17 @@ const Dashboard = () => {
       default:
         return (
           <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-              <p className="text-muted-foreground">No role assigned. Please contact an administrator.</p>
-            </div>
+            <Card className="border-l-4 border-l-orange-500">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-6 w-6 text-orange-500" />
+                  No Role Assigned
+                </CardTitle>
+                <CardDescription>
+                  Your account does not have any roles assigned. Please contact your system administrator to get access.
+                </CardDescription>
+              </CardHeader>
+            </Card>
           </div>
         );
     }
