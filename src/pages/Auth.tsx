@@ -71,6 +71,7 @@ const Auth = () => {
         data: {
           first_name: firstName,
           last_name: lastName,
+          role: role,
         },
       },
     });
@@ -82,15 +83,6 @@ const Auth = () => {
         description: error.message,
       });
     } else if (data.user) {
-      // Assign role to new user
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert([{ user_id: data.user.id, role: role as any }]);
-
-      if (roleError) {
-        console.error("Role assignment error:", roleError);
-      }
-
       toast({
         title: "Account created!",
         description: "You can now log in to your account.",
