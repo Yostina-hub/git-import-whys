@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { 
@@ -250,90 +250,89 @@ export const AppointmentsGuide = () => {
       </div>
 
       {/* Detailed Features */}
-      <Tabs defaultValue="book" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 h-auto">
-          <TabsTrigger value="book">Book</TabsTrigger>
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
-          <TabsTrigger value="reschedule">Reschedule</TabsTrigger>
-          <TabsTrigger value="reminders">Reminders</TabsTrigger>
-          <TabsTrigger value="checkin">Check-in</TabsTrigger>
-          <TabsTrigger value="telemedicine">Telemedicine</TabsTrigger>
-        </TabsList>
-
-        {features.map((feature, idx) => (
-          <TabsContent key={idx} value={feature.title.toLowerCase().split(' ')[0] || feature.title.toLowerCase().replace(' ', '')}>
-            <Card className="border-2">
-              <CardHeader>
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-gradient-to-br from-primary/20 to-primary/10 rounded-xl">
-                    <feature.icon className="h-6 w-6 text-primary" />
+      <Card className="border-2">
+        <CardHeader>
+          <CardTitle>Detailed Feature Guides</CardTitle>
+          <CardDescription>Click on each feature to expand and view detailed instructions</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Accordion type="single" collapsible className="w-full">
+            {features.map((feature, idx) => (
+              <AccordionItem key={idx} value={`item-${idx}`}>
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg">
+                      <feature.icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-semibold">{feature.title}</div>
+                      <div className="text-sm text-muted-foreground">{feature.description}</div>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-2xl">{feature.title}</CardTitle>
-                    <CardDescription className="text-base mt-1">{feature.description}</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Steps */}
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    <h3 className="text-lg font-semibold">Step-by-Step Guide</h3>
-                  </div>
-                  <div className="space-y-3">
-                    {feature.steps.map((step, stepIdx) => (
-                      <div key={stepIdx} className="flex gap-4 p-4 bg-muted/50 rounded-lg">
-                        <div className="flex-shrink-0 w-8 h-8 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-sm">
-                          {stepIdx + 1}
-                        </div>
-                        <div className="flex-1 pt-1">{step}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Tips */}
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Zap className="h-5 w-5 text-yellow-600" />
-                    <h3 className="text-lg font-semibold">Pro Tips</h3>
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    {feature.tips.map((tip, tipIdx) => (
-                      <div key={tipIdx} className="flex gap-3 p-3 bg-yellow-500/5 border border-yellow-500/20 rounded-lg">
-                        <Info className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm">{tip}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {feature.shortcuts.length > 0 && (
-                  <>
-                    <Separator />
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-6 pt-4">
+                    {/* Steps */}
                     <div>
                       <div className="flex items-center gap-2 mb-4">
-                        <Zap className="h-5 w-5 text-purple-600" />
-                        <h3 className="text-lg font-semibold">Keyboard Shortcuts</h3>
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        <h3 className="text-lg font-semibold">Step-by-Step Guide</h3>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {feature.shortcuts.map((shortcut, scIdx) => (
-                          <Badge key={scIdx} variant="outline" className="text-sm px-4 py-2">
-                            {shortcut}
-                          </Badge>
+                      <div className="space-y-3">
+                        {feature.steps.map((step, stepIdx) => (
+                          <div key={stepIdx} className="flex gap-4 p-4 bg-muted/50 rounded-lg">
+                            <div className="flex-shrink-0 w-8 h-8 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-sm">
+                              {stepIdx + 1}
+                            </div>
+                            <div className="flex-1 pt-1">{step}</div>
+                          </div>
                         ))}
                       </div>
                     </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        ))}
-      </Tabs>
+
+                    <Separator />
+
+                    {/* Tips */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Zap className="h-5 w-5 text-yellow-600" />
+                        <h3 className="text-lg font-semibold">Pro Tips</h3>
+                      </div>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        {feature.tips.map((tip, tipIdx) => (
+                          <div key={tipIdx} className="flex gap-3 p-3 bg-yellow-500/5 border border-yellow-500/20 rounded-lg">
+                            <Info className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                            <span className="text-sm">{tip}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {feature.shortcuts.length > 0 && (
+                      <>
+                        <Separator />
+                        <div>
+                          <div className="flex items-center gap-2 mb-4">
+                            <Zap className="h-5 w-5 text-purple-600" />
+                            <h3 className="text-lg font-semibold">Keyboard Shortcuts</h3>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {feature.shortcuts.map((shortcut, scIdx) => (
+                              <Badge key={scIdx} variant="outline" className="text-sm px-4 py-2">
+                                {shortcut}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </CardContent>
+      </Card>
 
       {/* FAQs */}
       <Card className="border-2">

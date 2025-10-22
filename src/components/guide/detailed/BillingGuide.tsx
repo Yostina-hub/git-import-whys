@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -308,82 +308,78 @@ export const BillingGuide = () => {
           <CardDescription>Comprehensive billing and payment instructions</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue={features[0].title} className="w-full">
-            <TabsList className="w-full grid grid-cols-2 md:grid-cols-6 h-auto">
-              {features.map((feature) => (
-                <TabsTrigger key={feature.title} value={feature.title} className="gap-2">
-                  <feature.icon className="h-4 w-4" />
-                  {feature.title.split(' ')[0]}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            {features.map((feature) => (
-              <TabsContent key={feature.title} value={feature.title} className="space-y-6 mt-6">
-                <div className="flex items-start gap-4 p-4 bg-accent/10 rounded-lg">
-                  <div className="p-3 bg-primary/10 rounded-lg">
-                    <feature.icon className="h-6 w-6 text-primary" />
+          <Accordion type="single" collapsible className="w-full">
+            {features.map((feature, idx) => (
+              <AccordionItem key={idx} value={`item-${idx}`}>
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <feature.icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-semibold">{feature.title}</div>
+                      <div className="text-sm text-muted-foreground">{feature.description}</div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{feature.title}</h3>
-                    <p className="text-muted-foreground">{feature.description}</p>
-                  </div>
-                </div>
-
-                {/* Steps */}
-                <div>
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <ArrowRight className="h-4 w-4 text-primary" />
-                    Step-by-Step Guide
-                  </h4>
-                  <div className="space-y-2">
-                    {feature.steps.map((step, index) => (
-                      <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/5 transition-colors">
-                        <Badge variant="outline" className="mt-0.5">{index + 1}</Badge>
-                        <p className="text-sm flex-1">{step}</p>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-6 pt-4">
+                    {/* Steps */}
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <ArrowRight className="h-4 w-4 text-primary" />
+                        Step-by-Step Guide
+                      </h4>
+                      <div className="space-y-2">
+                        {feature.steps.map((step, index) => (
+                          <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/5 transition-colors">
+                            <Badge variant="outline" className="mt-0.5">{index + 1}</Badge>
+                            <p className="text-sm flex-1">{step}</p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                <Separator />
+                    <Separator />
 
-                {/* Pro Tips */}
-                <div>
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <Lightbulb className="h-4 w-4 text-yellow-500" />
-                    Pro Tips
-                  </h4>
-                  <div className="space-y-2">
-                    {feature.tips.map((tip, index) => (
-                      <div key={index} className="flex items-start gap-2 text-sm">
-                        <CheckCircle2 className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
-                        <span>{tip}</span>
+                    {/* Pro Tips */}
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <Lightbulb className="h-4 w-4 text-yellow-500" />
+                        Pro Tips
+                      </h4>
+                      <div className="space-y-2">
+                        {feature.tips.map((tip, index) => (
+                          <div key={index} className="flex items-start gap-2 text-sm">
+                            <CheckCircle2 className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
+                            <span>{tip}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                <Separator />
+                    <Separator />
 
-                {/* Shortcuts */}
-                <div>
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <Keyboard className="h-4 w-4 text-primary" />
-                    Quick Actions & Shortcuts
-                  </h4>
-                  <div className="space-y-2">
-                    {feature.shortcuts.map((shortcut, index) => (
-                      <div key={index} className="flex items-start gap-2 text-sm p-2 rounded bg-accent/5">
-                        <ArrowRight className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                        <span>{shortcut}</span>
+                    {/* Shortcuts */}
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <Keyboard className="h-4 w-4 text-primary" />
+                        Quick Actions & Shortcuts
+                      </h4>
+                      <div className="space-y-2">
+                        {feature.shortcuts.map((shortcut, index) => (
+                          <div key={index} className="flex items-start gap-2 text-sm p-2 rounded bg-accent/5">
+                            <ArrowRight className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                            <span>{shortcut}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
                   </div>
-                </div>
-              </TabsContent>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </Tabs>
+          </Accordion>
         </CardContent>
       </Card>
 
