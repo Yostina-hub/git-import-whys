@@ -10,6 +10,7 @@ import { AuditLogsTab } from "@/components/admin/AuditLogsTab";
 import { SystemSettingsTab } from "@/components/admin/SystemSettingsTab";
 import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 import { UserManagementTab } from "@/components/admin/UserManagementTab";
+import { PermissionsTab } from "@/components/admin/PermissionsTab";
 import { AdminStats } from "@/components/admin/AdminStats";
 
 const Admin = () => {
@@ -159,7 +160,7 @@ const Admin = () => {
         />
 
         <Tabs defaultValue="analytics" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 p-1 bg-muted/50 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-5 p-1 bg-muted/50 backdrop-blur-sm">
             <TabsTrigger 
               value="analytics"
               className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white transition-all duration-300"
@@ -173,6 +174,13 @@ const Admin = () => {
             >
               <Users className="h-4 w-4" />
               Users
+            </TabsTrigger>
+            <TabsTrigger 
+              value="permissions"
+              className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-teal-600 data-[state=active]:text-white transition-all duration-300"
+            >
+              <Shield className="h-4 w-4" />
+              Permissions
             </TabsTrigger>
             <TabsTrigger 
               value="audit"
@@ -202,6 +210,14 @@ const Admin = () => {
             <Card className="border-0 shadow-lg bg-gradient-to-br from-card via-card to-green-500/5">
               <CardContent className="pt-6">
                 <UserManagementTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="permissions">
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-card via-card to-cyan-500/5">
+              <CardContent className="pt-6">
+                <PermissionsTab />
               </CardContent>
             </Card>
           </TabsContent>
