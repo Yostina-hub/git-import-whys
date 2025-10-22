@@ -24,6 +24,7 @@ import {
   Shield,
   Clock,
   Award,
+  ClipboardList,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AIGuideAssistant } from "@/components/guide/AIGuideAssistant";
@@ -34,6 +35,10 @@ import { IntegrationsGuide } from "@/components/guide/IntegrationsGuide";
 import { PatientManagementGuide } from "@/components/guide/detailed/PatientManagementGuide";
 import { AppointmentsGuide } from "@/components/guide/detailed/AppointmentsGuide";
 import { ClinicalRecordsGuide } from "@/components/guide/detailed/ClinicalRecordsGuide";
+import { BillingGuide } from "@/components/guide/detailed/BillingGuide";
+import { QueueManagementGuide } from "@/components/guide/detailed/QueueManagementGuide";
+import { AdminGuide } from "@/components/guide/detailed/AdminGuide";
+import { OrdersGuide } from "@/components/guide/detailed/OrdersGuide";
 
 const UserGuide = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -194,7 +199,7 @@ const UserGuide = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-9 h-auto">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 h-auto gap-1">
             <TabsTrigger value="overview" className="gap-2">
               <Sparkles className="h-4 w-4" />
               Overview
@@ -211,9 +216,25 @@ const UserGuide = () => {
               <Calendar className="h-4 w-4" />
               Appointments
             </TabsTrigger>
+            <TabsTrigger value="queue" className="gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Queue
+            </TabsTrigger>
             <TabsTrigger value="clinical" className="gap-2">
               <FileText className="h-4 w-4" />
               Clinical
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Orders
+            </TabsTrigger>
+            <TabsTrigger value="billing" className="gap-2">
+              <DollarSign className="h-4 w-4" />
+              Billing
+            </TabsTrigger>
+            <TabsTrigger value="admin" className="gap-2">
+              <Shield className="h-4 w-4" />
+              Admin
             </TabsTrigger>
             <TabsTrigger value="tutorials" className="gap-2">
               <Play className="h-4 w-4" />
@@ -314,6 +335,22 @@ const UserGuide = () => {
 
           <TabsContent value="clinical" className="animate-fade-in">
             <ClinicalRecordsGuide />
+          </TabsContent>
+
+          <TabsContent value="queue" className="animate-fade-in">
+            <QueueManagementGuide />
+          </TabsContent>
+
+          <TabsContent value="orders" className="animate-fade-in">
+            <OrdersGuide />
+          </TabsContent>
+
+          <TabsContent value="billing" className="animate-fade-in">
+            <BillingGuide />
+          </TabsContent>
+
+          <TabsContent value="admin" className="animate-fade-in">
+            <AdminGuide />
           </TabsContent>
 
           {/* Tutorials Tab */}
