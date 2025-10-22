@@ -2,221 +2,256 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { 
+import {
   DollarSign,
-  Receipt,
-  CreditCard,
   FileText,
-  Package,
+  CreditCard,
   RefreshCw,
-  TrendingUp,
-  AlertCircle,
+  BarChart3,
+  ArrowRight,
   CheckCircle2,
-  Info,
-  Zap,
-  Percent
+  Lightbulb,
+  Keyboard,
+  Package,
+  Percent,
+  Receipt,
 } from "lucide-react";
 
 export const BillingGuide = () => {
   const features = [
     {
-      icon: Receipt,
+      icon: FileText,
       title: "Invoice Management",
       description: "Create and manage patient invoices",
       steps: [
-        "Navigate to Billing page",
+        "Navigate to Billing from sidebar",
         "Click 'Create Invoice' button",
-        "Select patient from search",
-        "Choose services from service catalog",
-        "Quantities and unit prices auto-populate",
-        "Apply discounts or tax if needed",
-        "Review total amount",
-        "Save as Draft or Issue invoice",
+        "Select patient from dropdown or search",
+        "Choose billing type: Service, Package, or Custom",
+        "Add services/items - quantities auto-calculate totals",
+        "Apply discounts or coupons if applicable",
+        "Review tax calculations (configured in settings)",
+        "Save as Draft or Finalize invoice",
         "Print or email invoice to patient",
       ],
       tips: [
-        "Invoices in Draft status can be edited",
-        "Issued invoices are locked and require refund process",
-        "Bulk invoicing available for package treatments",
-        "Auto-calculate tax based on service categories",
-        "Email invoices directly from the system"
+        "Use package invoices for bundled services to save time",
+        "Draft invoices are saved automatically - return anytime to complete",
+        "Invoice numbers are auto-generated sequentially",
+        "Add custom line items for services not in catalog",
+        "Review discount policies before applying manual discounts",
       ],
-      shortcuts: ["Ctrl/Cmd + I: New Invoice", "Ctrl/Cmd + P: Print Invoice"],
+      shortcuts: [
+        "Ctrl+N for new invoice",
+        "Use service quick search to add items faster",
+        "Click patient name to view billing history",
+        "Export invoices to CSV for accounting",
+      ],
     },
     {
       icon: CreditCard,
       title: "Payment Processing",
       description: "Record and track patient payments",
       steps: [
-        "Open invoice from Billing list",
+        "Open an invoice from the billing list",
         "Click 'Record Payment' button",
-        "Select payment method (Cash, Card, Insurance, etc.)",
-        "Enter payment amount",
-        "Add transaction reference if applicable",
-        "Payment auto-updates invoice status",
-        "Partial payments create Outstanding balance",
-        "Full payment marks invoice as Paid",
-        "Receipt auto-generated and printable",
+        "Enter payment amount (can be partial or full)",
+        "Select payment method: Cash, Card, Insurance, Mobile Money, etc.",
+        "Add transaction reference number if applicable",
+        "Enter any payment notes or instructions",
+        "Click 'Record Payment' to save",
+        "System automatically updates invoice status (Paid/Partially Paid)",
+        "Print payment receipt for patient",
       ],
       tips: [
-        "Multiple payment methods supported per invoice",
-        "Payment gateway integration for online payments",
-        "Insurance claim tracking built-in",
-        "Automated payment reminders for overdue invoices",
-        "Daily payment reconciliation reports"
+        "Record partial payments as patients pay installments",
+        "Use transaction references for easier reconciliation",
+        "Payment receipts include all transaction details",
+        "View payment history from invoice details",
+        "Export payment reports for accounting",
       ],
-      shortcuts: ["Ctrl/Cmd + R: Record Payment"],
+      shortcuts: [
+        "Click 'Quick Pay' for full invoice payment",
+        "Use recent payment methods for faster entry",
+        "Search invoices by payment status",
+        "Filter by payment method for reconciliation",
+      ],
     },
     {
       icon: Package,
       title: "Package Billing",
-      description: "Manage treatment packages and subscriptions",
+      description: "Bill for service packages and bundles",
       steps: [
-        "Navigate to Packages tab",
-        "Click 'Create Package'",
-        "Define package name and description",
-        "Add included services with quantities",
-        "Set package price (usually discounted)",
-        "Set validity period (days/months)",
-        "Assign package to patient",
-        "System tracks service utilization",
-        "Alerts when package expires or depletes",
+        "Go to Packages tab in Billing",
+        "View available service packages",
+        "Click 'Create Package Invoice' on patient",
+        "Select package from dropdown",
+        "System auto-populates all package services",
+        "Package discount is applied automatically",
+        "Review and adjust if needed (some packages allow customization)",
+        "Finalize and process payment",
+        "Track package service usage over time",
       ],
       tips: [
-        "Packages can include multiple service types",
-        "Track remaining sessions in real-time",
-        "Auto-deduct from package during appointments",
-        "Renewal reminders before expiration",
-        "Package analytics show most popular bundles"
+        "Packages offer better value - promote to patients",
+        "Some packages allow partial service substitution",
+        "Track remaining services in package on invoice",
+        "Set expiry dates for time-limited packages",
+        "Create custom packages for VIP patients",
       ],
-      shortcuts: [],
+      shortcuts: [
+        "Search packages by name or category",
+        "View most popular packages for quick access",
+        "Clone existing packages to create variations",
+        "Export package sales reports",
+      ],
     },
     {
       icon: RefreshCw,
-      title: "Refunds & Adjustments",
-      description: "Process refunds and billing corrections",
+      title: "Refunds",
+      description: "Process refunds and credit notes",
       steps: [
-        "Locate original invoice",
-        "Click 'Create Refund' action",
-        "Select refund reason from dropdown",
-        "Choose full or partial refund",
-        "Enter refund amount if partial",
-        "Add notes explaining refund",
-        "Select refund method (original payment method recommended)",
-        "Approve refund (requires authorization)",
-        "Credit note auto-generated",
+        "Navigate to Billing > Refunds tab",
+        "Find invoice requiring refund",
+        "Click 'Create Refund' button",
+        "Select refund type: Full or Partial",
+        "Enter refund amount and reason (required)",
+        "Choose refund method (original payment method recommended)",
+        "Add approval notes if required by policy",
+        "Submit refund for processing",
+        "Print refund receipt for records",
+        "Original invoice status updates automatically",
       ],
       tips: [
-        "Refunds create audit trail for compliance",
-        "Approval workflow for refunds over set amount",
-        "Credit notes can be applied to future invoices",
-        "Refund reports track financial impact",
-        "Integration with accounting software"
+        "Document refund reasons thoroughly for audit trail",
+        "Partial refunds useful for service cancellations",
+        "Refunds create negative invoices in accounting",
+        "Get manager approval for large refunds if policy requires",
+        "Track refund trends to identify service issues",
       ],
-      shortcuts: [],
+      shortcuts: [
+        "Filter refunds by date or status",
+        "Search by invoice number or patient",
+        "Export refund reports for accounting",
+        "View refund history per patient",
+      ],
     },
     {
       icon: Percent,
       title: "Discounts & Coupons",
       description: "Apply discounts and promotional codes",
       steps: [
-        "Navigate to Configuration > Discounts",
-        "Click 'Create Discount Rule'",
-        "Set discount type (Percentage or Fixed Amount)",
-        "Define eligibility criteria (services, patients, dates)",
-        "Set discount value",
-        "Create coupon code (optional)",
-        "Set usage limits and expiration",
-        "Activate discount rule",
-        "Apply during invoice creation",
+        "During invoice creation, scroll to discount section",
+        "Choose discount type: Percentage or Fixed Amount",
+        "Enter discount value",
+        "OR enter coupon code in coupon field",
+        "System validates coupon and applies automatically",
+        "Review adjusted total",
+        "Add discount reason/notes (may be required)",
+        "Finalize invoice with discount applied",
       ],
       tips: [
-        "Senior citizen and insurance discounts can be automatic",
-        "Loyalty programs with tiered discounts",
-        "Time-based promotions (happy hours)",
-        "Referral discounts tracked per patient",
-        "Discount analytics show effectiveness"
+        "Coupon codes are case-sensitive",
+        "Some discounts require manager approval",
+        "View discount policies in Configuration > Discounts",
+        "Senior citizens and staff may have automatic discounts",
+        "Track discount usage to prevent abuse",
       ],
-      shortcuts: [],
+      shortcuts: [
+        "Recent coupons appear in dropdown for quick selection",
+        "Discount exemption policies auto-apply based on patient category",
+        "View discount impact in billing reports",
+        "Create time-limited promotional codes",
+      ],
     },
     {
-      icon: TrendingUp,
+      icon: BarChart3,
       title: "Financial Reports",
-      description: "Revenue analytics and reporting",
+      description: "Generate revenue and payment reports",
       steps: [
-        "Go to Billing > Reports",
-        "Select report type (Revenue, Payments, Outstanding, etc.)",
-        "Set date range",
-        "Apply filters (service type, provider, payment method)",
-        "View summary charts and tables",
-        "Drill down into specific transactions",
-        "Export to Excel or PDF",
-        "Schedule automated report emails",
+        "Go to Billing > Reports section",
+        "Select report type: Revenue, Payments, Outstanding, Refunds",
+        "Choose date range (today, week, month, custom)",
+        "Apply filters: payment method, service category, doctor, etc.",
+        "Click 'Generate Report' to view",
+        "Analyze charts and tables",
+        "Export to PDF or CSV",
+        "Schedule automated reports via email (optional)",
       ],
       tips: [
-        "Daily revenue summaries in dashboard",
-        "Aging reports for outstanding invoices",
-        "Provider-wise revenue breakdown",
-        "Service popularity and profitability analysis",
-        "Tax reports for compliance"
+        "Run end-of-day reports for cash reconciliation",
+        "Monitor outstanding invoices weekly",
+        "Compare month-over-month revenue trends",
+        "Identify top revenue-generating services",
+        "Use reports for financial planning",
       ],
-      shortcuts: [],
+      shortcuts: [
+        "Save favorite report configurations",
+        "Quick filters for common time periods",
+        "Export directly to accounting software",
+        "Email reports to management automatically",
+      ],
     },
   ];
 
   const paymentMethods = [
-    { name: "Cash", description: "Physical currency payments" },
-    { name: "Credit/Debit Card", description: "Card payments via POS or gateway" },
-    { name: "Insurance", description: "Insurance claim processing" },
-    { name: "Bank Transfer", description: "Direct bank transfers" },
-    { name: "Digital Wallet", description: "Mobile payment apps" },
-    { name: "Check", description: "Bank check payments" },
+    { method: "Cash", description: "Physical currency payment", icon: "💵" },
+    { method: "Credit/Debit Card", description: "Card payment via POS or online", icon: "💳" },
+    { method: "Mobile Money", description: "M-Pesa, MTN, Airtel Money, etc.", icon: "📱" },
+    { method: "Bank Transfer", description: "Direct bank deposit or transfer", icon: "🏦" },
+    { method: "Insurance", description: "Insurance claim payment", icon: "🛡️" },
+    { method: "Cheque", description: "Bank cheque payment", icon: "📝" },
   ];
 
   const invoiceStatuses = [
-    { status: "Draft", color: "gray", description: "Invoice created but not issued, editable" },
-    { status: "Issued", color: "blue", description: "Sent to patient, awaiting payment" },
-    { status: "Partially Paid", color: "yellow", description: "Some payment received, balance due" },
-    { status: "Paid", color: "green", description: "Fully paid, closed" },
-    { status: "Overdue", color: "red", description: "Past due date, payment pending" },
-    { status: "Cancelled", color: "gray", description: "Invoice cancelled or voided" },
+    { status: "Draft", description: "Invoice created but not finalized", color: "secondary" },
+    { status: "Pending", description: "Invoice finalized, awaiting payment", color: "default" },
+    { status: "Partially Paid", description: "Partial payment received", color: "default" },
+    { status: "Paid", description: "Fully paid invoice", color: "default" },
+    { status: "Overdue", description: "Payment past due date", color: "destructive" },
+    { status: "Cancelled", description: "Invoice cancelled/voided", color: "secondary" },
   ];
 
   const faqs = [
     {
-      question: "Can I edit an invoice after it's been issued?",
-      answer: "No, issued invoices are locked for audit compliance. To make changes, you must cancel the original invoice and create a new one, or issue a credit note for adjustments."
+      q: "How do I void an incorrect invoice?",
+      a: "Open the invoice and click 'Cancel Invoice'. Add a cancellation reason (required for audit). The invoice will be marked as cancelled but remains in system for records. If payment was received, process a refund first. Create a new correct invoice if needed.",
     },
     {
-      question: "How do I handle split payments between insurance and patient?",
-      answer: "Create one invoice with all charges. Record two separate payments: one from insurance and one from patient (copay). The system tracks both payment sources."
+      q: "Can I edit an invoice after it's paid?",
+      a: "No, paid invoices cannot be edited to maintain financial integrity. If changes are needed: 1) Create a refund for the incorrect amount, 2) Create a new corrected invoice, 3) Document the reason in notes. This creates proper audit trail.",
     },
     {
-      question: "What happens if a patient doesn't pay on time?",
-      answer: "System automatically marks invoices as Overdue after due date. You can send automated reminders, apply late fees (if configured), or flag patient account until payment received."
+      q: "How do I handle insurance billing?",
+      a: "Create invoice normally but select 'Insurance' as payment method. Enter claim number and insurance details. Mark as paid when insurance processes claim. Track pending insurance payments in Outstanding Reports. Follow up on unpaid claims regularly.",
     },
     {
-      question: "How do I integrate with accounting software?",
-      answer: "Navigate to Configuration > Integrations. Connect to QuickBooks, Xero, or other supported platforms. Transactions sync automatically based on your settings."
+      q: "What if a patient can't pay in full?",
+      a: "Accept partial payments! Record the amount paid, system tracks balance automatically. Create payment plan if needed. Send payment reminders for outstanding balance. Flag invoice as 'Payment Plan' in notes for tracking.",
+    },
+    {
+      q: "How do I reconcile daily cash collections?",
+      a: "Run End of Day Report > Payment Report > Filter by Cash > Today. System shows all cash transactions. Compare total to physical cash. Investigate any discrepancies. Export report for accounting records. Close cash drawer after reconciliation.",
+    },
+    {
+      q: "Can I offer discounts without approval?",
+      a: "Depends on your facility's policy configured in Settings. Typically: discounts under 10% are auto-approved, 10-25% require manager approval, over 25% require admin approval. System enforces these rules. Check your discount policy in Configuration.",
     },
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Hero */}
-      <Card className="border-2 border-primary/20 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent overflow-hidden">
-        <div className="absolute inset-0 bg-grid-white/5" />
-        <CardHeader className="relative">
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl">
+    <div className="space-y-6">
+      {/* Hero Section */}
+      <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl">
               <DollarSign className="h-8 w-8 text-white" />
             </div>
             <div>
-              <CardTitle className="text-3xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Billing & Payments Guide
-              </CardTitle>
-              <CardDescription className="text-base mt-2">
-                Complete financial management, invoicing, and payment processing
+              <CardTitle className="text-3xl">Billing & Payment Guide</CardTitle>
+              <CardDescription className="text-base mt-1">
+                Complete guide to invoicing, payments, and financial management
               </CardDescription>
             </div>
           </div>
@@ -225,81 +260,87 @@ export const BillingGuide = () => {
 
       {/* Quick Reference */}
       <div className="grid md:grid-cols-2 gap-6">
-        <Card className="border-2">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-blue-600" />
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
               Payment Methods
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {paymentMethods.map((method, idx) => (
-              <div key={idx} className="p-3 bg-muted/30 rounded-lg space-y-1">
-                <div className="font-medium">{method.name}</div>
-                <div className="text-sm text-muted-foreground">{method.description}</div>
+            {paymentMethods.map((item) => (
+              <div key={item.method} className="flex items-start gap-3 p-3 rounded-lg bg-accent/5">
+                <span className="text-2xl">{item.icon}</span>
+                <div className="flex-1">
+                  <div className="font-semibold">{item.method}</div>
+                  <div className="text-sm text-muted-foreground">{item.description}</div>
+                </div>
               </div>
             ))}
           </CardContent>
         </Card>
 
-        <Card className="border-2">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-indigo-600" />
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-primary" />
               Invoice Statuses
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {invoiceStatuses.map((item, idx) => (
-              <div key={idx} className="p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="outline">{item.status}</Badge>
-                </div>
-                <div className="text-xs text-muted-foreground">{item.description}</div>
+          <CardContent className="space-y-3">
+            {invoiceStatuses.map((item) => (
+              <div key={item.status} className="flex items-start gap-3">
+                <Badge variant={item.color as any} className="mt-0.5">{item.status}</Badge>
+                <div className="flex-1 text-sm text-muted-foreground">{item.description}</div>
               </div>
             ))}
           </CardContent>
         </Card>
       </div>
 
-      {/* Features Tabs */}
-      <Tabs defaultValue="invoices" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 h-auto">
-          <TabsTrigger value="invoices">Invoices</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
-          <TabsTrigger value="packages">Packages</TabsTrigger>
-          <TabsTrigger value="refunds">Refunds</TabsTrigger>
-          <TabsTrigger value="discounts">Discounts</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-        </TabsList>
+      {/* Detailed Features */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-primary" />
+            Feature Guides
+          </CardTitle>
+          <CardDescription>Comprehensive billing and payment instructions</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue={features[0].title} className="w-full">
+            <TabsList className="w-full grid grid-cols-2 md:grid-cols-6 h-auto">
+              {features.map((feature) => (
+                <TabsTrigger key={feature.title} value={feature.title} className="gap-2">
+                  <feature.icon className="h-4 w-4" />
+                  {feature.title.split(' ')[0]}
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-        {features.map((feature, idx) => (
-          <TabsContent key={idx} value={feature.title.toLowerCase().split(' ')[0]}>
-            <Card className="border-2">
-              <CardHeader>
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-gradient-to-br from-primary/20 to-primary/10 rounded-xl">
+            {features.map((feature) => (
+              <TabsContent key={feature.title} value={feature.title} className="space-y-6 mt-6">
+                <div className="flex items-start gap-4 p-4 bg-accent/10 rounded-lg">
+                  <div className="p-3 bg-primary/10 rounded-lg">
                     <feature.icon className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl">{feature.title}</CardTitle>
-                    <CardDescription className="text-base mt-1">{feature.description}</CardDescription>
+                    <h3 className="font-semibold text-lg">{feature.title}</h3>
+                    <p className="text-muted-foreground">{feature.description}</p>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
+
+                {/* Steps */}
                 <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    <h3 className="text-lg font-semibold">Step-by-Step Guide</h3>
-                  </div>
-                  <div className="space-y-3">
-                    {feature.steps.map((step, stepIdx) => (
-                      <div key={stepIdx} className="flex gap-4 p-4 bg-muted/50 rounded-lg">
-                        <div className="flex-shrink-0 w-8 h-8 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-sm">
-                          {stepIdx + 1}
-                        </div>
-                        <div className="flex-1 pt-1">{step}</div>
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <ArrowRight className="h-4 w-4 text-primary" />
+                    Step-by-Step Guide
+                  </h4>
+                  <div className="space-y-2">
+                    {feature.steps.map((step, index) => (
+                      <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/5 transition-colors">
+                        <Badge variant="outline" className="mt-0.5">{index + 1}</Badge>
+                        <p className="text-sm flex-1">{step}</p>
                       </div>
                     ))}
                   </div>
@@ -307,94 +348,93 @@ export const BillingGuide = () => {
 
                 <Separator />
 
+                {/* Pro Tips */}
                 <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Zap className="h-5 w-5 text-yellow-600" />
-                    <h3 className="text-lg font-semibold">Pro Tips</h3>
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    {feature.tips.map((tip, tipIdx) => (
-                      <div key={tipIdx} className="flex gap-3 p-3 bg-yellow-500/5 border border-yellow-500/20 rounded-lg">
-                        <Info className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm">{tip}</span>
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4 text-yellow-500" />
+                    Pro Tips
+                  </h4>
+                  <div className="space-y-2">
+                    {feature.tips.map((tip, index) => (
+                      <div key={index} className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
+                        <span>{tip}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {feature.shortcuts.length > 0 && (
-                  <>
-                    <Separator />
-                    <div>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Zap className="h-5 w-5 text-purple-600" />
-                        <h3 className="text-lg font-semibold">Keyboard Shortcuts</h3>
+                <Separator />
+
+                {/* Shortcuts */}
+                <div>
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <Keyboard className="h-4 w-4 text-primary" />
+                    Quick Actions & Shortcuts
+                  </h4>
+                  <div className="space-y-2">
+                    {feature.shortcuts.map((shortcut, index) => (
+                      <div key={index} className="flex items-start gap-2 text-sm p-2 rounded bg-accent/5">
+                        <ArrowRight className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <span>{shortcut}</span>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {feature.shortcuts.map((shortcut, scIdx) => (
-                          <Badge key={scIdx} variant="outline" className="text-sm px-4 py-2">
-                            {shortcut}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        ))}
-      </Tabs>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </CardContent>
+      </Card>
 
       {/* Best Practices */}
-      <Card className="border-2 border-blue-500/50 bg-blue-500/5">
+      <Card className="border-2 border-accent/50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-700">
-            <AlertCircle className="h-5 w-5" />
-            Billing Best Practices
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-success" />
+            Best Practices
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex gap-3 items-start">
-            <CheckCircle2 className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              Always verify patient insurance coverage before treatment to avoid billing disputes
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <h4 className="font-semibold text-sm text-success">✓ Do</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>• Finalize invoices before accepting payment</li>
+                <li>• Always provide printed receipts for cash payments</li>
+                <li>• Record transaction references for card/mobile payments</li>
+                <li>• Reconcile cash daily at end of shift</li>
+                <li>• Document reasons for discounts and refunds</li>
+                <li>• Follow up on overdue invoices promptly</li>
+                <li>• Export financial reports for accounting monthly</li>
+              </ul>
             </div>
-          </div>
-          <div className="flex gap-3 items-start">
-            <CheckCircle2 className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              Issue invoices immediately after service delivery for better cash flow
-            </div>
-          </div>
-          <div className="flex gap-3 items-start">
-            <CheckCircle2 className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              Reconcile daily payments before end of day to catch discrepancies early
-            </div>
-          </div>
-          <div className="flex gap-3 items-start">
-            <CheckCircle2 className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              Send payment reminders 3 days before due date to reduce late payments
+            <div className="space-y-2">
+              <h4 className="font-semibold text-sm text-destructive">✗ Don't</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>• Accept payment without creating proper invoice</li>
+                <li>• Edit invoices after they're paid</li>
+                <li>• Apply discounts without proper authorization</li>
+                <li>• Delete invoices (cancel them instead)</li>
+                <li>• Mix personal and facility funds</li>
+                <li>• Process refunds without documentation</li>
+                <li>• Ignore payment discrepancies</li>
+              </ul>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* FAQs */}
-      <Card className="border-2">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Info className="h-5 w-5 text-primary" />
-            Frequently Asked Questions
-          </CardTitle>
+          <CardTitle>Frequently Asked Questions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {faqs.map((faq, idx) => (
-            <div key={idx} className="p-4 bg-muted/30 rounded-lg space-y-2">
-              <h4 className="font-semibold text-primary">{faq.question}</h4>
-              <p className="text-sm text-muted-foreground">{faq.answer}</p>
+          {faqs.map((faq, index) => (
+            <div key={index} className="p-4 rounded-lg border">
+              <h4 className="font-semibold mb-2">{faq.q}</h4>
+              <p className="text-sm text-muted-foreground">{faq.a}</p>
             </div>
           ))}
         </CardContent>
