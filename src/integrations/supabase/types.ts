@@ -2617,22 +2617,10 @@ export type Database = {
       }
     }
     Functions: {
-      assign_admin_role: {
-        Args: { user_email: string }
-        Returns: undefined
-      }
-      delete_user: {
-        Args: { user_id_to_delete: string }
-        Returns: undefined
-      }
-      generate_mrn: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_ticket_token: {
-        Args: { queue_prefix: string }
-        Returns: string
-      }
+      assign_admin_role: { Args: { user_email: string }; Returns: undefined }
+      delete_user: { Args: { user_id_to_delete: string }; Returns: undefined }
+      generate_mrn: { Args: never; Returns: string }
+      generate_ticket_token: { Args: { queue_prefix: string }; Returns: string }
       get_user_with_roles: {
         Args: { user_uuid: string }
         Returns: {
@@ -2654,7 +2642,7 @@ export type Database = {
         Returns: boolean
       }
       list_all_users_with_roles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           email: string
