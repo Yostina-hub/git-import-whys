@@ -104,11 +104,16 @@ export const QueueActions = ({ ticket, queues, onUpdate }: QueueActionsProps) =>
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm">
-            <MoreVertical className="h-4 w-4" />
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="animate-pulse hover:animate-none border-primary/50 hover:border-primary hover:bg-primary/10 transition-all"
+          >
+            <MoreVertical className="h-4 w-4 mr-1" />
+            Actions
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="bg-background z-50">
           <DropdownMenuLabel>Queue Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
           
