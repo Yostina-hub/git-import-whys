@@ -64,10 +64,10 @@ export const CreateOrderDialog = ({
 
       const { error } = await supabase.from("orders" as any).insert({
         patient_id: patientId,
-        appointment_id: appointmentId || null,
+        appointment_id: appointmentId && appointmentId.trim() !== "" ? appointmentId : null,
         order_type: orderType,
         priority: priority,
-        notes: notes || null,
+        notes: notes && notes.trim() !== "" ? notes : null,
         ordered_by: user.id,
         order_payload: orderPayload,
         status: "draft",
