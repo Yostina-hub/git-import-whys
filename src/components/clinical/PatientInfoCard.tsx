@@ -22,10 +22,15 @@ export const PatientInfoCard = ({ patient, age }: PatientInfoCardProps) => {
                 <h2 className="text-2xl font-bold">
                   {patient.first_name} {patient.middle_name} {patient.last_name}
                 </h2>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <Badge variant="outline" className="font-mono">
                     MRN: {patient.mrn}
                   </Badge>
+                  {patient.sonik_id && (
+                    <Badge variant="outline" className="font-mono bg-blue-50 text-blue-700 border-blue-300">
+                      SONIK ID: {patient.sonik_id}
+                    </Badge>
+                  )}
                   <Badge className="bg-gradient-to-r from-primary to-blue-600 text-white border-0">
                     {age} years old
                   </Badge>
