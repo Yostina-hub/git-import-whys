@@ -29,10 +29,12 @@ import {
   DollarSign,
   Stethoscope,
   ShieldAlert,
-  Sparkles
+  Sparkles,
+  Edit
 } from "lucide-react";
 import { Patient } from "@/hooks/usePatients";
 import { useToast } from "@/hooks/use-toast";
+import { EditPatientDialog } from "./EditPatientDialog";
 
 interface PatientDetailsDialogProps {
   patient: Patient | null;
@@ -56,6 +58,7 @@ export function PatientDetailsDialog({ patient, open, onOpenChange }: PatientDet
   });
   const [timeline, setTimeline] = useState<any[]>([]);
   const [aiInsights, setAiInsights] = useState<string>("");
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   useEffect(() => {
     if (open && patient) {
@@ -225,19 +228,31 @@ export function PatientDetailsDialog({ patient, open, onOpenChange }: PatientDet
                 {getInitials()}
               </AvatarFallback>
             </Avatar>
-            <div>
+            <div className="flex-1">
               <div className="text-2xl font-bold">
                 {patient.first_name} {patient.middle_name} {patient.last_name}
               </div>
               <div className="text-sm text-muted-foreground font-mono">
                 MRN: {patient.mrn}
+                {fullPatientData?.sonik_id && (
+                  <span className="ml-4">SONIK ID: {fullPatientData.sonik_id}</span>
+                )}
               </div>
             </div>
             {patient.is_returning && (
-              <Badge className="ml-auto bg-green-100 text-green-700 border-green-300">
+              <Badge className="bg-green-100 text-green-700 border-green-300">
                 Returning Patient
               </Badge>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowEditDialog(true)}
+              className="ml-2"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Patient
+            </Button>
           </DialogTitle>
         </DialogHeader>
 
@@ -597,6 +612,15 @@ export function PatientDetailsDialog({ patient, open, onOpenChange }: PatientDet
           </ScrollArea>
         )}
       </DialogContent>
+
+      {patient && (
+        <EditPatientDialog
+          patient={fullPatientData || patient}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          onSuccess={loadPatientDetails}
+        />
+      )}
     </Dialog>
   );
 }

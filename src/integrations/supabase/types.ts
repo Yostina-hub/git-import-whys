@@ -1359,6 +1359,7 @@ export type Database = {
             | Database["public"]["Enums"]["registration_status"]
             | null
           sex_at_birth: Database["public"]["Enums"]["sex_at_birth"] | null
+          sonik_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1395,6 +1396,7 @@ export type Database = {
             | Database["public"]["Enums"]["registration_status"]
             | null
           sex_at_birth?: Database["public"]["Enums"]["sex_at_birth"] | null
+          sonik_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1431,6 +1433,7 @@ export type Database = {
             | Database["public"]["Enums"]["registration_status"]
             | null
           sex_at_birth?: Database["public"]["Enums"]["sex_at_birth"] | null
+          sonik_id?: string | null
           updated_at?: string
         }
         Relationships: []

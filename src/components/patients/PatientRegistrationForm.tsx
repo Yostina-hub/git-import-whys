@@ -21,6 +21,7 @@ interface PatientFormData {
   phone_alt: string;
   email: string;
   national_id: string;
+  sonik_id: string;
   address_line1: string;
   city: string;
   country: string;
@@ -66,6 +67,7 @@ export const PatientRegistrationForm = ({
     phone_alt: existingPatient?.phone_alt || "",
     email: existingPatient?.email || "",
     national_id: existingPatient?.national_id || "",
+    sonik_id: existingPatient?.sonik_id || "",
     address_line1: existingPatient?.address_line1 || "",
     city: existingPatient?.city || "",
     country: existingPatient?.country || "",
@@ -344,12 +346,32 @@ export const PatientRegistrationForm = ({
             />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="sonik_id">SONIK ID</Label>
+            <Input
+              id="sonik_id"
+              value={formData.sonik_id}
+              onChange={(e) => setFormData({ ...formData, sonik_id: e.target.value })}
+              placeholder="External SONIK system ID"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="national_id">National ID</Label>
+            <Input
+              id="national_id"
+              value={formData.national_id}
+              onChange={(e) => setFormData({ ...formData, national_id: e.target.value })}
             />
           </div>
         </div>
