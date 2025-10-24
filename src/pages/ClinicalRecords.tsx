@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, User, History, Heart, Pill, AlertCircle, FileText, ClipboardList, FileSignature, RefreshCw, Activity } from "lucide-react";
+import { ArrowLeft, User, History, Heart, Pill, AlertCircle, FileText, ClipboardList, FileSignature, RefreshCw, Activity, FolderOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AssessmentsTab from "@/components/clinical/AssessmentsTab";
 import SessionsTab from "@/components/clinical/SessionsTab";
@@ -18,6 +18,7 @@ import { PatientQuickSearch } from "@/components/patients/PatientQuickSearch";
 import { Badge } from "@/components/ui/badge";
 import { ClinicalStats } from "@/components/clinical/ClinicalStats";
 import { PatientInfoCard } from "@/components/clinical/PatientInfoCard";
+import { DocumentsTab } from "@/components/documents/DocumentsTab";
 
 const ClinicalRecords = () => {
   const navigate = useNavigate();
@@ -196,7 +197,7 @@ const ClinicalRecords = () => {
 
             {/* Clinical Tabs */}
             <Tabs defaultValue="history" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 h-auto p-1 bg-muted/50 backdrop-blur-sm">
+              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-8 h-auto p-1 bg-muted/50 backdrop-blur-sm">
                 <TabsTrigger 
                   value="history" 
                   className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white transition-all duration-300"
@@ -246,6 +247,13 @@ const ClinicalRecords = () => {
                   <FileSignature className="h-4 w-4" />
                   <span className="hidden sm:inline">Consents</span>
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="documents"
+                  className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-600 data-[state=active]:text-white transition-all duration-300"
+                >
+                  <FolderOpen className="h-4 w-4" />
+                  <span className="hidden sm:inline">Documents</span>
+                </TabsTrigger>
               </TabsList>
 
             <TabsContent value="history" className="mt-6">
@@ -281,6 +289,10 @@ const ClinicalRecords = () => {
                 autoOpen={showConsentDialog}
                 onAutoOpenChange={(open) => setShowConsentDialog(open)}
               />
+            </TabsContent>
+
+            <TabsContent value="documents">
+              <DocumentsTab patientId={patientId} />
             </TabsContent>
             </Tabs>
           </div>
