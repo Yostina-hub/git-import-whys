@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { PatientQuickSearch } from "@/components/patients/PatientQuickSearch";
 
 interface CreateOrderDialogProps {
   patientId: string;
@@ -53,6 +54,8 @@ export const CreateOrderDialog = ({
   const [notes, setNotes] = useState("");
   const [orderPayload, setOrderPayload] = useState<any>({});
   const { toast } = useToast();
+  const [localPatientId, setLocalPatientId] = useState<string>(patientId || "");
+  const [localPatientName, setLocalPatientName] = useState<string>("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,8 +65,13 @@ export const CreateOrderDialog = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      const resolvedPatientId = (patientId && patientId.trim() !== "") ? patientId : localPatientId;
+      if (!resolvedPatientId) {
+        throw new Error("Please select a patient before creating an order");
+      }
+
       const { error } = await supabase.from("orders" as any).insert({
-        patient_id: patientId,
+        patient_id: resolvedPatientId,
         appointment_id: appointmentId && appointmentId.trim() !== "" ? appointmentId : null,
         order_type: orderType,
         priority: priority,
@@ -109,6 +117,18 @@ export const CreateOrderDialog = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {(!patientId || patientId.trim() === "") && (
+            <div className="space-y-2">
+              <Label>Select Patient</Label>
+              {localPatientId && (
+                <div className="text-sm text-muted-foreground">Selected: {localPatientName}</div>
+              )}
+              <PatientQuickSearch onPatientSelect={(p) => {
+                setLocalPatientId(p.id);
+                setLocalPatientName(`${p.first_name} ${p.last_name} (MRN: ${p.mrn})`);
+              }} />
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="order-type">Order Type</Label>
