@@ -12,12 +12,49 @@ serve(async (req) => {
   }
 
   try {
-    const { consultationId } = await req.json();
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Get and verify user
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "No authorization header" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Check AI access
+    const { data: accessCheck } = await supabase.rpc("check_ai_access", {
+      _user_id: user.id,
+    });
+
+    if (!accessCheck || !accessCheck.allowed) {
+      return new Response(
+        JSON.stringify({ 
+          error: accessCheck?.reason || "AI access not available",
+          usage: accessCheck?.usage,
+          limit: accessCheck?.limit
+        }), 
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { consultationId } = await req.json();
 
     // Get consultation details
     const { data: consultation } = await supabase
@@ -67,6 +104,15 @@ serve(async (req) => {
 
     const aiData = await aiResponse.json();
     const summary = aiData.choices[0]?.message?.content || 'Unable to generate summary';
+
+    // Log usage after successful AI call
+    await supabase.from("ai_usage_log").insert({
+      user_id: user.id,
+      feature_type: "consultation_summary",
+      tokens_used: 0,
+      cost_estimate: 0.001,
+      metadata: { consultationId },
+    });
 
     // Update consultation with AI summary
     await supabase
