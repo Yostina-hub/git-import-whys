@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, UserPlus, Trash2 } from "lucide-react";
-import { PatientQuickSearch } from "@/components/patients/PatientQuickSearch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface UserAIAccess {
   id: string;
@@ -19,11 +19,21 @@ interface UserAIAccess {
   daily_token_limit: number;
   token_balance: number;
   email?: string;
+  first_name?: string;
+  last_name?: string;
   usage_today?: number;
+}
+
+interface SystemUser {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
 }
 
 export const AIAccessManagement = () => {
   const [users, setUsers] = useState<UserAIAccess[]>([]);
+  const [systemUsers, setSystemUsers] = useState<SystemUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddUser, setShowAddUser] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
@@ -33,7 +43,26 @@ export const AIAccessManagement = () => {
 
   useEffect(() => {
     loadAIAccessUsers();
+    loadSystemUsers();
   }, []);
+
+  const loadSystemUsers = async () => {
+    const { data, error } = await supabase.rpc("list_all_users_with_roles");
+    
+    if (error) {
+      console.error("Error loading system users:", error);
+      return;
+    }
+
+    if (data && Array.isArray(data)) {
+      setSystemUsers(data.map((user: any) => ({
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
+      })));
+    }
+  };
 
   const loadAIAccessUsers = async () => {
     setLoading(true);
@@ -67,18 +96,24 @@ export const AIAccessManagement = () => {
       });
     }
 
-    // Get user emails from user_roles
-    const { data: rolesData } = await supabase
-      .from("user_roles" as any)
-      .select("user_id");
+    // Get user details from profiles
+    const { data: profilesData } = await supabase
+      .from("profiles" as any)
+      .select("id, first_name, last_name");
 
-    const userIds = Array.from(new Set(rolesData?.map((r: any) => r.user_id) || []));
+    const profilesMap = new Map(
+      profilesData?.map((p: any) => [p.id, p]) || []
+    );
     
-    // Get emails from auth (this requires admin access)
-    const usersWithData = accessData.map((access: any) => ({
-      ...access,
-      usage_today: usageCounts[access.user_id] || 0,
-    }));
+    const usersWithData = accessData.map((access: any) => {
+      const profile = profilesMap.get(access.user_id);
+      return {
+        ...access,
+        first_name: profile?.first_name,
+        last_name: profile?.last_name,
+        usage_today: usageCounts[access.user_id] || 0,
+      };
+    });
 
     setUsers(usersWithData);
     setLoading(false);
@@ -206,12 +241,21 @@ export const AIAccessManagement = () => {
             <Card className="mb-4">
               <CardContent className="pt-6 space-y-4">
                 <div>
-                  <Label>Select User (by User ID)</Label>
-                  <Input
-                    placeholder="Enter user UUID"
-                    value={selectedUserId}
-                    onChange={(e) => setSelectedUserId(e.target.value)}
-                  />
+                  <Label>Select User</Label>
+                  <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a user..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {systemUsers
+                        .filter(u => !users.some(au => au.user_id === u.id))
+                        .map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.first_name} {user.last_name} ({user.email})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -247,7 +291,7 @@ export const AIAccessManagement = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User ID</TableHead>
+                <TableHead>User</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Requests</TableHead>
                 <TableHead>Tokens</TableHead>
@@ -265,8 +309,13 @@ export const AIAccessManagement = () => {
               ) : (
                 users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-mono text-xs">
-                      {user.user_id.substring(0, 8)}...
+                    <TableCell>
+                      <div className="font-medium">
+                        {user.first_name} {user.last_name}
+                      </div>
+                      <div className="text-xs text-muted-foreground font-mono">
+                        {user.user_id.substring(0, 8)}...
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={user.ai_enabled ? "default" : "secondary"}>
