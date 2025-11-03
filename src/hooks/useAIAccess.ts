@@ -48,7 +48,7 @@ export const useAIAccess = () => {
     checkAccess();
   }, []);
 
-  const showAccessError = () => {
+  const showAccessError = async () => {
     if (accessStatus && !accessStatus.allowed) {
       toast({
         variant: "destructive",

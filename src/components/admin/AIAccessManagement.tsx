@@ -132,6 +132,17 @@ export const AIAccessManagement = () => {
         description: error.message,
       });
     } else {
+      // Send notification to user
+      await supabase.functions.invoke("send-notification", {
+        body: {
+          recipient_type: "users",
+          user_ids: [userId],
+          subject: `AI Access ${!currentState ? "Enabled" : "Disabled"}`,
+          body: `Your AI access has been ${!currentState ? "enabled" : "disabled"} by an administrator.`,
+          type: "system",
+        },
+      });
+
       toast({
         title: "AI access updated",
         description: `AI access ${!currentState ? "enabled" : "disabled"} for user`,
@@ -153,6 +164,17 @@ export const AIAccessManagement = () => {
         description: error.message,
       });
     } else {
+      // Send notification to user
+      await supabase.functions.invoke("send-notification", {
+        body: {
+          recipient_type: "users",
+          user_ids: [userId],
+          subject: "AI Access Limit Updated",
+          body: `Your daily AI request limit has been updated to ${newLimit} requests per day.`,
+          type: "system",
+        },
+      });
+
       toast({
         title: "Daily limit updated",
         description: `Daily limit set to ${newLimit} requests`,
@@ -204,11 +226,23 @@ export const AIAccessManagement = () => {
         description: error.message,
       });
     } else {
+      // Send notification to user
+      await supabase.functions.invoke("send-notification", {
+        body: {
+          recipient_type: "users",
+          user_ids: [userId],
+          subject: "AI Access Revoked",
+          body: "Your AI access has been revoked by an administrator. Please contact support if you need access.",
+          type: "system",
+        },
+      });
+
       toast({
         title: "User removed",
         description: "AI access revoked",
       });
       loadAIAccessUsers();
+      loadSystemUsers();
     }
   };
 
