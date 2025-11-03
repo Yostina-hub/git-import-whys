@@ -53,6 +53,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_usage_log: {
+        Row: {
+          cost_estimate: number | null
+          created_at: string | null
+          feature_type: string
+          id: string
+          metadata: Json | null
+          tokens_used: number | null
+          user_id: string
+        }
+        Insert: {
+          cost_estimate?: number | null
+          created_at?: string | null
+          feature_type: string
+          id?: string
+          metadata?: Json | null
+          tokens_used?: number | null
+          user_id: string
+        }
+        Update: {
+          cost_estimate?: number | null
+          created_at?: string | null
+          feature_type?: string
+          id?: string
+          metadata?: Json | null
+          tokens_used?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       allergies: {
         Row: {
           allergen: string
@@ -2365,6 +2395,33 @@ export type Database = {
           },
         ]
       }
+      user_ai_access: {
+        Row: {
+          ai_enabled: boolean | null
+          created_at: string | null
+          daily_limit: number | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_enabled?: boolean | null
+          created_at?: string | null
+          daily_limit?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_enabled?: boolean | null
+          created_at?: string | null
+          daily_limit?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_clinic_grant: {
         Row: {
           all_clinics: boolean
@@ -2621,6 +2678,7 @@ export type Database = {
     }
     Functions: {
       assign_admin_role: { Args: { user_email: string }; Returns: undefined }
+      check_ai_access: { Args: { _user_id: string }; Returns: Json }
       delete_user: { Args: { user_id_to_delete: string }; Returns: undefined }
       generate_mrn: { Args: never; Returns: string }
       generate_ticket_token: { Args: { queue_prefix: string }; Returns: string }

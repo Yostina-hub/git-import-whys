@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft } from "lucide-react";
 import { UserProfileSettings } from "@/components/profile/UserProfileSettings";
 import { ChangePasswordSettings } from "@/components/profile/ChangePasswordSettings";
+import { AIUsageCard } from "@/components/profile/AIUsageCard";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -50,6 +51,10 @@ const Profile = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-6">
+          <AIUsageCard />
+        </div>
+        
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList>
             <TabsTrigger value="profile">Profile Information</TabsTrigger>

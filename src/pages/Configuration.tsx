@@ -8,6 +8,7 @@ import { PaymentTypesConfig } from "@/components/configuration/PaymentTypesConfi
 import { PriceListsConfig } from "@/components/configuration/PriceListsConfig";
 import { RulesEngine } from "@/components/configuration/RulesEngine";
 import { DiscountExemptionPolicies } from "@/components/configuration/DiscountExemptionPolicies";
+import { SystemSettingsTab } from "@/components/admin/SystemSettingsTab";
 
 const Configuration = () => {
   const navigate = useNavigate();
@@ -51,6 +52,7 @@ const Configuration = () => {
             <TabsTrigger value="price-lists">Price Lists</TabsTrigger>
             <TabsTrigger value="rules">Rules Engine</TabsTrigger>
             <TabsTrigger value="policies">Discount Policies</TabsTrigger>
+            <TabsTrigger value="system">System Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="payment-types">
@@ -67,6 +69,10 @@ const Configuration = () => {
 
           <TabsContent value="policies" className="space-y-4">
             <DiscountExemptionPolicies />
+          </TabsContent>
+
+          <TabsContent value="system" className="space-y-4">
+            <SystemSettingsTab />
           </TabsContent>
         </Tabs>
       </main>

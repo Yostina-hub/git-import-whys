@@ -12,6 +12,8 @@ import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 import { UserManagementTab } from "@/components/admin/UserManagementTab";
 import { PermissionsTab } from "@/components/admin/PermissionsTab";
 import { AdminStats } from "@/components/admin/AdminStats";
+import { AIAccessManagement } from "@/components/admin/AIAccessManagement";
+import { AIUsageStats } from "@/components/admin/AIUsageStats";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -160,7 +162,7 @@ const Admin = () => {
         />
 
         <Tabs defaultValue="analytics" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 p-1 bg-muted/50 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-7 p-1 bg-muted/50 backdrop-blur-sm">
             <TabsTrigger 
               value="analytics"
               className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white transition-all duration-300"
@@ -195,6 +197,18 @@ const Admin = () => {
             >
               <Settings className="h-4 w-4" />
               Settings
+            </TabsTrigger>
+            <TabsTrigger 
+              value="ai-access"
+              className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-500 data-[state=active]:to-red-600 data-[state=active]:text-white transition-all duration-300"
+            >
+              AI Access
+            </TabsTrigger>
+            <TabsTrigger 
+              value="ai-usage"
+              className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-violet-600 data-[state=active]:text-white transition-all duration-300"
+            >
+              AI Usage
             </TabsTrigger>
           </TabsList>
 
@@ -234,6 +248,22 @@ const Admin = () => {
             <Card className="border-0 shadow-lg bg-gradient-to-br from-card via-card to-purple-500/5">
               <CardContent className="pt-6">
                 <SystemSettingsTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="ai-access">
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-card via-card to-rose-500/5">
+              <CardContent className="pt-6">
+                <AIAccessManagement />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="ai-usage">
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-card via-card to-indigo-500/5">
+              <CardContent className="pt-6">
+                <AIUsageStats />
               </CardContent>
             </Card>
           </TabsContent>

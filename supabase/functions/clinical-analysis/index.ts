@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,48 @@ serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Get and verify user
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "No authorization header" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Check AI access
+    const { data: accessCheck } = await supabase.rpc("check_ai_access", {
+      _user_id: user.id,
+    });
+
+    if (!accessCheck || !accessCheck.allowed) {
+      return new Response(
+        JSON.stringify({ 
+          error: accessCheck?.reason || "AI access not available",
+          usage: accessCheck?.usage,
+          limit: accessCheck?.limit
+        }), 
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const { patientData, analysisType } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -133,6 +176,15 @@ ${patientContext}`;
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Log usage after successful AI call
+    await supabase.from("ai_usage_log").insert({
+      user_id: user.id,
+      feature_type: `clinical_${analysisType}`,
+      tokens_used: 0,
+      cost_estimate: 0.001,
+      metadata: { analysisType },
+    });
 
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
