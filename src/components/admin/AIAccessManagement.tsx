@@ -16,6 +16,8 @@ interface UserAIAccess {
   user_id: string;
   ai_enabled: boolean;
   daily_limit: number;
+  daily_token_limit: number;
+  token_balance: number;
   email?: string;
   usage_today?: number;
 }
@@ -26,6 +28,7 @@ export const AIAccessManagement = () => {
   const [showAddUser, setShowAddUser] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [newDailyLimit, setNewDailyLimit] = useState(100);
+  const [newTokenLimit, setNewTokenLimit] = useState(10000);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -132,6 +135,8 @@ export const AIAccessManagement = () => {
         user_id: selectedUserId,
         ai_enabled: true,
         daily_limit: newDailyLimit,
+        daily_token_limit: newTokenLimit,
+        token_balance: 0,
       });
 
     if (error) {
@@ -208,14 +213,26 @@ export const AIAccessManagement = () => {
                     onChange={(e) => setSelectedUserId(e.target.value)}
                   />
                 </div>
-                <div>
-                  <Label>Daily Request Limit</Label>
-                  <Input
-                    type="number"
-                    value={newDailyLimit}
-                    onChange={(e) => setNewDailyLimit(parseInt(e.target.value))}
-                    min={1}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Daily Request Limit</Label>
+                    <Input
+                      type="number"
+                      value={newDailyLimit}
+                      onChange={(e) => setNewDailyLimit(parseInt(e.target.value))}
+                      min={1}
+                    />
+                  </div>
+                  <div>
+                    <Label>Daily Token Limit</Label>
+                    <Input
+                      type="number"
+                      value={newTokenLimit}
+                      onChange={(e) => setNewTokenLimit(parseInt(e.target.value))}
+                      min={1000}
+                      step={1000}
+                    />
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={handleAddUser}>Add User</Button>
@@ -232,15 +249,16 @@ export const AIAccessManagement = () => {
               <TableRow>
                 <TableHead>User ID</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Daily Limit</TableHead>
-                <TableHead>Usage Today</TableHead>
+                <TableHead>Requests</TableHead>
+                <TableHead>Tokens</TableHead>
+                <TableHead>Token Balance</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     No users with AI access
                   </TableCell>
                 </TableRow>
@@ -256,19 +274,23 @@ export const AIAccessManagement = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Input
-                        type="number"
-                        value={user.daily_limit}
-                        onChange={(e) =>
-                          handleUpdateLimit(user.user_id, parseInt(e.target.value))
-                        }
-                        className="w-24"
-                      />
+                      <div className="text-sm">
+                        Limit: {user.daily_limit}
+                        <br />
+                        <span className={user.usage_today >= user.daily_limit ? "text-destructive" : "text-muted-foreground"}>
+                          Used: {user.usage_today || 0}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>
-                      <span className={user.usage_today >= user.daily_limit ? "text-destructive font-semibold" : ""}>
-                        {user.usage_today} / {user.daily_limit}
-                      </span>
+                      <div className="text-sm">
+                        Limit: {(user.daily_token_limit || 0).toLocaleString()}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-lg font-semibold text-primary">
+                        {(user.token_balance || 0).toLocaleString()}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">

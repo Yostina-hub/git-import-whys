@@ -53,6 +53,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_token_purchases: {
+        Row: {
+          amount_paid: number
+          created_at: string | null
+          id: string
+          payment_status: string
+          stripe_payment_id: string | null
+          tokens_purchased: number
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string | null
+          id?: string
+          payment_status?: string
+          stripe_payment_id?: string | null
+          tokens_purchased: number
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string | null
+          id?: string
+          payment_status?: string
+          stripe_payment_id?: string | null
+          tokens_purchased?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_usage_log: {
         Row: {
           cost_estimate: number | null
@@ -2398,25 +2428,37 @@ export type Database = {
       user_ai_access: {
         Row: {
           ai_enabled: boolean | null
+          auto_recharge: boolean | null
           created_at: string | null
           daily_limit: number | null
+          daily_token_limit: number | null
           id: string
+          payment_method_id: string | null
+          token_balance: number | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           ai_enabled?: boolean | null
+          auto_recharge?: boolean | null
           created_at?: string | null
           daily_limit?: number | null
+          daily_token_limit?: number | null
           id?: string
+          payment_method_id?: string | null
+          token_balance?: number | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           ai_enabled?: boolean | null
+          auto_recharge?: boolean | null
           created_at?: string | null
           daily_limit?: number | null
+          daily_token_limit?: number | null
           id?: string
+          payment_method_id?: string | null
+          token_balance?: number | null
           updated_at?: string | null
           user_id?: string
         }

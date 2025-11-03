@@ -9,6 +9,7 @@ import { PriceListsConfig } from "@/components/configuration/PriceListsConfig";
 import { RulesEngine } from "@/components/configuration/RulesEngine";
 import { DiscountExemptionPolicies } from "@/components/configuration/DiscountExemptionPolicies";
 import { SystemSettingsTab } from "@/components/admin/SystemSettingsTab";
+import { TokenPurchase } from "@/components/configuration/TokenPurchase";
 
 const Configuration = () => {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ const Configuration = () => {
             <TabsTrigger value="price-lists">Price Lists</TabsTrigger>
             <TabsTrigger value="rules">Rules Engine</TabsTrigger>
             <TabsTrigger value="policies">Discount Policies</TabsTrigger>
+            <TabsTrigger value="tokens">AI Tokens</TabsTrigger>
             <TabsTrigger value="system">System Settings</TabsTrigger>
           </TabsList>
 
@@ -69,6 +71,10 @@ const Configuration = () => {
 
           <TabsContent value="policies" className="space-y-4">
             <DiscountExemptionPolicies />
+          </TabsContent>
+
+          <TabsContent value="tokens" className="space-y-4">
+            <TokenPurchase />
           </TabsContent>
 
           <TabsContent value="system" className="space-y-4">

@@ -8,6 +8,10 @@ interface AIAccessStatus {
   usage?: number;
   limit?: number;
   remaining?: number;
+  token_balance?: number;
+  tokens_used_today?: number;
+  daily_token_limit?: number;
+  tokens_remaining_today?: number;
 }
 
 export const useAIAccess = () => {
